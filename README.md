@@ -6,15 +6,75 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MySQL](https://img.shields.io/badge/mysql-8.0%2B-blue.svg)](https://www.mysql.com/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0%2B-blue.svg)](https://www.typescriptlang.org/)
+[![Status](https://img.shields.io/badge/status-Production%20Ready-success.svg)]()
+
+## 📖 Tabla de Contenidos
+
+- [Descripción](#-descripción)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Características Principales](#-características-principales)
+- [Requisitos](#-requisitos)
+- [Instalación](#️-instalación)
+- [Configuración](#-configuración)
+- [Desarrollo](#-desarrollo)
+- [Base de Datos](#-base-de-datos)
+- [Estructura del Proyecto](#️-estructura-del-proyecto)
+- [Sistema de Pagos](#-sistema-de-pagos)
+- [API Documentation](#-api-documentation)
+- [Producción](#-producción)
+- [Testing](#-testing)
+- [Licencia](#-licencia)
+
+## 🎯 Descripción
+
+AstroBar es una plataforma móvil que conecta bares nocturnos con usuarios en Buenos Aires, Argentina. Permite a los bares crear promociones flash y comunes, mientras que los usuarios pueden descubrirlas, aceptarlas y canjearlas mediante códigos QR únicos.
+
+### ✨ Características Destacadas
+
+- 🎁 **Promociones Flash**: Ofertas de 5-15 minutos con contador en tiempo real
+- 📱 **QR Único**: Sistema de validación seguro con códigos QR de un solo uso
+- 🏆 **Sistema de Niveles**: Copper → Bronze → Silver → Gold → Platinum
+- 💰 **Comisiones Flexibles**: 5%-30% configurable por bar
+- 🔔 **Notificaciones Push**: Alertas de promociones cercanas
+- 📊 **Analytics Completo**: Dashboard para bares y administradores
+- 🛡️ **Seguridad**: JWT, validación +18, auditoría completa
 
 ## 🚀 Stack Tecnológico
 
-- **Frontend**: React Native + Expo
-- **Backend**: Express.js + TypeScript
-- **Base de Datos**: MySQL + Drizzle ORM
-- **Pagos**: Stripe Connect (Split automático configurable)
-- **Notificaciones**: Expo Push Notifications
+### Frontend
+- **Framework**: React Native 0.74+
+- **Runtime**: Expo SDK 51+
+- **Lenguaje**: TypeScript 5.0+
+- **Navegación**: React Navigation 6
+- **Estado**: Context API + Hooks
+- **UI**: Custom components + Expo Vector Icons
+- **Cámara**: expo-camera (QR Scanner)
+- **Notificaciones**: expo-notifications
+
+### Backend
+- **Framework**: Express.js 4.18+
+- **Lenguaje**: TypeScript 5.0+
+- **ORM**: Drizzle ORM
+- **Autenticación**: JWT + Refresh Tokens
+- **Validación**: Express Validator
+- **Seguridad**: Helmet, CORS, Rate Limiting
+
+### Base de Datos
+- **Motor**: MySQL 8.0+
+- **Migraciones**: Drizzle Kit
+- **Backup**: mysqldump
+
+### Servicios Externos
+- **Pagos**: Stripe Connect
 - **Mapas**: Google Maps API
+- **Push Notifications**: Expo Push Service
+- **Storage**: Local filesystem (escalable a S3)
+
+### DevOps
+- **Control de Versiones**: Git + GitHub
+- **Package Manager**: npm
+- **Linting**: ESLint + Prettier
+- **Type Checking**: TypeScript Compiler
 
 ## 📋 Requisitos
 
@@ -114,16 +174,62 @@ npm run dev
 
 ## 📊 Base de Datos
 
-### Schema
-El schema completo está en `shared/schema-mysql.ts`
+### Schema Principal
 
-### Migraciones
+#### Tablas Core
+```sql
+-- Usuarios
+users (id, name, email, phone, password, role, pushToken, ...)
+
+-- Bares
+businesses (id, name, address, latitude, longitude, ownerId, isActive, ...)
+
+-- Promociones
+promotions (id, businessId, title, type, originalPrice, promoPrice, 
+            stock, stockConsumed, startTime, endTime, isActive, ...)
+
+-- Transacciones
+promotion_transactions (id, promotionId, userId, businessId, qrCode, 
+                        status, amountPaid, platformCommission, 
+                        businessRevenue, canCancelUntil, redeemedAt, ...)
+
+-- Puntos de Usuario
+user_points (id, userId, totalPoints, promotionsRedeemed, currentLevel, ...)
+
+-- Comisiones por Bar
+business_commissions (id, businessId, platformCommission, notes, ...)
+```
+
+### Migraciones Disponibles
+
 ```bash
-# Aplicar cambios al schema
-npm run db:push
+# Aplicar todas las migraciones
+mysql -u root -p astrobar_db < migrations/create_promotions_system.sql
+mysql -u root -p astrobar_db < migrations/create_business_commissions.sql
+mysql -u root -p astrobar_db < migrations/create_test_users.sql
+mysql -u root -p astrobar_db < migrations/create_test_promotions.sql
+```
 
-# Backup
-mysqldump -u root -p astrobar_db > backup.sql
+### Usuarios de Prueba
+
+```javascript
+// Todos con contraseña: "password"
+{
+  customer: "cliente@test.com",
+  business_owner: "bar@test.com",
+  admin: "admin@test.com",
+  super_admin: "superadmin@test.com"
+}
+```
+
+### Backup y Restore
+
+```bash
+# Backup completo
+mysqldump -u root -p astrobar_db > backup_$(date +%Y%m%d).sql
+
+# Backup solo estructura
+mysqldump -u root -p --no-data astrobar_db > schema.sql
 
 # Restore
 mysql -u root -p astrobar_db < backup.sql
@@ -293,42 +399,99 @@ npm run server:start
 - Enviar a bar específico
 - Historial de notificaciones
 
-### API Endpoints Admin
+## 📚 API Documentation
 
+### Autenticación
+
+Todas las rutas protegidas requieren header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+### Endpoints Principales
+
+#### Promociones
 ```bash
-# Configuración
-GET    /api/admin/settings
-PUT    /api/admin/settings/:key
-POST   /api/admin/settings
+# Público
+GET    /api/promotions                    # Listar activas
+GET    /api/promotions/:id                # Detalle
 
+# Cliente (autenticado)
+POST   /api/promotions/:id/accept         # Aceptar promoción
+POST   /api/promotions/transactions/:id/cancel  # Cancelar
+GET    /api/promotions/transactions/my    # Mis transacciones
+
+# Bar (business_owner)
+POST   /api/promotions                    # Crear promoción
+PATCH  /api/promotions/:id                # Pausar/activar
+POST   /api/promotions/redeem             # Canjear QR
+```
+
+#### Usuario
+```bash
+GET    /api/user/profile                  # Perfil
+GET    /api/user/stats                    # Estadísticas
+POST   /api/user/push-token               # Guardar token push
+```
+
+#### Bar
+```bash
+GET    /api/business/dashboard            # Dashboard
+GET    /api/business/stats                # Estadísticas
+GET    /api/business/hours                # Horarios
+PUT    /api/business/hours                # Actualizar horarios
+```
+
+#### Admin
+```bash
 # Usuarios
-GET    /api/admin/users
-GET    /api/admin/users/:id
-PATCH  /api/admin/users/:id/status
-DELETE /api/admin/users/:id
+GET    /api/admin/users                   # Listar
+PATCH  /api/admin/users/:id/status        # Activar/desactivar
+DELETE /api/admin/users/:id               # Eliminar
 
 # Bares
-GET    /api/admin/businesses
-GET    /api/admin/businesses/:id
-PATCH  /api/admin/businesses/:id/status
-PATCH  /api/admin/businesses/:id/verification
-PATCH  /api/admin/businesses/:id/pause
+GET    /api/admin/businesses              # Listar
+PATCH  /api/admin/businesses/:id/verification  # Aprobar/rechazar
 
 # Comisiones
-GET    /api/admin/commissions
-GET    /api/admin/commissions/:businessId
-POST   /api/admin/commissions
+GET    /api/admin/commissions             # Listar
+POST   /api/admin/commissions             # Actualizar
+
+# Transacciones
+GET    /api/admin/transactions            # Todas
+GET    /api/admin/promotions/dashboard    # Dashboard promociones
 
 # Notificaciones
-POST   /api/admin/notifications/push
-POST   /api/admin/notifications/email
-GET    /api/admin/notifications
-
-# Estadísticas
-GET    /api/admin/stats/dashboard
-GET    /api/admin/stats/business/:id
-GET    /api/admin/alerts
+POST   /api/admin/notifications/push      # Enviar push
 ```
+
+### Respuestas
+
+#### Éxito
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+#### Error
+```json
+{
+  "success": false,
+  "error": "Mensaje de error"
+}
+```
+
+### Códigos de Estado
+
+- `200` - OK
+- `201` - Created
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `500` - Internal Server Error
 
 ### Escalabilidad
 
@@ -359,32 +522,222 @@ VALUES ('bar_id_123', 0.05, 'Comisión inicial 5%', 'admin_id')
 ON DUPLICATE KEY UPDATE platform_commission = 0.05;
 ```
 
-## 📦 Producción
+## 🚀 Producción
 
-### Build Backend
+### Preparación
+
+#### 1. Variables de Entorno
 ```bash
+# Crear archivo .env.production
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=mysql://user:pass@host:3306/astrobar_db
+JWT_SECRET=<strong_secret>
+STRIPE_SECRET_KEY=sk_live_...
+GOOGLE_MAPS_API_KEY=<production_key>
+EXPO_ACCESS_TOKEN=<production_token>
+```
+
+#### 2. Base de Datos
+```bash
+# Crear base de datos de producción
+mysql -u root -p
+CREATE DATABASE astrobar_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# Aplicar migraciones
+mysql -u root -p astrobar_db < migrations/create_promotions_system.sql
+mysql -u root -p astrobar_db < migrations/create_business_commissions.sql
+```
+
+#### 3. Build
+```bash
+# Backend
 npm run server:build
+
+# Frontend (Android APK)
+eas build --platform android --profile production
+
+# Frontend (iOS)
+eas build --platform ios --profile production
 ```
 
-### Build Frontend (APK Android)
+### Deployment
+
+#### Backend (Node.js)
 ```bash
-npm run build:android
+# Opción 1: PM2
+npm install -g pm2
+pm2 start dist/server.js --name astrobar-api
+pm2 save
+pm2 startup
+
+# Opción 2: Docker
+docker build -t astrobar-api .
+docker run -d -p 5000:5000 --env-file .env.production astrobar-api
+
+# Opción 3: Systemd
+sudo systemctl enable astrobar-api
+sudo systemctl start astrobar-api
 ```
 
-### Iniciar Producción
+#### Frontend (Expo)
 ```bash
-npm run production:start
+# Publicar actualización OTA
+eas update --branch production --message "Nueva versión"
+
+# Subir a Google Play Store
+eas submit --platform android
+
+# Subir a App Store
+eas submit --platform ios
+```
+
+### Monitoreo
+
+#### Logs
+```bash
+# PM2
+pm2 logs astrobar-api
+
+# Docker
+docker logs -f <container_id>
+
+# Systemd
+journalctl -u astrobar-api -f
+```
+
+#### Health Check
+```bash
+# Endpoint de salud
+curl https://api.astrobar.com/health
+
+# Respuesta esperada
+{"status":"ok","timestamp":"2024-01-01T00:00:00.000Z"}
+```
+
+### Backup Automatizado
+
+```bash
+# Crear script de backup diario
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+mysqldump -u root -p astrobar_db | gzip > /backups/astrobar_$DATE.sql.gz
+
+# Mantener solo últimos 30 días
+find /backups -name "astrobar_*.sql.gz" -mtime +30 -delete
+
+# Agregar a crontab
+0 2 * * * /path/to/backup.sh
+```
+
+### SSL/HTTPS
+
+```bash
+# Certbot (Let's Encrypt)
+sudo certbot --nginx -d api.astrobar.com
+
+# Renovación automática
+sudo certbot renew --dry-run
+```
+
+### Escalabilidad
+
+#### Load Balancer (Nginx)
+```nginx
+upstream astrobar_backend {
+    server 127.0.0.1:5000;
+    server 127.0.0.1:5001;
+    server 127.0.0.1:5002;
+}
+
+server {
+    listen 80;
+    server_name api.astrobar.com;
+    
+    location / {
+        proxy_pass http://astrobar_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+#### Base de Datos (Replicación)
+```bash
+# Master-Slave para lectura escalable
+# Master: Escrituras
+# Slaves: Lecturas
 ```
 
 ## 🧪 Testing
 
+### Unit Tests
 ```bash
-# Linting
+# Ejecutar tests
+npm test
+
+# Con cobertura
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+### Linting
+```bash
+# ESLint
 npm run lint
 
-# Type checking
-npm run check:types
+# Fix automático
+npm run lint:fix
+
+# Prettier
+npm run format
 ```
+
+### Type Checking
+```bash
+# TypeScript
+npm run check:types
+
+# Watch mode
+npm run check:types:watch
+```
+
+### E2E Testing
+```bash
+# Detox (React Native)
+npm run test:e2e:ios
+npm run test:e2e:android
+```
+
+### Manual Testing
+
+#### Flujo Completo Usuario
+1. Registro/Login
+2. Ver mapa de bares
+3. Seleccionar bar con promoción
+4. Aceptar promoción
+5. Confirmar pago
+6. Recibir QR
+7. Mostrar QR en bar
+8. Verificar puntos ganados
+
+#### Flujo Completo Bar
+1. Login como business_owner
+2. Crear promoción flash
+3. Ver en panel de promociones activas
+4. Escanear QR de cliente
+5. Validar canje
+6. Ver estadísticas actualizadas
+
+#### Flujo Completo Admin
+1. Login como admin
+2. Aprobar nuevo bar
+3. Configurar comisión
+4. Monitorear transacciones
+5. Enviar notificación push
+6. Ver dashboard de promociones
 
 ## 📄 Licencia
 
