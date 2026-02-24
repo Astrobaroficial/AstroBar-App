@@ -54,19 +54,40 @@ export async function createPaymentIntent(params: CreatePaymentIntentParams) {
     const { orderId, amount, customerId, businessId, driverId, paymentMethod } =
       params;
 
-    // Create Stripe PaymentIntent
+    // Get business Stripe account
+    const [business] = await db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.id, businessId))
+      .limit(1);
+
+    if (!business?.stripeAccountId) {
+      throw new Error("Business Stripe account not configured");
+    }
+
+    // Get commission for this business
+    const platformCommission = await CommissionService.getBusinessCommission(businessId);
+    const split = CommissionService.calculateSplit(amount, platformCommission);
+
+    // Create Stripe PaymentIntent with automatic split
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(split.total * 100), // Total user pays (product + commission)
       currency: "mxn",
       payment_method: paymentMethod,
       confirmation_method: "manual",
       confirm: paymentMethod ? true : false,
+      application_fee_amount: Math.round(split.platform * 100), // Platform commission
+      transfer_data: {
+        destination: business.stripeAccountId, // Bar receives 100% of product price
+      },
       metadata: {
         orderId,
         customerId,
         businessId,
         driverId: driverId || "",
         type: "order_payment",
+        productPrice: amount.toString(),
+        platformCommission: platformCommission.toString(),
       },
     });
 
@@ -77,7 +98,7 @@ export async function createPaymentIntent(params: CreatePaymentIntentParams) {
       customerId,
       businessId,
       driverId,
-      amount,
+      amount: split.total, // Total charged to user
       currency: "MXN",
       status: paymentIntent.status,
       paymentMethod: paymentMethod || "card",
@@ -91,6 +112,9 @@ export async function createPaymentIntent(params: CreatePaymentIntentParams) {
         id: paymentIntent.id,
         clientSecret: paymentIntent.client_secret,
         status: paymentIntent.status,
+        total: split.total,
+        productPrice: amount,
+        platformFee: split.platform,
       },
     };
   } catch (error: any) {
