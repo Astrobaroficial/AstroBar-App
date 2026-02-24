@@ -1,161 +1,371 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import QRCode from "react-native-qrcode-svg";
 
 import { ThemedText } from "@/components/ThemedText";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
-import { api } from "@/lib/api";
+import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { apiRequest } from "@/lib/query-client";
+
+type ActivePromotionsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ActivePromotionsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<ActivePromotionsScreenNavigationProp>();
   
-  const [flashPromos, setFlashPromos] = useState<any[]>([]);
-  const [commonPromos, setCommonPromos] = useState<any[]>([]);
+  const [activeTransaction, setActiveTransaction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [canCancel, setCanCancel] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
-    loadPromotions();
+    loadActivePromotion();
   }, []);
 
-  const loadPromotions = async () => {
+  useEffect(() => {
+    if (!activeTransaction) return;
+
+    const cancelDeadline = new Date(activeTransaction.canCancelUntil);
+    const now = new Date();
+    const secondsLeft = Math.max(0, Math.floor((cancelDeadline.getTime() - now.getTime()) / 1000));
+    
+    setTimeLeft(secondsLeft);
+    setCanCancel(secondsLeft > 0 && activeTransaction.status === 'pending');
+
+    if (secondsLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCanCancel(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [activeTransaction]);
+
+  const loadActivePromotion = async () => {
     try {
-      const [flash, common] = await Promise.all([
-        api.get("/promotions/flash"),
-        api.get("/promotions"),
-      ]);
-      setFlashPromos(flash.data.flashPromotions || []);
-      setCommonPromos(common.data.promotions || []);
+      const response = await apiRequest('GET', '/api/promotions/transactions/my');
+      const data = await response.json();
+      
+      if (data.success && data.transactions) {
+        // Find pending transaction
+        const pending = data.transactions.find((t: any) => t.status === 'pending');
+        setActiveTransaction(pending || null);
+      }
     } catch (error) {
-      console.error("Error loading promotions:", error);
+      console.error('Error loading active promotion:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const deletePromo = async (id: string, type: "flash" | "common") => {
-    Alert.alert("Eliminar", "¿Seguro que quieres eliminar esta promoción?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.delete(`/promotions/${type === "flash" ? "flash/" : ""}${id}`);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            loadPromotions();
-          } catch (error: any) {
-            Alert.alert("Error", "No se pudo eliminar");
-          }
-        },
-      },
-    ]);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadActivePromotion();
   };
+
+  const handleCancel = async () => {
+    if (!activeTransaction || !canCancel) return;
+
+    setIsCancelling(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const response = await apiRequest('POST', `/api/promotions/transactions/${activeTransaction.id}/cancel`);
+      const data = await response.json();
+
+      if (data.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        alert('Promoción cancelada exitosamente');
+        loadActivePromotion();
+      }
+    } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      alert(error.message || 'Error al cancelar');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={AstroBarColors.primary} />
+      </View>
+    );
+  }
+
+  if (!activeTransaction) {
+    return (
+      <LinearGradient
+        colors={[theme.gradientStart || '#1A1A2E', theme.gradientEnd || '#16213E']}
+        style={styles.container}
+      >
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+          <Pressable onPress={() => navigation.goBack()}>
+            <Feather name="arrow-left" size={24} color="#FFFFFF" />
+          </Pressable>
+          <ThemedText type="h3" style={{ color: '#FFFFFF' }}>
+            Promoción Activa
+          </ThemedText>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <View style={styles.emptyContainer}>
+          <Feather name="inbox" size={64} color={theme.textSecondary} />
+          <ThemedText type="h3" style={styles.emptyTitle}>
+            No hay promoción activa
+          </ThemedText>
+          <ThemedText type="body" style={styles.emptyText}>
+            Aceptá una promoción para verla aquí
+          </ThemedText>
+          <Button
+            onPress={() => navigation.navigate('MainTabs')}
+            style={styles.emptyButton}
+          >
+            Ver Bares
+          </Button>
+        </View>
+      </LinearGradient>
+    );
+  }
+
+  const promotion = activeTransaction.promotion;
+  const business = activeTransaction.business;
 
   return (
     <LinearGradient
-      colors={[theme.gradientStart || '#000000', theme.gradientEnd || '#1A1A1A']}
+      colors={[theme.gradientStart || '#1A1A2E', theme.gradientEnd || '#16213E']}
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()}>
-          <Feather name="arrow-left" size={24} color={theme.text} />
+          <Feather name="arrow-left" size={24} color="#FFFFFF" />
         </Pressable>
-        <ThemedText type="h3">Promociones Activas</ThemedText>
-        <View style={{ width: 24 }} />
+        <ThemedText type="h3" style={{ color: '#FFFFFF' }}>
+          Promoción Activa
+        </ThemedText>
+        <Pressable onPress={handleRefresh}>
+          <Feather name="refresh-cw" size={24} color="#FFFFFF" />
+        </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather name="zap" size={20} color="#8B5CF6" />
-            <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>
-              Flash ({flashPromos.length}/3)
-            </ThemedText>
-          </View>
-          {flashPromos.length === 0 ? (
-            <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
-              No hay promociones flash activas
-            </ThemedText>
-          ) : (
-            flashPromos.map((promo) => (
-              <View key={promo.id} style={[styles.card, { backgroundColor: theme.card }]}>
-                <View style={{ flex: 1 }}>
-                  <ThemedText type="h4">{promo.name}</ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
-                    Stock: {promo.stock} | ${(promo.discounted_price / 100).toFixed(2)}
-                  </ThemedText>
-                </View>
-                <Pressable onPress={() => deletePromo(promo.id, "flash")} style={styles.deleteBtn}>
-                  <Feather name="trash-2" size={18} color="#FF4444" />
-                </Pressable>
-              </View>
-            ))
-          )}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFFFFF" />
+        }
+      >
+        {/* QR Code */}
+        <View style={[styles.qrCard, { backgroundColor: '#FFFFFF' }]}>
+          <QRCode
+            value={activeTransaction.qrCode}
+            size={220}
+            backgroundColor="#FFFFFF"
+            color="#000000"
+          />
+          <ThemedText type="h3" style={styles.qrCode}>
+            {activeTransaction.qrCode}
+          </ThemedText>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather name="calendar" size={20} color="#FFD700" />
-            <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>
-              Comunes ({commonPromos.length}/10)
-            </ThemedText>
+        {/* Details */}
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
+          <View style={styles.detailRow}>
+            <Feather name="zap" size={20} color="#FFD700" />
+            <View style={styles.detailContent}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Promoción
+              </ThemedText>
+              <ThemedText type="body" style={{ fontWeight: '600' }}>
+                {promotion?.title || 'Promoción'}
+              </ThemedText>
+            </View>
           </View>
-          {commonPromos.length === 0 ? (
-            <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
-              No hay promociones comunes activas
-            </ThemedText>
-          ) : (
-            commonPromos.map((promo) => (
-              <View key={promo.id} style={[styles.card, { backgroundColor: theme.card }]}>
-                <View style={{ flex: 1 }}>
-                  <ThemedText type="h4">{promo.name}</ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
-                    Stock: {promo.stock} | ${(promo.discounted_price / 100).toFixed(2)}
-                  </ThemedText>
-                </View>
-                <Pressable onPress={() => deletePromo(promo.id, "common")} style={styles.deleteBtn}>
-                  <Feather name="trash-2" size={18} color="#FF4444" />
-                </Pressable>
-              </View>
-            ))
-          )}
+
+          <View style={styles.detailRow}>
+            <Feather name="map-pin" size={20} color={AstroBarColors.primary} />
+            <View style={styles.detailContent}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Bar
+              </ThemedText>
+              <ThemedText type="body" style={{ fontWeight: '600' }}>
+                {business?.name || 'Bar'}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.detailRow}>
+            <Feather name="dollar-sign" size={20} color="#4CAF50" />
+            <View style={styles.detailContent}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Total pagado
+              </ThemedText>
+              <ThemedText type="h3" style={{ color: '#4CAF50' }}>
+                ${(activeTransaction.amountPaid / 100).toFixed(2)}
+              </ThemedText>
+            </View>
+          </View>
         </View>
+
+        {/* Cancel Timer */}
+        {canCancel && (
+          <View style={[styles.cancelCard, { backgroundColor: 'rgba(244, 67, 54, 0.1)' }]}>
+            <View style={styles.cancelTimer}>
+              <ThemedText type="h3" style={{ color: '#F44336' }}>
+                {timeLeft}s
+              </ThemedText>
+            </View>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="small" style={{ color: '#F44336' }}>
+                Podés cancelar en los próximos {timeLeft} segundos
+              </ThemedText>
+            </View>
+          </View>
+        )}
+
+        {/* Info */}
+        <View style={[styles.infoCard, { backgroundColor: 'rgba(255, 215, 0, 0.1)' }]}>
+          <Feather name="info" size={20} color="#FFD700" />
+          <ThemedText type="small" style={styles.infoText}>
+            Mostrá este QR al personal del bar para canjear tu promoción.
+            Ganarás 10 puntos automáticamente.
+          </ThemedText>
+        </View>
+
+        {/* Buttons */}
+        {canCancel && (
+          <Button
+            onPress={handleCancel}
+            disabled={isCancelling}
+            style={[styles.cancelButton, { backgroundColor: '#F44336' }]}
+          >
+            {isCancelling ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              'CANCELAR PROMOCIÓN'
+            )}
+          </Button>
+        )}
       </ScrollView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
+    width: '100%',
   },
-  content: { paddingHorizontal: Spacing.lg },
-  section: { marginBottom: Spacing.xl },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.md,
+  scrollContent: {
+    padding: Spacing.xl,
   },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  emptyTitle: {
+    marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
-  deleteBtn: {
-    padding: Spacing.sm,
+  emptyText: {
+    textAlign: 'center',
+    color: '#999999',
+    marginBottom: Spacing.xl,
+  },
+  emptyButton: {
+    minWidth: 200,
+  },
+  qrCard: {
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  qrCode: {
+    marginTop: Spacing.lg,
+    color: '#000000',
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  card: {
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
+    gap: Spacing.lg,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  cancelCard: {
+    flexDirection: 'row',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  cancelTimer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(244, 67, 54, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoCard: {
+    flexDirection: 'row',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  infoText: {
+    flex: 1,
+    color: '#FFD700',
+  },
+  cancelButton: {
+    height: 56,
   },
 });
