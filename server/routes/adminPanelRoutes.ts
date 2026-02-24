@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { db } from "../../shared/db";
+import { db } from "../db";
 import { 
   users, businesses, businessCommissions, systemSettings, 
   adminNotifications, orders, transactions, products 
-} from "../../shared/schema-mysql";
+} from "@shared/schema-mysql";
 import { eq, sql, desc, and, gte, lte } from "drizzle-orm";
-import { authenticateToken, requireAdmin } from "../middleware/auth";
+import { authenticateToken, requireAdmin } from "../authMiddleware";
 
 const router = Router();
 
