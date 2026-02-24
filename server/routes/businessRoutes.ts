@@ -54,7 +54,7 @@ router.get("/featured", async (req, res) => {
 // Get business dashboard
 router.get("/dashboard", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    const { businesses, orders } = await import("@shared/schema-mysql");
+    const { businesses, promotionTransactions } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq, desc } = await import("drizzle-orm");
 
@@ -68,36 +68,39 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
       return res.status(404).json({ error: "Business not found" });
     }
 
-    const businessOrders = await db
+    const transactions = await db
       .select()
-      .from(orders)
-      .where(eq(orders.businessId, business.id))
-      .orderBy(desc(orders.createdAt));
+      .from(promotionTransactions)
+      .where(eq(promotionTransactions.businessId, business.id))
+      .orderBy(desc(promotionTransactions.createdAt));
 
-    const pendingOrders = businessOrders.filter(o => o.status === "pending");
-    const todayOrders = businessOrders.filter(o => {
-      const today = new Date();
-      const orderDate = new Date(o.createdAt);
-      return orderDate.toDateString() === today.toDateString();
+    const pendingTransactions = transactions.filter(t => t.status === "pending");
+    const today = new Date();
+    const todayTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.createdAt);
+      return transactionDate.toDateString() === today.toDateString();
     });
 
-    const todayRevenue = todayOrders
-      .filter(o => o.status === "delivered")
-      .reduce((sum, o) => {
-        const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-        const productBase = Math.round(subtotalWithMarkup / 1.15);
-        return sum + productBase;
-      }, 0);
+    const todayRevenue = todayTransactions
+      .filter(t => t.status === "redeemed")
+      .reduce((sum, t) => sum + t.businessRevenue, 0);
 
     res.json({
       success: true,
       dashboard: {
         business,
-        pendingOrders: pendingOrders.length,
-        todayOrders: todayOrders.length,
-        todayRevenue: Math.round(todayRevenue),
-        totalOrders: businessOrders.length,
-        recentOrders: businessOrders.slice(0, 10),
+        isOpen: business.isActive,
+        pendingOrders: pendingTransactions.length,
+        todayOrders: todayTransactions.length,
+        todayRevenue,
+        totalOrders: transactions.length,
+        recentOrders: transactions.slice(0, 10).map(t => ({
+          id: t.id,
+          status: t.status,
+          subtotal: t.amountPaid,
+          customerName: 'Cliente',
+          createdAt: t.createdAt,
+        })),
       },
     });
   } catch (error: any) {
@@ -108,11 +111,10 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
 // Get business stats
 router.get("/stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    const { businesses, orders } = await import("@shared/schema-mysql");
+    const { businesses, promotionTransactions, promotions } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { eq, and, desc } = await import("drizzle-orm");
 
-    // Get the specific business (first one if no businessId provided)
     const requestedBusinessId = req.query.businessId as string | undefined;
     
     const ownerBusinesses = await db
@@ -131,13 +133,15 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
         return res.status(403).json({ error: "No tienes acceso a este negocio" });
       }
     } else {
-      targetBusiness = ownerBusinesses[0]; // Default to first business
+      targetBusiness = ownerBusinesses[0];
     }
     
-    const businessOrders = await db
+    // Get all transactions for this business
+    const transactions = await db
       .select()
-      .from(orders)
-      .where(eq(orders.businessId, targetBusiness.id));
+      .from(promotionTransactions)
+      .where(eq(promotionTransactions.businessId, targetBusiness.id))
+      .orderBy(desc(promotionTransactions.createdAt));
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -145,61 +149,67 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const deliveredOrders = businessOrders.filter(o => o.status === "delivered");
-    const cancelledOrders = businessOrders.filter(o => o.status === "cancelled");
+    const redeemedTransactions = transactions.filter(t => t.status === 'redeemed');
+    const cancelledTransactions = transactions.filter(t => t.status === 'cancelled');
     
-    const todayOrders = deliveredOrders.filter(o => new Date(o.createdAt) >= startOfToday);
-    const weekOrders = deliveredOrders.filter(o => new Date(o.createdAt) >= startOfWeek);
-    const monthOrders = deliveredOrders.filter(o => new Date(o.createdAt) >= startOfMonth);
+    const todayTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfToday);
+    const weekTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfWeek);
+    const monthTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfMonth);
 
-    // Negocio gana solo el valor base de productos (sin markup ni delivery)
-    // Fórmula: (total - deliveryFee) / 1.15
-    const todayRevenue = todayOrders.reduce((sum, o) => {
-      const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-      const productBase = Math.round(subtotalWithMarkup / 1.15);
-      return sum + productBase;
-    }, 0);
-    const weekRevenue = weekOrders.reduce((sum, o) => {
-      const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-      const productBase = Math.round(subtotalWithMarkup / 1.15);
-      return sum + productBase;
-    }, 0);
-    const monthRevenue = monthOrders.reduce((sum, o) => {
-      const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-      const productBase = Math.round(subtotalWithMarkup / 1.15);
-      return sum + productBase;
-    }, 0);
-    const totalRevenue = deliveredOrders.reduce((sum, o) => {
-      const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-      const productBase = Math.round(subtotalWithMarkup / 1.15);
-      return sum + productBase;
-    }, 0);
+    // Bar receives businessRevenue (100% of promo price)
+    const todayRevenue = todayTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
+    const weekRevenue = weekTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
+    const monthRevenue = monthTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
+    const totalRevenue = redeemedTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
 
-    const avgValue = deliveredOrders.length > 0 ? Math.round(totalRevenue / deliveredOrders.length) : 0;
+    const avgValue = redeemedTransactions.length > 0 ? Math.round(totalRevenue / redeemedTransactions.length) : 0;
 
-    console.log('📊 BUSINESS STATS DEBUG:');
-    console.log('  Business ID:', targetBusiness.id);
-    console.log('  Business Name:', targetBusiness.name);
-    console.log('  Total Revenue:', totalRevenue, '=', (totalRevenue/100).toFixed(2));
-    console.log('  Delivered Orders:', deliveredOrders.length);
-    console.log('  Avg Value:', avgValue, '=', (avgValue/100).toFixed(2));
+    // Get top promotions
+    const promoStats = new Map<string, { count: number; revenue: number; title: string }>();
+    
+    for (const transaction of redeemedTransactions) {
+      const existing = promoStats.get(transaction.promotionId) || { count: 0, revenue: 0, title: '' };
+      existing.count++;
+      existing.revenue += transaction.businessRevenue;
+      
+      if (!existing.title) {
+        const [promo] = await db
+          .select({ title: promotions.title })
+          .from(promotions)
+          .where(eq(promotions.id, transaction.promotionId))
+          .limit(1);
+        existing.title = promo?.title || 'Promoción';
+      }
+      
+      promoStats.set(transaction.promotionId, existing);
+    }
+
+    const topPromotions = Array.from(promoStats.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
+      .map(p => ({
+        name: p.title,
+        quantity: p.count,
+        revenue: p.revenue,
+      }));
 
     res.json({
       success: true,
       businessId: targetBusiness.id,
       businessName: targetBusiness.name,
       revenue: {
-        today: Math.round(todayRevenue),
-        week: Math.round(weekRevenue),
-        month: Math.round(monthRevenue),
-        total: Math.round(totalRevenue),
+        today: todayRevenue,
+        week: weekRevenue,
+        month: monthRevenue,
+        total: totalRevenue,
       },
       orders: {
-        total: businessOrders.length,
-        completed: deliveredOrders.length,
-        cancelled: cancelledOrders.length,
-        avgValue: avgValue,
+        total: transactions.length,
+        completed: redeemedTransactions.length,
+        cancelled: cancelledTransactions.length,
+        avgValue,
       },
+      topProducts: topPromotions,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
