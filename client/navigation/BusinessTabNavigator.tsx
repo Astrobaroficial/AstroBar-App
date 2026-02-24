@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 
 import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
-import BusinessProductsScreen from "@/screens/BusinessProductsScreen";
+import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -41,10 +41,10 @@ export default function BusinessTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="BusinessProducts"
-        component={BusinessProductsScreen}
+        name="BusinessPromotions"
+        component={BusinessPromotionsPanel}
         options={{
-          title: "Promociones",
+          title: "Promociones Activas",
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
           ),

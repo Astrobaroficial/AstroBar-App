@@ -357,6 +357,54 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
   }
 });
 
+// Update promotion (pause/activate)
+router.patch("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { promotions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and } = await import("drizzle-orm");
+
+    const promotionId = req.params.id;
+    const { isActive } = req.body;
+
+    // Verify ownership
+    const [promotion] = await db
+      .select()
+      .from(promotions)
+      .where(eq(promotions.id, promotionId))
+      .limit(1);
+
+    if (!promotion) {
+      return res.status(404).json({ error: "Promoción no encontrada" });
+    }
+
+    const [business] = await db
+      .select()
+      .from(businesses)
+      .where(
+        and(
+          eq(businesses.id, promotion.businessId),
+          eq(businesses.ownerId, req.user!.id)
+        )
+      )
+      .limit(1);
+
+    if (!business) {
+      return res.status(403).json({ error: "No tienes acceso a esta promoción" });
+    }
+
+    await db
+      .update(promotions)
+      .set({ isActive })
+      .where(eq(promotions.id, promotionId));
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating promotion:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Redeem QR code (bar scans)
 router.post("/redeem", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
