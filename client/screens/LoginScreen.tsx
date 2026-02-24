@@ -94,7 +94,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     if (biometricAvailable) {
       const storedPhone = await import(
         "@react-native-async-storage/async-storage"
-      ).then((m) => m.default.getItem("@nemy_biometric_phone"));
+      ).then((m) => m.default.getItem("@astrobar_biometric_phone"));
       setShowBiometricOption(!!storedPhone);
     }
   };
@@ -209,8 +209,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     try {
       await Share.share({
         message:
-          "Descubre NEMY - Tu delivery local de confianza en Autlán. Pide comida y productos del mercado con un toque. Descarga ahora: https://nemy.replit.app",
-        title: "NEMY - Delivery Local",
+          "Descubre AstroBar - Tu plataforma de promociones nocturnas en Buenos Aires. Encuentra las mejores promos en bares. Descarga ahora: https://astrobar.com.ar",
+        title: "AstroBar - Promociones Nocturnas",
       });
     } catch (error) {
       console.log("Error sharing:", error);
@@ -257,10 +257,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               resizeMode="contain"
             />
             <ThemedText type="hero" style={styles.appName}>
-              NEMY
+              AstroBar
             </ThemedText>
             <ThemedText type="body" style={styles.slogan}>
-              vivir es conectar
+              Conectando bares con usuarios
             </ThemedText>
           </View>
 
@@ -270,7 +270,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             style={[styles.formCard, Shadows.lg]}
           >
             <ThemedText type="h3" style={styles.formTitle}>
-              Bienvenido a NEMY
+              Bienvenido a AstroBar
             </ThemedText>
             <ThemedText type="body" style={styles.formSubtitle}>
               {loginMode === "password" 
@@ -536,7 +536,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           <Pressable onPress={handleShare} style={styles.shareButton}>
             <Feather name="share-2" size={18} color="#FFFFFF" />
             <ThemedText type="small" style={styles.shareText}>
-              Compartir NEMY
+              Compartir AstroBar
             </ThemedText>
           </Pressable>
 
