@@ -84,6 +84,11 @@ app.use('/api', apiRoutes);
 import walletRoutesV2 from './routes/walletRoutes';
 app.use('/api/wallet', walletRoutesV2);
 
+// Admin Panel routes
+import adminPanelRoutes from './routes/adminPanelRoutes';
+console.log('🔧 Registering Admin Panel routes at /api/admin');
+app.use('/api/admin', adminPanelRoutes);
+
 // Favorites routes
 import favoritesRoutes from './favoritesRoutes';
 console.log('🔧 Registering favorites routes at /api/favorites');

@@ -585,3 +585,40 @@ export const favorites = mysqlTable("favorites", {
 });
 
 export type Favorite = typeof favorites.$inferSelect;
+
+// Business Commissions - Comisiones configurables por bar
+export const businessCommissions = mysqlTable("business_commissions", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  businessId: varchar("business_id", { length: 255 }).notNull().unique(),
+  platformCommission: decimal("platform_commission", { precision: 5, scale: 4 }).notNull().default("0.3000"), // 30% por defecto
+  effectiveFrom: timestamp("effective_from").default(sql`CURRENT_TIMESTAMP`),
+  notes: text("notes"),
+  createdBy: varchar("created_by", { length: 255 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+// Admin Notifications - Notificaciones enviadas por admin
+export const adminNotifications = mysqlTable("admin_notifications", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // push, email, both
+  targetType: varchar("target_type", { length: 50 }).notNull(), // all_users, all_bars, specific_user, specific_bar
+  targetId: varchar("target_id", { length: 255 }), // ID específico si aplica
+  sentCount: int("sent_count").default(0),
+  failedCount: int("failed_count").default(0),
+  status: varchar("status", { length: 50 }).default("pending"), // pending, sending, completed, failed
+  sentBy: varchar("sent_by", { length: 255 }).notNull(),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type BusinessCommission = typeof businessCommissions.$inferSelect;
+export type AdminNotification = typeof adminNotifications.$inferSelect;

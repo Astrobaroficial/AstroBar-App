@@ -1,135 +1,99 @@
 import { db } from "./db";
-import { orders } from "@shared/schema-mysql";
+import { businessCommissions, systemSettings } from "@shared/schema-mysql";
 import { eq } from "drizzle-orm";
-import { logger } from "./logger";
-import { AppError } from "./errors";
-import { financialService } from "./unifiedFinancialService";
 
-export async function calculateAndDistributeCommissions(
-  orderId: string,
-): Promise<void> {
-  const [order] = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.id, orderId))
-    .limit(1);
+export class CommissionService {
+  // Get commission for a specific business
+  static async getBusinessCommission(businessId: string): Promise<number> {
+    try {
+      const [commission] = await db
+        .select()
+        .from(businessCommissions)
+        .where(eq(businessCommissions.businessId, businessId))
+        .limit(1);
 
-  if (!order) {
-    throw new AppError(404, `Order ${orderId} not found`);
-  }
-
-  if (order.status !== "delivered") {
-    throw new AppError(400, `Order ${orderId} is not delivered yet`);
-  }
-
-  if (order.platformFee && order.businessEarnings && order.deliveryEarnings) {
-    logger.warn("Commissions already calculated", { orderId });
-    return;
-  }
-
-  // Use unified financial service for consistent calculations
-  const commissions = await financialService.calculateCommissions(order.total, order.deliveryFee || 0);
-
-  // VALIDACIÓN: Verificar que la suma de comisiones = total del pedido
-  const totalCommissions = commissions.platform + commissions.business + commissions.driver;
-  if (totalCommissions !== order.total) {
-    logger.error("Commission distribution validation failed", {
-      orderId,
-      total: order.total,
-      distributed: totalCommissions,
-      breakdown: commissions,
-    });
-    throw new AppError(500, `Commission sum mismatch: total ${order.total}, distributed ${totalCommissions}`);
-  }
-
-  await db
-    .update(orders)
-    .set({
-      platformFee: commissions.platform,
-      businessEarnings: commissions.business,
-      deliveryEarnings: commissions.driver,
-    })
-    .where(eq(orders.id, orderId));
-
-  await distributeToWallets(order, commissions.business, commissions.driver);
-
-  logger.payment("Commissions calculated and distributed", {
-    orderId,
-    total: order.total,
-    platformFee: commissions.platform,
-    businessEarnings: commissions.business,
-    deliveryEarnings: commissions.driver,
-  });
-}
-
-async function distributeToWallets(
-  order: typeof orders.$inferSelect,
-  businessEarnings: number,
-  deliveryEarnings: number,
-): Promise<void> {
-  try {
-    const isCash = order.paymentMethod === "cash";
-
-    // Update business wallet
-    await financialService.updateWalletBalance(
-      order.businessId,
-      businessEarnings,
-      isCash ? "cash_income" : "income",
-      order.id,
-      `Earnings from order #${order.id.slice(-6)}${isCash ? " (efectivo)" : ""}`
-    );
-
-    // Update driver wallet if assigned
-    if (order.deliveryPersonId) {
-      if (isCash) {
-        // EFECTIVO: Registrar transacción + actualizar cashOwed
-        await financialService.updateWalletBalance(
-          order.deliveryPersonId,
-          deliveryEarnings,
-          "cash_income",
-          order.id,
-          `Comisión de entrega - Pedido #${order.id.slice(-6)} (efectivo cobrado)`
-        );
-
-        // Registrar deuda: el repartidor debe depositar platform + business
-        const platformFee = order.platformFee || Math.round(order.total * 0.15);
-        const debtAmount = order.total - deliveryEarnings; // Total menos su comisión
-        
-        await financialService.updateCashOwed(
-          order.deliveryPersonId,
-          debtAmount,
-          order.id,
-          `Deuda por pedido #${order.id.slice(-6)} en efectivo`
-        );
-      } else {
-        // TARJETA: Solo acreditar comisión
-        await financialService.updateWalletBalance(
-          order.deliveryPersonId,
-          deliveryEarnings,
-          "income",
-          order.id,
-          `Comisión de entrega - Pedido #${order.id.slice(-6)}`
-        );
+      if (commission) {
+        return parseFloat(commission.platformCommission);
       }
+
+      // Return default commission if not configured
+      return await this.getDefaultCommission();
+    } catch (error) {
+      console.error("Error getting business commission:", error);
+      return await this.getDefaultCommission();
     }
-  } catch (error) {
-    logger.error("Error distributing to wallets", { orderId: order.id, error });
-    throw error;
   }
-}
 
-export async function releasePendingFunds(orderId: string): Promise<void> {
-  const [order] = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.id, orderId))
-    .limit(1);
-  
-  if (!order || !order.businessEarnings) return;
+  // Get default platform commission
+  static async getDefaultCommission(): Promise<number> {
+    try {
+      const [setting] = await db
+        .select()
+        .from(systemSettings)
+        .where(eq(systemSettings.key, "default_platform_commission"))
+        .limit(1);
 
-  // Funds are already released immediately in the new system
-  logger.payment("Funds released immediately", {
-    orderId,
-    amount: order.businessEarnings,
-  });
+      if (setting) {
+        return parseFloat(setting.value);
+      }
+
+      return 0.30; // 30% default
+    } catch (error) {
+      console.error("Error getting default commission:", error);
+      return 0.30;
+    }
+  }
+
+  // Calculate split based on commission
+  static calculateSplit(totalAmount: number, platformCommission: number) {
+    const platformAmount = Math.round(totalAmount * platformCommission);
+    const businessAmount = totalAmount - platformAmount;
+
+    return {
+      platform: platformAmount,
+      business: businessAmount,
+      platformPercentage: platformCommission,
+      businessPercentage: 1 - platformCommission,
+    };
+  }
+
+  // Set commission for a business
+  static async setBusinessCommission(
+    businessId: string,
+    platformCommission: number,
+    notes?: string,
+    createdBy?: string
+  ) {
+    try {
+      const [existing] = await db
+        .select()
+        .from(businessCommissions)
+        .where(eq(businessCommissions.businessId, businessId))
+        .limit(1);
+
+      if (existing) {
+        await db
+          .update(businessCommissions)
+          .set({
+            platformCommission: platformCommission.toString(),
+            notes,
+            createdBy,
+            updatedAt: new Date(),
+          })
+          .where(eq(businessCommissions.businessId, businessId));
+      } else {
+        await db.insert(businessCommissions).values({
+          businessId,
+          platformCommission: platformCommission.toString(),
+          notes,
+          createdBy,
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error setting business commission:", error);
+      return { success: false, error };
+    }
+  }
 }

@@ -46,14 +46,16 @@ exit
 npm run db:push
 ```
 
-## ⚙️ Límites Técnicos MVP
+## ⚙️ Límites Técnicos MVP (Configurables desde Panel Admin)
 
-- 🏢 Máximo 100 bares activos
-- 🍽️ Máximo 80 productos por bar
-- 📸 Máximo 80 imágenes por bar
-- 🎁 Máximo 10 promociones comunes activas por bar
-- ⚡ Máximo 3 promociones flash activas por bar
+- 🏢 Máximo 100 bares activos (escalable sin límite)
+- 🍽️ Máximo 80 productos por bar (configurable)
+- 📸 Máximo 80 imágenes por bar (configurable)
+- 🎁 Máximo 10 promociones comunes activas por bar (configurable)
+- ⚡ Máximo 3 promociones flash activas por bar (configurable)
 - 🖼️ Imágenes: max 1200px, 200-400kb, WebP/JPG
+- ⚠️ Alertas automáticas al 90% de capacidad
+- 🎛️ Todos los límites modificables desde panel admin sin tocar código
 
 ## 🔧 Configuración
 
@@ -156,19 +158,26 @@ AstroBar/
 └── android/             # Build Android
 ```
 
-## 💳 Sistema de Pagos
+## 💳 Sistema de Pagos (Configurable)
 
-### Comisiones
-- **Bar**: 70% del precio de la promoción
-- **Plataforma AstroBar**: 30% del precio de la promoción
+### Comisiones Escalables
+- **Comisión Inicial**: 5% plataforma / 95% bar
+- **Comisión Estándar**: 10% plataforma / 90% bar
+- **Comisión Premium**: 15% plataforma / 85% bar
+- **Comisión Máxima**: 30% plataforma / 70% bar
+- 🎛️ **Configurable por bar** desde panel admin
+- 🎛️ **Configurable por promoción** (opcional)
+- 📊 Historial de cambios de comisiones
 
 ### Flujo de Pago
 1. Usuario acepta promoción y paga con tarjeta (Stripe)
-2. Pago procesado y split automático (70/30)
+2. Pago procesado y split automático según comisión configurada
 3. Usuario recibe QR code único
-4. Usuario tiene 60 segundos para cancelar
+4. Usuario tiene 60 segundos para cancelar (configurable)
 5. Bar escanea QR para validar y entregar
 6. Usuario gana 10 puntos automáticamente
+7. Comisión transferida automáticamente a AstroBar
+8. Bar recibe su porcentaje en cuenta Stripe Connect
 
 ## 📱 Funcionalidades
 
@@ -192,7 +201,22 @@ AstroBar/
 - 🕐 Configurar horarios por día
 - 📈 Estadísticas: ventas, canjes, top promociones
 - 📱 Escanear QR para validar promociones
-- 💰 Recibir 70% de cada venta automáticamente
+- 💰 Recibir 70-95% de cada venta automáticamente (según comisión configurada)
+- 📊 Ver comisión actual en tiempo real
+
+### Para Administradores (Panel Admin)
+- 🎛️ **Control Total del Sistema**
+- 👥 Gestión de usuarios (activar/desactivar/eliminar)
+- 🏢 Gestión de bares (aprobar/rechazar/suspender)
+- 💰 Configurar comisiones por bar (5% a 30%)
+- ⚙️ Modificar límites del sistema en tiempo real
+- 📢 Enviar notificaciones push masivas
+- 📧 Enviar emails a usuarios/bares
+- 📊 Dashboard con estadísticas completas
+- ⚠️ Alertas automáticas de límites
+- 📈 Ver ingresos y métricas en tiempo real
+- 🔧 Configurar tiempos de cancelación
+- 📝 Historial de todas las acciones (auditoría)
 
 ## 🔐 Seguridad
 
@@ -200,9 +224,137 @@ AstroBar/
 - 🔑 JWT con refresh tokens
 - 💳 Pagos seguros con Stripe (PCI compliant)
 - ⏱️ QR codes con expiración
-- 🚫 Cancelación de 60 segundos
-- 🔒 Autenticación por roles (usuario/bar/admin)
-- 📝 Auditoría de transacciones
+- 🚫 Cancelación de 60 segundos (configurable)
+- 🔒 Autenticación por roles (usuario/bar/admin/super_admin)
+- 📝 Auditoría completa de transacciones y acciones
+- 🛡️ Panel admin protegido (solo admin/super_admin)
+- 🔐 Rate limiting por usuario
+- 📊 Logs de todas las acciones críticas
+
+## 🎛️ Panel de Administración
+
+### Acceso
+```bash
+# Aplicar migración de base de datos
+mysql -u root -p astrobar_db < migrations/add_admin_panel_tables.sql
+
+# Reiniciar servidor
+npm run server:start
+```
+
+### Funcionalidades
+
+#### Dashboard
+- Total usuarios activos/inactivos
+- Total bares activos/inactivos
+- Ingresos totales en tiempo real
+- Alertas de límites (90% = alerta)
+- Progreso visual de capacidad
+
+#### Gestión de Usuarios
+- Ver lista completa
+- Filtrar por rol y estado
+- Activar/Desactivar
+- Eliminar usuarios
+- Ver historial de compras
+
+#### Gestión de Bares
+- Ver lista completa
+- Aprobar/Rechazar nuevos bares
+- Activar/Desactivar
+- Suspender temporalmente
+- Ver estadísticas por bar
+- Configurar comisión individual
+
+#### Configuración de Comisiones
+- Ver comisiones de todos los bares
+- Configurar comisión por bar (5% - 30%)
+- Comisión por defecto: 30%
+- Historial de cambios
+- Notas por cada cambio
+
+#### Configuración del Sistema
+- `max_active_bars`: 100 (escalable)
+- `max_products_per_bar`: 80
+- `max_images_per_bar`: 80
+- `max_common_promotions`: 10
+- `max_flash_promotions`: 3
+- `default_platform_commission`: 0.30 (30%)
+- `cancellation_window_seconds`: 60
+- Todos modificables en tiempo real
+
+#### Notificaciones
+- Enviar push a todos los usuarios
+- Enviar push a todos los bares
+- Enviar a usuario específico
+- Enviar a bar específico
+- Historial de notificaciones
+
+### API Endpoints Admin
+
+```bash
+# Configuración
+GET    /api/admin/settings
+PUT    /api/admin/settings/:key
+POST   /api/admin/settings
+
+# Usuarios
+GET    /api/admin/users
+GET    /api/admin/users/:id
+PATCH  /api/admin/users/:id/status
+DELETE /api/admin/users/:id
+
+# Bares
+GET    /api/admin/businesses
+GET    /api/admin/businesses/:id
+PATCH  /api/admin/businesses/:id/status
+PATCH  /api/admin/businesses/:id/verification
+PATCH  /api/admin/businesses/:id/pause
+
+# Comisiones
+GET    /api/admin/commissions
+GET    /api/admin/commissions/:businessId
+POST   /api/admin/commissions
+
+# Notificaciones
+POST   /api/admin/notifications/push
+POST   /api/admin/notifications/email
+GET    /api/admin/notifications
+
+# Estadísticas
+GET    /api/admin/stats/dashboard
+GET    /api/admin/stats/business/:id
+GET    /api/admin/alerts
+```
+
+### Escalabilidad
+
+#### Cambiar Límite de Bares
+```sql
+-- Opción 1: Desde panel admin (recomendado)
+-- Ir a "Configuración" → "max_active_bars" → Cambiar valor
+
+-- Opción 2: Desde SQL
+UPDATE system_settings 
+SET value = '1000' 
+WHERE key = 'max_active_bars';
+```
+
+#### Cambiar Comisión por Defecto
+```sql
+-- Desde panel admin o SQL
+UPDATE system_settings 
+SET value = '0.15' 
+WHERE key = 'default_platform_commission';
+```
+
+#### Configurar Comisión por Bar
+```sql
+-- Desde panel admin o SQL
+INSERT INTO business_commissions (business_id, platform_commission, notes, created_by)
+VALUES ('bar_id_123', 0.05, 'Comisión inicial 5%', 'admin_id')
+ON DUPLICATE KEY UPDATE platform_commission = 0.05;
+```
 
 ## 📦 Producción
 

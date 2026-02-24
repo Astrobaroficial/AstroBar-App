@@ -11,6 +11,7 @@ import {
 } from "@shared/schema-mysql";
 import { eq, and } from "drizzle-orm";
 import { financialService } from "./unifiedFinancialService";
+import { CommissionService } from "./commissionService";
 
 // Lazy-loaded Stripe instance
 let stripeInstance: Stripe | null = null;
@@ -202,7 +203,7 @@ export async function processSuccessfulPayment(paymentIntentId: string) {
       throw new Error("Payment not found");
     }
 
-    // Fetch order to calculate commissions correctly (card sales)
+    // Fetch order to calculate commissions correctly
     const [order] = await db
       .select()
       .from(orders)
@@ -213,27 +214,24 @@ export async function processSuccessfulPayment(paymentIntentId: string) {
       throw new Error(`Order ${payment.orderId} not found for payment ${paymentIntentId}`);
     }
 
-    const commissions = await financialService.calculateCommissions(
-      payment.amount,
-      order.deliveryFee || 0,
-      order.productosBase || undefined,
-      order.nemyCommission || undefined
-    );
+    // Get configurable commission for this business
+    const platformCommission = await CommissionService.getBusinessCommission(payment.businessId);
+    const split = CommissionService.calculateSplit(payment.amount, platformCommission);
 
-    const platformAmount = commissions.platform;
-    const businessAmount = commissions.business;
-    const driverAmount = payment.driverId ? commissions.driver : 0;
+    const platformAmount = split.platform;
+    const businessAmount = split.business;
+    const driverAmount = payment.driverId ? (order.deliveryFee || 0) : 0;
 
-    // Update business wallet using unified service
+    // Update business wallet
     await financialService.updateWalletBalance(
       payment.businessId,
       businessAmount,
       "commission",
       payment.orderId,
-      `Venta con tarjeta - Pedido ${payment.orderId}`
+      `Venta - Comisión ${(platformCommission * 100).toFixed(1)}% - Pedido ${payment.orderId}`
     );
 
-    // Update driver wallet (if assigned) using unified service
+    // Update driver wallet (if assigned)
     if (payment.driverId && driverAmount > 0) {
       await financialService.updateWalletBalance(
         payment.driverId,
@@ -244,12 +242,15 @@ export async function processSuccessfulPayment(paymentIntentId: string) {
       );
     }
 
-    // Update order status
+    // Update order with commission info
     await db
       .update(orders)
       .set({
         status: "paid",
         paidAt: new Date(),
+        platformFee: platformAmount,
+        businessEarnings: businessAmount,
+        deliveryEarnings: driverAmount,
         updatedAt: new Date(),
       })
       .where(eq(orders.id, payment.orderId));
@@ -270,6 +271,7 @@ export async function processSuccessfulPayment(paymentIntentId: string) {
         platform: platformAmount,
         business: businessAmount,
         driver: driverAmount,
+        platformCommission: platformCommission,
       },
     };
   } catch (error: any) {
