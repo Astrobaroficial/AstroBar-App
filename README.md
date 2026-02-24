@@ -12,7 +12,7 @@
 - **Frontend**: React Native + Expo
 - **Backend**: Express.js + TypeScript
 - **Base de Datos**: MySQL + Drizzle ORM
-- **Pagos**: Stripe Connect (70% bar / 30% plataforma)
+- **Pagos**: Stripe Connect (Split automático configurable)
 - **Notificaciones**: Expo Push Notifications
 - **Mapas**: Google Maps API
 
