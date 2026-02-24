@@ -1,0 +1,314 @@
+# ============================================
+# AstroBar - Professional .gitignore
+# ============================================
+
+# ============================================
+# Environment & Secrets
+# ============================================
+.env
+.env.*
+!.env.example
+*.pem
+ca.pem
+
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ============================================
+# Build Outputs
+# ============================================
+dist/
+build/
+out/
+.next/
+web-build/
+static-build/
+*.apk
+*.aab
+*.ipa
+
+# ============================================
+# Expo
+# ============================================
+.expo/
+.expo-shared/
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+backend-tunnel.log
+
+# ============================================
+# Database & Backups
+# ============================================
+*.sql
+!setup-db-local.sql
+*.dump
+*.backup
+backups/
+export_*.sql
+
+# ============================================
+# Testing & Development
+# ============================================
+coverage/
+.nyc_output/
+test-*.js
+*test*.ts
+!*.test.ts
+diagnose-*.ts
+fix-*.ts
+fix-*.js
+fix-*.sql
+sync-*.ts
+sync-*.js
+sync-*.sql
+create-test-*.sql
+test-*.bat
+verify-*.bat
+diagnose*.bat
+emergency-*.js
+process-*.js
+transfer-*.js
+
+# ============================================
+# Documentation (Keep only README.md)
+# ============================================
+*.md
+!README.md
+ADMIN-*.md
+ANALISIS-*.md
+AUDIT-*.md
+CASH-*.md
+CHECKLIST-*.md
+COMO_*.md
+CORRECCION-*.md
+CORRECCIONES-*.md
+CRITICAL-*.md
+DATOS-*.md
+DEPLOYMENT-*.md
+DIAGNOSTICO-*.md
+ESPECIFICACION-*.md
+FINANCE-*.md
+FINANCIAL-*.md
+FLUJO-*.md
+GUIA-*.md
+IMPLEMENTACION-*.md
+IMPLEMENTATION-*.md
+INSTRUCCIONES-*.md
+INTEGRIDAD-*.md
+LOGIN_*.md
+MANUAL_*.md
+MARKUP-*.md
+MEJORAS-*.md
+NUEVA-*.md
+POLITICA-*.md
+PRODUCTION_*.md
+QUICK-*.md
+REPLIT-*.md
+RESET-*.md
+RESUMEN-*.md
+RETIROS-*.md
+ROLE_*.md
+RUTAS-*.md
+SECURE-*.md
+SMART_*.md
+SOLUCION-*.md
+TERMINOS-*.md
+WALLET-*.md
+WITHDRAWAL-*.md
+WORLD_*.md
+design_guidelines.md
+replit.md
+
+# ============================================
+# Scripts & Batch Files
+# ============================================
+*.bat
+!start-local.bat
+*.sh
+!start-production.sh
+backup-*.bat
+build-*.bat
+cargar-*.bat
+check-*.bat
+create-*.bat
+diagnose*.bat
+diagnostico.bat
+export-*.bat
+fix-*.bat
+liberar-*.bat
+reset-*.bat
+start-production.bat
+sync-*.bat
+test-*.bat
+tunnel-*.bat
+verify-*.bat
+
+# ============================================
+# Temporary & Cache
+# ============================================
+.cache/
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# ============================================
+# IDE & Editors
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Uploads (Keep structure, ignore files)
+# ============================================
+server/uploads/profiles/*
+!server/uploads/profiles/.gitkeep
+server/uploads/businesses/*
+!server/uploads/businesses/.gitkeep
+server/uploads/products/*
+!server/uploads/products/.gitkeep
+
+# ============================================
+# Attached Assets & Images
+# ============================================
+attached_assets/
+
+# ============================================
+# Backup & Old Files
+# ============================================
+*.BACKUP.*
+*.OLD.*
+*.old
+*-old.*
+*-backup.*
+*Compact.*
+*Complete.*
+*Fixed.*
+*Direct.*
+
+# ============================================
+# Specific Files to Ignore
+# ============================================
+add-test-orders.sql
+analyze-routes.js
+audit-quick-endpoint.js
+bundletool.jar
+cloudflared.exe
+compare-routes.js
+create-available-orders.js
+create-delivery-zones.sql
+create-withdrawal-table.sql
+ecosystem.config.json
+init-commissions.sql
+insert-delivery-zones.sql
+load-real-data.sql
+login-business.js
+my-app@1.0.0
+mysql
+nemy_backup.sql
+
+# ============================================
+# Legacy NEMY Files (Previous Project)
+# ============================================
+**/nemy*
+**/NEMY*
+NemyApp/
+android/app/nemy-release.keystore
+
+# ============================================
+# Replit Files
+# ============================================
+.replit
+.local/
+npm
+offline.html
+pm2-no-daemon.js
+production-start.js
+rebuild-transactions.sql
+seed-data.sql
+seed-simple.sql
+setup-weekly-settlement-system.sql
+sw.js
+temp_commissions.sql
+tsx
+
+# ============================================
+# Server - Keep only essential
+# ============================================
+server/apiRoutes.BACKUP.ts
+server/apiRoutesCompact.BACKUP.ts
+server/clearFinancialData*.ts
+server/createCashOrders.sql
+server/fixCommissions.sql
+server/fixDeliveredOrder.ts
+server/fixOrderEarnings.ts
+server/migrateCashOrders.ts
+server/reprocessDeliveries.ts
+server/resetFinancial*.ts
+server/runCashTests.ts
+server/syncDriverEarnings.ts
+server/testBusinessStats.ts
+server/testFinancialAudit.ts
+server/tsx
+server/MANUAL_CASH_TEST.md
+server/ROUTE_MAP.ts
+server/routes-consolidated.ts
+server/tests/
+
+# ============================================
+# Scripts folder - Keep only essential
+# ============================================
+scripts/*.sql
+scripts/*.ts
+!scripts/build.js
+
+# ============================================
+# Keep Essential Files
+# ============================================
+!package.json
+!tsconfig.json
+!drizzle.config.ts
+!app.json
+!eas.json
+!babel.config.js
+!metro.config.js
+!eslint.config.js
+!.replit
+!README.md
+!.env.example
+!.env.production.example

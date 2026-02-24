@@ -1,0 +1,71 @@
+export default {
+  expo: {
+    name: "NEMY",
+    slug: "nemy-app",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "nemy",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.nemy.app",
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription: "Necesitamos tu ubicacion para asignarte pedidos y mostrar tu posicion en tiempo real."
+      }
+    },
+    android: {
+      adaptiveIcon: {
+        backgroundColor: "#FF8C00",
+        foregroundImage: "./assets/images/icon.png"
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      package: "com.nemy.app",
+      config: {
+        googleMaps: {
+          apiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
+        }
+      }
+    },
+    web: {
+      output: "single",
+      favicon: "./assets/images/icon.png"
+    },
+    plugins: [
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#FF8C00",
+          dark: {
+            backgroundColor: "#1A1A1A",
+            image: "./assets/images/splash-icon.png"
+          }
+        }
+      ],
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "react-native-maps",
+        {
+          googleMapsApiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
+        }
+      ]
+    ],
+    experiments: {
+      reactCompiler: true
+    },
+    extra: {
+      eas: {
+        projectId: "8c58541f-bf02-4e36-bcf9-a2e64b126a5b"
+      },
+      // CRITICAL: Backend URL for production builds
+      EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || "https://nemy-app.replit.app"
+    },
+    owner: "caskiuzs-organization"
+  }
+};

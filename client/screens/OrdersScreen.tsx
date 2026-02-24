@@ -1,0 +1,328 @@
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  RefreshControl,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
+
+import { ThemedText } from "@/components/ThemedText";
+import { Badge } from "@/components/Badge";
+import { EmptyState } from "@/components/EmptyState";
+import { OrderStatusBar } from "@/components/OrderStatusBar";
+import { useTheme } from "@/hooks/useTheme";
+import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Order, OrderStatus } from "@/types";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { apiRequest } from "@/lib/query-client";
+
+type OrdersScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmado",
+  preparing: "Preparando",
+  ready: "Listo",
+  picked_up: "Recogido",
+  on_the_way: "En camino",
+  delivered: "Entregado",
+  cancelled: "Cancelado",
+};
+
+const STATUS_VARIANTS: Record<
+  OrderStatus,
+  "primary" | "secondary" | "success" | "warning" | "error"
+> = {
+  pending: "warning",
+  confirmed: "primary",
+  preparing: "primary",
+  ready: "success",
+  picked_up: "primary",
+  on_the_way: "primary",
+  delivered: "success",
+  cancelled: "error",
+};
+
+export default function OrdersScreen() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+  const navigation = useNavigation<OrdersScreenNavigationProp>();
+  const { theme } = useTheme();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      const response = await apiRequest("GET", "/api/orders");
+      const data = await response.json();
+      const apiOrders = data.orders || [];
+      setOrders(
+        apiOrders.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
+      );
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadOrders();
+    }, [loadOrders]),
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadOrders();
+    setIsRefreshing(false);
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return `Hoy, ${date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`;
+    } else if (diffDays === 1) {
+      return `Ayer, ${date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`;
+    } else {
+      return date.toLocaleDateString("es-MX", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  };
+
+  const activeOrders = orders.filter(
+    (o) => !["delivered", "cancelled"].includes(o.status),
+  );
+  const pastOrders = orders.filter((o) =>
+    ["delivered", "cancelled"].includes(o.status),
+  );
+
+  const renderOrder = ({ item }: { item: Order }) => {
+    const isActive = !["delivered", "cancelled"].includes(item.status);
+
+    return (
+      <Pressable
+        onPress={() =>
+          navigation.navigate("OrderTracking", { orderId: item.id })
+        }
+        style={[styles.orderCard, { backgroundColor: theme.card }, Shadows.sm]}
+      >
+        <View style={styles.orderHeader}>
+          <Image
+            source={
+              item.businessImage
+                ? { uri: item.businessImage }
+                : require("../../assets/images/delivery-hero.png")
+            }
+            style={styles.businessImage}
+            contentFit="cover"
+          />
+          <View style={styles.orderInfo}>
+            <ThemedText type="h4" numberOfLines={1}>
+              {item.businessName}
+            </ThemedText>
+            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+              {formatDate(item.createdAt)}
+            </ThemedText>
+          </View>
+          <Badge
+            text={STATUS_LABELS[item.status]}
+            variant={STATUS_VARIANTS[item.status]}
+          />
+        </View>
+
+        {isActive ? (
+          <View style={styles.statusSection}>
+            <OrderStatusBar status={item.status} />
+          </View>
+        ) : null}
+
+        <View style={styles.orderFooter}>
+          <ThemedText type="small" style={{ color: theme.textSecondary }}>
+            {item.items.length}{" "}
+            {item.items.length === 1 ? "producto" : "productos"}
+          </ThemedText>
+          <ThemedText type="h4" style={{ color: NemyColors.primary }}>
+            ${((item.total || 0) / 100).toFixed(2)}
+          </ThemedText>
+        </View>
+
+        {isActive ? (
+          <View style={[styles.trackButton, { borderTopColor: theme.border }]}>
+            <Feather name="map-pin" size={16} color={NemyColors.primary} />
+            <ThemedText
+              type="small"
+              style={{ color: NemyColors.primary, marginLeft: Spacing.xs }}
+            >
+              Ver seguimiento
+            </ThemedText>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => {}}
+            style={[
+              styles.reorderButton,
+              { backgroundColor: theme.backgroundSecondary },
+            ]}
+          >
+            <Feather name="refresh-cw" size={16} color={NemyColors.primary} />
+            <ThemedText
+              type="small"
+              style={{ color: NemyColors.primary, marginLeft: Spacing.xs }}
+            >
+              Reordenar
+            </ThemedText>
+          </Pressable>
+        )}
+      </Pressable>
+    );
+  };
+
+  const ListHeader = () => (
+    <>
+      {activeOrders.length > 0 ? (
+        <View style={styles.sectionHeader}>
+          <ThemedText type="h3">Pedidos activos</ThemedText>
+        </View>
+      ) : null}
+      {activeOrders.map((order) => (
+        <View key={order.id}>{renderOrder({ item: order })}</View>
+      ))}
+      {pastOrders.length > 0 ? (
+        <View style={styles.sectionHeader}>
+          <ThemedText type="h3">Historial</ThemedText>
+        </View>
+      ) : null}
+    </>
+  );
+
+  if (!isLoading && orders.length === 0) {
+    return (
+      <LinearGradient
+        colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <EmptyState
+          image={require("../../assets/images/delivery-hero.png")}
+          title="Sin pedidos aún"
+          description="Tus pedidos aparecerán aquí"
+          actionLabel="Explorar negocios"
+          onAction={() => navigation.navigate("BusinessList")}
+        />
+      </LinearGradient>
+    );
+  }
+
+  return (
+    <LinearGradient
+      colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <FlatList
+        data={pastOrders}
+        keyExtractor={(item) => item.id}
+        renderItem={renderOrder}
+        ListHeaderComponent={ListHeader}
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            paddingTop: Spacing.md,
+            paddingBottom: tabBarHeight + Spacing.xl,
+          },
+        ]}
+        scrollIndicatorInsets={{ bottom: insets.bottom }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={NemyColors.primary}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      />
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: Spacing.lg,
+  },
+  sectionHeader: {
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  orderCard: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  businessImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  orderInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  statusSection: {
+    marginTop: Spacing.md,
+  },
+  orderFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  trackButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: Spacing.md,
+    marginTop: Spacing.md,
+    borderTopWidth: 1,
+  },
+  reorderButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
+  },
+});

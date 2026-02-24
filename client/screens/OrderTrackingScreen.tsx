@@ -1,0 +1,888 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Linking,
+  Dimensions,
+  Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { ThemedText } from "@/components/ThemedText";
+import { OrderStatusBar } from "@/components/OrderStatusBar";
+import { Badge } from "@/components/Badge";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { OrderProgressBar } from "@/components/OrderProgressBar";
+import { CollapsibleMap } from "@/components/CollapsibleMap";
+import { useTheme } from "@/hooks/useTheme";
+import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Order } from "@/types";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { mockOrders } from "@/data/mockData";
+import { apiRequest, getApiUrl } from "@/lib/query-client";
+
+type OrderTrackingRouteProp = RouteProp<RootStackParamList, "OrderTracking">;
+type OrderTrackingNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "OrderTracking"
+>;
+
+const ORDERS_KEY = "@nemy_orders";
+const { width } = Dimensions.get("window");
+
+const parseDeliveryAddress = (address: string | null): string => {
+  if (!address) return "Dirección no disponible";
+  try {
+    const parsed = JSON.parse(address);
+    if (typeof parsed === "object") {
+      const parts = [parsed.street, parsed.city, parsed.state, parsed.zipCode].filter(Boolean);
+      return parts.join(", ") || address;
+    }
+    return address;
+  } catch {
+    return address;
+  }
+};
+
+export default function OrderTrackingScreen() {
+  const insets = useSafeAreaInsets();
+  const route = useRoute<OrderTrackingRouteProp>();
+  const navigation = useNavigation<OrderTrackingNavigationProp>();
+  const { theme } = useTheme();
+
+  const { orderId } = route.params;
+  const [order, setOrder] = useState<Order | null>(null);
+  const [locationPermission, setLocationPermission] =
+    useState<Location.PermissionStatus | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [deliveryLocation, setDeliveryLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [selectedTip, setSelectedTip] = useState<number | null>(null);
+  const [tipSent, setTipSent] = useState(false);
+  const [sendingTip, setSendingTip] = useState(false);
+
+  const tipOptions = [10, 20, 30, 50];
+
+  const handleSendTip = async () => {
+    if (!selectedTip || !order?.deliveryPersonId || sendingTip) return;
+    setSendingTip(true);
+    try {
+      await apiRequest("POST", `/api/orders/${orderId}/tip`, {
+        amount: selectedTip,
+        deliveryPersonId: order.deliveryPersonId,
+      });
+      setTipSent(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.log("Error sending tip");
+    } finally {
+      setSendingTip(false);
+    }
+  };
+
+  // Business location (Autlan, Mexico center)
+  const businessLocation = {
+    latitude: 19.7708,
+    longitude: -104.3636,
+    title: "Negocio",
+  };
+
+  // Poll for delivery person location every 10 seconds
+  useEffect(() => {
+    const fetchDeliveryLocation = async () => {
+      if (!orderId) return;
+      try {
+        const response = await fetch(
+          new URL(`/api/delivery/location/${orderId}`, getApiUrl()).toString(),
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.location) {
+            setDeliveryLocation({
+              latitude: parseFloat(data.location.latitude),
+              longitude: parseFloat(data.location.longitude),
+            });
+          }
+        }
+      } catch (error) {
+        // Silently handle delivery location errors - this is expected for demo orders
+        console.log("Delivery location not available for this order");
+      }
+    };
+
+    fetchDeliveryLocation();
+    const interval = setInterval(fetchDeliveryLocation, 10000);
+    return () => clearInterval(interval);
+  }, [orderId]);
+
+  // Request location permission
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      if (Platform.OS === "web") return;
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
+
+      if (status === "granted") {
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        } catch (error) {
+          console.error("Error getting location:", error);
+        }
+      }
+    };
+
+    requestLocationPermission();
+  }, []);
+
+  useEffect(() => {
+    const loadOrder = async () => {
+      try {
+        const response = await apiRequest("GET", `/api/orders/${orderId}`);
+        const data = await response.json();
+        if (data.order) {
+          const apiOrder = data.order;
+          const transformedOrder: Order = {
+            id: apiOrder.id,
+            userId: apiOrder.userId,
+            businessId: apiOrder.businessId,
+            businessName: apiOrder.businessName,
+            businessImage: apiOrder.businessImage || "",
+            items:
+              typeof apiOrder.items === "string"
+                ? JSON.parse(apiOrder.items)
+                : apiOrder.items,
+            status: apiOrder.status,
+            subtotal: apiOrder.subtotal / 100,
+            productosBase: apiOrder.productosBase ? apiOrder.productosBase / 100 : undefined,
+            nemyCommission: apiOrder.nemyCommission ? apiOrder.nemyCommission / 100 : undefined,
+            deliveryFee: apiOrder.deliveryFee / 100,
+            total: apiOrder.total / 100,
+            paymentMethod: apiOrder.paymentMethod,
+            deliveryAddress: parseDeliveryAddress(apiOrder.deliveryAddress),
+            createdAt: apiOrder.createdAt,
+            estimatedDelivery: apiOrder.estimatedDelivery,
+            deliveryPersonId: apiOrder.deliveryPersonId,
+            deliveryPersonName: apiOrder.deliveryPersonName,
+            deliveryPersonPhone: apiOrder.deliveryPersonPhone,
+          };
+          setOrder(transformedOrder);
+          return;
+        }
+      } catch (error: any) {
+        console.error("Error loading order from API:", error);
+        // If API fails, try to load from local storage or use mock data
+      }
+
+      try {
+        const stored = await AsyncStorage.getItem(ORDERS_KEY);
+        const savedOrders: Order[] = stored ? JSON.parse(stored) : [];
+        const allOrders = [...savedOrders, ...mockOrders];
+        const foundOrder = allOrders.find((o) => o.id === orderId);
+
+        if (foundOrder) {
+          setOrder(foundOrder);
+        } else {
+          // Create a mock order for demonstration
+          const mockOrder: Order = {
+            id: orderId,
+            userId: "user_demo",
+            businessId: "business_demo",
+            businessName: "Restaurante Demo",
+            businessImage:
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
+            items: [
+              {
+                id: "item_1",
+                quantity: 2,
+                product: {
+                  id: "prod_1",
+                  name: "Tacos al Pastor",
+                  price: 15.0,
+                  image:
+                    "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400",
+                },
+              },
+            ],
+            status: "preparing",
+            subtotal: 30.0,
+            deliveryFee: 25.0,
+            total: 55.0,
+            paymentMethod: "card",
+            deliveryAddress: "Calle Ejemplo 123, Autlán, Jalisco",
+            createdAt: new Date().toISOString(),
+            estimatedDelivery: new Date(
+              Date.now() + 30 * 60 * 1000,
+            ).toISOString(),
+            deliveryPersonId: "delivery_demo",
+            deliveryPersonName: "Carlos Repartidor",
+            deliveryPersonPhone: "+523171234569",
+          };
+          setOrder(mockOrder);
+        }
+      } catch (error) {
+        console.error("Error loading order from storage:", error);
+        // Fallback to mock orders
+        const foundOrder = mockOrders.find((o) => o.id === orderId);
+        setOrder(foundOrder || null);
+      }
+    };
+
+    loadOrder();
+
+    // Poll for order updates every 30 seconds
+    const interval = setInterval(loadOrder, 30000);
+    return () => clearInterval(interval);
+  }, [orderId]);
+
+  const handleCall = (phone: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const handleWhatsApp = (phone: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const cleanPhone = phone.replace(/\D/g, "");
+    Linking.openURL(`https://wa.me/${cleanPhone}`);
+  };
+
+  if (!order) {
+    return (
+      <View
+        style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
+      >
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Feather name="arrow-left" size={24} color={theme.text} />
+          </Pressable>
+          <ThemedText type="h2">Seguimiento</ThemedText>
+          <View style={{ width: 44 }} />
+        </View>
+        <View style={styles.notFound}>
+          <ThemedText type="h3">Pedido no encontrado</ThemedText>
+        </View>
+      </View>
+    );
+  }
+
+  const getStatusMinutes = (
+    status: string,
+  ): { min: number; max: number } | null => {
+    switch (status) {
+      case "pending":
+        return { min: 35, max: 50 };
+      case "accepted":
+        return { min: 25, max: 40 };
+      case "preparing":
+        return { min: 15, max: 25 };
+      case "ready":
+        return { min: 10, max: 20 };
+      case "picked_up":
+        return { min: 5, max: 15 };
+      case "delivered":
+      case "cancelled":
+        return null;
+      default:
+        return { min: 30, max: 45 };
+    }
+  };
+
+  const etaRange = getStatusMinutes(order.status);
+  const dynamicEta = etaRange ? `${etaRange.min}-${etaRange.max} min` : null;
+
+  const estimatedTime = order.estimatedDelivery
+    ? new Date(order.estimatedDelivery).toLocaleTimeString("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  const nemyCommission = order.nemyCommission
+    ? order.nemyCommission / 100
+    : order.subtotal * 0.15;
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={24} color={theme.text} />
+        </Pressable>
+        <ThemedText type="h2">Seguimiento</ThemedText>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Countdown Timer */}
+        {dynamicEta && (
+          <View style={[styles.statusCard, { backgroundColor: theme.card }, Shadows.md]}>
+            <View style={styles.businessRow}>
+              <View style={[styles.iconContainer, { backgroundColor: NemyColors.primary + '20' }]}>
+                <Feather name="clock" size={24} color={NemyColors.primary} />
+              </View>
+              <View style={styles.businessInfo}>
+                <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                  {order.status === 'accepted' ? 'Pedido aceptado' : 
+                   order.status === 'preparing' ? 'Preparando tu pedido' :
+                   order.status === 'ready' ? 'Listo para recoger' :
+                   order.status === 'picked_up' ? 'En camino' : 'Procesando'}
+                </ThemedText>
+                <ThemedText type="h3" style={{ color: NemyColors.primary }}>
+                  {dynamicEta}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Progress Bar */}
+        <OrderProgressBar status={order.status} />
+
+        <View
+          style={[
+            styles.statusCard,
+            { backgroundColor: theme.card },
+            Shadows.md,
+          ]}
+        >
+          <View style={styles.businessRow}>
+            <Image
+              source={
+                order.businessImage
+                  ? { uri: order.businessImage }
+                  : require("../../assets/images/delivery-hero.png")
+              }
+              style={styles.businessImage}
+              contentFit="cover"
+            />
+            <View style={styles.businessInfo}>
+              <ThemedText type="h4">{order.businessName}</ThemedText>
+              <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                Pedido #{order.id.slice(-6)}
+              </ThemedText>
+            </View>
+            {dynamicEta ? (
+              <View style={styles.etaContainer}>
+                <ThemedText
+                  type="caption"
+                  style={{ color: theme.textSecondary }}
+                >
+                  ETA
+                </ThemedText>
+                <ThemedText type="h3" style={{ color: NemyColors.primary }}>
+                  {dynamicEta}
+                </ThemedText>
+              </View>
+            ) : order.status === "delivered" ? (
+              <View style={styles.etaContainer}>
+                <Feather name="check-circle" size={24} color="#4CAF50" />
+                <ThemedText
+                  type="caption"
+                  style={{ color: "#4CAF50", marginTop: 4 }}
+                >
+                  Entregado
+                </ThemedText>
+              </View>
+            ) : null}
+          </View>
+
+          <OrderStatusBar status={order.status} />
+        </View>
+
+        {/* Mapa funcional en APK */}
+        <CollapsibleMap
+          businessLocation={businessLocation}
+          deliveryPersonLocation={deliveryLocation || undefined}
+          customerLocation={userLocation || undefined}
+        />
+
+        {order.deliveryPersonName ? (
+          <View
+            style={[
+              styles.deliveryCard,
+              { backgroundColor: theme.card },
+              Shadows.sm,
+            ]}
+          >
+            <View style={styles.deliveryHeader}>
+              <View style={styles.deliveryAvatar}>
+                <Feather name="user" size={24} color={theme.text} />
+              </View>
+              <View style={styles.deliveryInfo}>
+                <ThemedText type="h4">{order.deliveryPersonName}</ThemedText>
+                <ThemedText
+                  type="caption"
+                  style={{ color: theme.textSecondary }}
+                >
+                  Tu repartidor
+                </ThemedText>
+              </View>
+            </View>
+            <View style={styles.contactButtons}>
+              <Pressable
+                onPress={() =>
+                  order.deliveryPersonPhone &&
+                  handleCall(order.deliveryPersonPhone)
+                }
+                style={[
+                  styles.contactBtn,
+                  { backgroundColor: theme.backgroundSecondary },
+                ]}
+              >
+                <Feather name="phone" size={20} color={NemyColors.primary} />
+                <ThemedText
+                  type="small"
+                  style={{ color: NemyColors.primary, marginLeft: Spacing.xs }}
+                >
+                  Llamar
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("OrderChat", {
+                    orderId: order.id,
+                    receiverId: order.deliveryPersonId || "",
+                    receiverName: order.deliveryPersonName || "Repartidor",
+                  })
+                }
+                style={[
+                  styles.contactBtn,
+                  { backgroundColor: NemyColors.primary },
+                ]}
+              >
+                <Feather name="message-square" size={20} color="#FFFFFF" />
+                <ThemedText
+                  type="small"
+                  style={{ color: "#FFFFFF", marginLeft: Spacing.xs }}
+                >
+                  Chat
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
+        <View
+          style={[
+            styles.addressCard,
+            { backgroundColor: theme.card },
+            Shadows.sm,
+          ]}
+        >
+          <View style={styles.addressHeader}>
+            <Feather name="map-pin" size={20} color={NemyColors.primary} />
+            <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>
+              Dirección de entrega
+            </ThemedText>
+          </View>
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>
+            {order.deliveryAddress}
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.orderDetails,
+            { backgroundColor: theme.card },
+            Shadows.sm,
+          ]}
+        >
+          <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>
+            Detalles del pedido
+          </ThemedText>
+          {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
+            order.items.map((item, index) => {
+              const itemName = item.product?.name || item.name || "Producto";
+              let itemPrice = item.product?.price || item.price || 0;
+              // Si el precio parece estar en centavos (mayor a 1000), dividir por 100
+              if (itemPrice > 1000) itemPrice = itemPrice / 100;
+              const itemQty = item.quantity || 1;
+              return (
+                <View key={item.id || `item-${index}`} style={styles.itemRow}>
+                  <ThemedText type="body">
+                    {itemQty}x {itemName}
+                  </ThemedText>
+                  <ThemedText type="body">
+                    ${(itemPrice * itemQty).toFixed(2)}
+                  </ThemedText>
+                </View>
+              );
+            })
+          ) : (
+            <ThemedText type="body" style={{ color: theme.textSecondary }}>
+              No hay items en este pedido
+            </ThemedText>
+          )}
+          <View style={[styles.totalSection, { borderTopColor: theme.border }]}>
+            <View style={styles.itemRow}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Subtotal
+              </ThemedText>
+              <ThemedText type="small">${order.subtotal.toFixed(2)}</ThemedText>
+            </View>
+            <View style={styles.itemRow}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Comision NEMY (15%)
+              </ThemedText>
+              <ThemedText type="small">${nemyCommission.toFixed(2)}</ThemedText>
+            </View>
+            <View style={styles.itemRow}>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Envío
+              </ThemedText>
+              <ThemedText type="small">
+                ${order.deliveryFee.toFixed(2)}
+              </ThemedText>
+            </View>
+            <View style={styles.itemRow}>
+              <ThemedText type="h4">Total</ThemedText>
+              <ThemedText type="h4" style={{ color: NemyColors.primary }}>
+                ${order.total.toFixed(2)}
+              </ThemedText>
+            </View>
+          </View>
+          <View style={styles.paymentRow}>
+            <Feather
+              name={
+                order.paymentMethod === "card" ? "credit-card" : "dollar-sign"
+              }
+              size={16}
+              color={theme.textSecondary}
+            />
+            <ThemedText
+              type="caption"
+              style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}
+            >
+              {order.paymentMethod === "card"
+                ? "Pagado con tarjeta"
+                : "Pago en efectivo"}
+            </ThemedText>
+          </View>
+        </View>
+
+        {order.status === "delivered" && order.deliveryPersonId && !tipSent ? (
+          <View
+            style={[
+              styles.tipCard,
+              { backgroundColor: theme.card },
+              Shadows.md,
+            ]}
+          >
+            <View style={styles.tipHeader}>
+              <Feather name="heart" size={20} color={NemyColors.primary} />
+              <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>
+                Agregar propina
+              </ThemedText>
+            </View>
+            <ThemedText
+              type="body"
+              style={{ color: theme.textSecondary, marginBottom: Spacing.md }}
+            >
+              Agradece a tu repartidor por su servicio
+            </ThemedText>
+            <View style={styles.tipOptions}>
+              {tipOptions.map((tip) => (
+                <Pressable
+                  key={tip}
+                  onPress={() => {
+                    setSelectedTip(tip);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  style={[
+                    styles.tipOption,
+                    {
+                      backgroundColor:
+                        selectedTip === tip
+                          ? NemyColors.primary
+                          : theme.backgroundSecondary,
+                      borderColor:
+                        selectedTip === tip ? NemyColors.primary : theme.border,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    type="body"
+                    style={{
+                      color: selectedTip === tip ? "#FFFFFF" : theme.text,
+                      fontWeight: "600",
+                    }}
+                  >
+                    ${tip}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable
+              onPress={handleSendTip}
+              disabled={!selectedTip || sendingTip}
+              style={[
+                styles.tipButton,
+                {
+                  backgroundColor: selectedTip
+                    ? NemyColors.primary
+                    : theme.backgroundSecondary,
+                  opacity: selectedTip && !sendingTip ? 1 : 0.5,
+                },
+              ]}
+            >
+              <Feather name="gift" size={18} color="#FFFFFF" />
+              <ThemedText
+                type="body"
+                style={{
+                  color: "#FFFFFF",
+                  marginLeft: Spacing.sm,
+                  fontWeight: "600",
+                }}
+              >
+                {sendingTip ? "Enviando..." : "Enviar propina"}
+              </ThemedText>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {tipSent ? (
+          <View
+            style={[styles.tipCard, { backgroundColor: "#E8F5E9" }, Shadows.sm]}
+          >
+            <View style={styles.tipHeader}>
+              <Feather name="check-circle" size={20} color="#4CAF50" />
+              <ThemedText
+                type="h4"
+                style={{ marginLeft: Spacing.sm, color: "#2E7D32" }}
+              >
+                Propina enviada
+              </ThemedText>
+            </View>
+            <ThemedText type="body" style={{ color: "#4CAF50" }}>
+              Tu repartidor recibirá ${selectedTip} MXN
+            </ThemedText>
+          </View>
+        ) : null}
+
+        {order.status !== "cancelled" && (
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.navigate("ReportIssue", {
+                orderId: order.id,
+                orderNumber: order.id.slice(-6),
+              });
+            }}
+            style={[styles.reportButton, { borderColor: theme.border }]}
+          >
+            <Feather name="alert-circle" size={18} color={NemyColors.warning} />
+            <ThemedText
+              type="body"
+              style={{ marginLeft: Spacing.sm, color: theme.textSecondary }}
+            >
+              Reportar un problema
+            </ThemedText>
+          </Pressable>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  notFound: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing["4xl"],
+  },
+  statusCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  businessRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  businessImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  businessInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  etaContainer: {
+    alignItems: "flex-end",
+  },
+  mapPlaceholder: {
+    height: 200,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    overflow: "hidden",
+  },
+  mapContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deliveryCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  deliveryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  deliveryAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#E0E0E0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deliveryInfo: {
+    marginLeft: Spacing.md,
+  },
+  contactButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  contactBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  addressCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  addressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  orderDetails: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+  },
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.xs,
+  },
+  totalSection: {
+    borderTopWidth: 1,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+  },
+  paymentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  tipCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.lg,
+  },
+  tipHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  tipOptions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  tipOption: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tipButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  reportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+  },
+});
