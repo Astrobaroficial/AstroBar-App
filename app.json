@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "NEMY",
-    "slug": "nemy-app",
+    "name": "AstroBar",
+    "slug": "astrobar-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nemy",
+    "scheme": "astrobar",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nemy.app",
+      "bundleIdentifier": "com.astrobar.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicacion para asignarte pedidos y mostrar tu posicion en tiempo real."
+        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicación para mostrarte bares cercanos y promociones disponibles."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FF8C00",
+        "backgroundColor": "#1A1A2E",
         "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.nemy.app",
+      "package": "com.astrobar.app",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
@@ -40,9 +40,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FF8C00",
+          "backgroundColor": "#1A1A2E",
           "dark": {
-            "backgroundColor": "#1A1A1A",
+            "backgroundColor": "#0F0F1E",
             "image": "./assets/images/splash-icon.png"
           }
         }
@@ -63,7 +63,7 @@
       "eas": {
         "projectId": "8c58541f-bf02-4e36-bcf9-a2e64b126a5b"
       },
-      "EXPO_PUBLIC_BACKEND_URL": "https://nemy-app.replit.app"
+      "EXPO_PUBLIC_BACKEND_URL": "https://astrobar-app.railway.app"
     },
     "owner": "caskiuzs-organization"
   }
