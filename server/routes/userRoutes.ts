@@ -109,4 +109,25 @@ router.get("/stats", authenticateToken, async (req, res) => {
   }
 });
 
+// Save push token
+router.post("/push-token", authenticateToken, async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { token } = req.body;
+
+    await db
+      .update(users)
+      .set({ pushToken: token })
+      .where(eq(users.id, req.user!.id));
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error saving push token:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

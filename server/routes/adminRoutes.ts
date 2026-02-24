@@ -734,6 +734,42 @@ router.get("/settings", authenticateToken, requireRole("admin", "super_admin"), 
   }
 });
 
+// Send push notification
+router.post("/notifications/push", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, isNotNull } = await import("drizzle-orm");
+    const { sendBulkPushNotifications } = await import("../services/pushNotifications");
+
+    const { title, body, target } = req.body; // target: 'all' | 'customers' | 'businesses'
+
+    let targetUsers;
+    if (target === 'customers') {
+      targetUsers = await db.select().from(users).where(eq(users.role, 'customer'));
+    } else if (target === 'businesses') {
+      targetUsers = await db.select().from(users).where(eq(users.role, 'business_owner'));
+    } else {
+      targetUsers = await db.select().from(users).where(isNotNull(users.pushToken));
+    }
+
+    const tokens = targetUsers
+      .filter(u => u.pushToken)
+      .map(u => u.pushToken!);
+
+    if (tokens.length === 0) {
+      return res.json({ success: true, sent: 0, message: 'No hay usuarios con tokens' });
+    }
+
+    await sendBulkPushNotifications(tokens, title, body);
+
+    res.json({ success: true, sent: tokens.length });
+  } catch (error: any) {
+    console.error('Error sending notifications:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
 
 // Bank account (placeholder)
