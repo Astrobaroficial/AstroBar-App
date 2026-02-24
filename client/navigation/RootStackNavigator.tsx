@@ -17,6 +17,8 @@ import BusinessHoursScreen from "@/screens/BusinessHoursScreen";
 import BusinessCategoriesScreen from "@/screens/BusinessCategoriesScreen";
 import MyBusinessesScreen from "@/screens/MyBusinessesScreen";
 import EditProfileScreen from "@/screens/EditProfileScreen";
+import ConfirmPromotionScreen from "@/screens/ConfirmPromotionScreen";
+import PromotionQRScreen from "@/screens/PromotionQRScreen";
 
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
@@ -31,6 +33,7 @@ if (Platform.OS !== 'web') {
 
 export type RootStackParamList = {
   Main: undefined;
+  MainTabs: undefined;
   Login: undefined;
   Signup: { phone?: string } | undefined;
   VerifyPhone: { phone: string };
@@ -51,6 +54,15 @@ export type RootStackParamList = {
   MyBusinesses: { openAddModal?: boolean; draft?: { name?: string; type?: string; address?: string; phone?: string } } | undefined;
   Terms: undefined;
   Privacy: undefined;
+  ConfirmPromotion: {
+    promotion: any;
+    business: any;
+  };
+  PromotionQR: {
+    transaction: any;
+    promotion: any;
+    business: any;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -121,6 +133,16 @@ export default function RootStackNavigator() {
             name="Privacy"
             component={PrivacyScreen}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ConfirmPromotion"
+            component={ConfirmPromotionScreen}
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="PromotionQR"
+            component={PromotionQRScreen}
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
           />
         </>
       ) : (

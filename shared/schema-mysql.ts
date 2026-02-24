@@ -623,3 +623,67 @@ export const adminNotifications = mysqlTable("admin_notifications", {
 
 export type BusinessCommission = typeof businessCommissions.$inferSelect;
 export type AdminNotification = typeof adminNotifications.$inferSelect;
+
+// Promotions - Promociones de bares (flash y comunes)
+export const promotions = mysqlTable("promotions", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  businessId: varchar("business_id", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 20 }).notNull().default("common"), // flash, common
+  originalPrice: int("original_price").notNull(), // en centavos
+  promoPrice: int("promo_price").notNull(), // en centavos
+  discountPercentage: int("discount_percentage"), // calculado
+  stock: int("stock").notNull().default(0),
+  stockConsumed: int("stock_consumed").notNull().default(0),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  image: text("image"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+// Promotion Transactions - Transacciones de promociones aceptadas
+export const promotionTransactions = mysqlTable("promotion_transactions", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  promotionId: varchar("promotion_id", { length: 255 }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  businessId: varchar("business_id", { length: 255 }).notNull(),
+  qrCode: varchar("qr_code", { length: 255 }).notNull().unique(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, confirmed, cancelled, redeemed, expired
+  amountPaid: int("amount_paid").notNull(), // en centavos
+  platformCommission: int("platform_commission").notNull(), // en centavos
+  businessRevenue: int("business_revenue").notNull(), // en centavos
+  canCancelUntil: timestamp("can_cancel_until"), // 60 segundos después de crear
+  redeemedAt: timestamp("redeemed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+// User Points - Sistema de puntos y niveles
+export const userPoints = mysqlTable("user_points", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  totalPoints: int("total_points").notNull().default(0),
+  currentLevel: varchar("current_level", { length: 20 }).notNull().default("copper"), // copper, bronze, silver, gold, platinum
+  promotionsRedeemed: int("promotions_redeemed").notNull().default(0),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+export type Promotion = typeof promotions.$inferSelect;
+export type PromotionTransaction = typeof promotionTransactions.$inferSelect;
+export type UserPoints = typeof userPoints.$inferSelect;
