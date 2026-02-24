@@ -292,7 +292,7 @@ router.get("/users", authenticateToken, requireRole("admin", "super_admin"), asy
 // Get all businesses with commissions
 router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
-    const { businesses } = await import("@shared/schema-mysql");
+    const { businesses: businessesTable } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { sql } = await import("drizzle-orm");
 
