@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import AdminScreenNew from "@/screens/AdminScreenNew";
 import AdminTransactionsMonitor from "@/screens/AdminTransactionsMonitor";
 import AdminPromotionsDashboard from "@/screens/AdminPromotionsDashboard";
+import AdminCommissionsManager from "@/screens/AdminCommissionsManager";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -58,6 +59,16 @@ export default function AdminTabNavigator() {
           title: "Transacciones",
           tabBarIcon: ({ color, size }) => (
             <Feather name="activity" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AdminCommissions"
+        component={AdminCommissionsManager}
+        options={{
+          title: "Comisiones",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="dollar-sign" size={size} color={color} />
           ),
         }}
       />

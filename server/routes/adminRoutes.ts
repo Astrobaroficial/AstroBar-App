@@ -289,6 +289,62 @@ router.get("/users", authenticateToken, requireRole("admin", "super_admin"), asy
   }
 });
 
+// Get all businesses with commissions
+router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { sql } = await import("drizzle-orm");
+
+    const result = await db.execute(sql`
+      SELECT 
+        b.id as businessId,
+        b.name as businessName,
+        COALESCE(bc.platform_commission, 0.30) as commission,
+        bc.updated_at as lastUpdated
+      FROM businesses b
+      LEFT JOIN business_commissions bc ON b.id = bc.business_id
+      WHERE b.is_active = 1
+      ORDER BY b.name
+    `);
+
+    const businesses = Array.isArray(result[0]) ? result[0] : result;
+    res.json({ success: true, businesses });
+  } catch (error: any) {
+    console.error('Commissions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update business commission
+router.post("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const { sql } = await import("drizzle-orm");
+    const { v4: uuidv4 } = await import("uuid");
+
+    const { businessId, commission, notes } = req.body;
+
+    if (commission < 0.05 || commission > 0.30) {
+      return res.status(400).json({ error: 'La comisión debe estar entre 5% y 30%' });
+    }
+
+    await db.execute(sql`
+      INSERT INTO business_commissions (id, business_id, platform_commission, notes, created_by)
+      VALUES (${uuidv4()}, ${businessId}, ${commission}, ${notes || ''}, ${req.user!.id})
+      ON DUPLICATE KEY UPDATE 
+        platform_commission = ${commission},
+        notes = ${notes || ''},
+        updated_at = CURRENT_TIMESTAMP
+    `);
+
+    res.json({ success: true, message: 'Comisión actualizada' });
+  } catch (error: any) {
+    console.error('Update commission error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update user
 router.put("/users/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
