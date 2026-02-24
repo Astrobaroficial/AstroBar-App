@@ -216,10 +216,12 @@ export async function processSuccessfulPayment(paymentIntentId: string) {
 
     // Get configurable commission for this business
     const platformCommission = await CommissionService.getBusinessCommission(payment.businessId);
-    const split = CommissionService.calculateSplit(payment.amount, platformCommission);
+    const productPrice = payment.amount; // Amount bar set for product
+    const split = CommissionService.calculateSplit(productPrice, platformCommission);
 
-    const platformAmount = split.platform;
-    const businessAmount = split.business;
+    const platformAmount = split.platform; // Commission charged to user
+    const businessAmount = split.business; // 100% of product price
+    const totalCharged = split.total; // What user actually paid
     const driverAmount = payment.driverId ? (order.deliveryFee || 0) : 0;
 
     // Update business wallet

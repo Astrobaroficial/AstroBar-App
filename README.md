@@ -161,23 +161,26 @@ AstroBar/
 ## 💳 Sistema de Pagos (Configurable)
 
 ### Comisiones Escalables
-- **Comisión Inicial**: 5% plataforma / 95% bar
-- **Comisión Estándar**: 10% plataforma / 90% bar
-- **Comisión Premium**: 15% plataforma / 85% bar
-- **Comisión Máxima**: 30% plataforma / 70% bar
+**El bar recibe 100% del precio de su producto. La plataforma cobra una comisión adicional al usuario.**
+
+- **Comisión Inicial**: 5% adicional (Usuario paga: $100 producto + $5 comisión = $105)
+- **Comisión Estándar**: 10% adicional (Usuario paga: $100 producto + $10 comisión = $110)
+- **Comisión Premium**: 15% adicional (Usuario paga: $100 producto + $15 comisión = $115)
+- **Comisión Máxima**: 30% adicional (Usuario paga: $100 producto + $30 comisión = $130)
 - 🎛️ **Configurable por bar** desde panel admin
 - 🎛️ **Configurable por promoción** (opcional)
 - 📊 Historial de cambios de comisiones
 
 ### Flujo de Pago
-1. Usuario acepta promoción y paga con tarjeta (Stripe)
-2. Pago procesado y split automático según comisión configurada
-3. Usuario recibe QR code único
-4. Usuario tiene 60 segundos para cancelar (configurable)
-5. Bar escanea QR para validar y entregar
-6. Usuario gana 10 puntos automáticamente
-7. Comisión transferida automáticamente a AstroBar
-8. Bar recibe su porcentaje en cuenta Stripe Connect
+1. Usuario acepta promoción (ej: $100)
+2. Sistema calcula comisión del bar (ej: 5% = $5)
+3. Usuario paga total con tarjeta (ej: $105)
+4. Bar recibe 100% del precio del producto ($100)
+5. Plataforma recibe comisión ($5)
+6. Usuario recibe QR code único
+7. Usuario tiene 60 segundos para cancelar (configurable)
+8. Bar escanea QR para validar y entregar
+9. Usuario gana 10 puntos automáticamente
 
 ## 📱 Funcionalidades
 
@@ -201,8 +204,8 @@ AstroBar/
 - 🕐 Configurar horarios por día
 - 📈 Estadísticas: ventas, canjes, top promociones
 - 📱 Escanear QR para validar promociones
-- 💰 Recibir 70-95% de cada venta automáticamente (según comisión configurada)
-- 📊 Ver comisión actual en tiempo real
+- 💰 Recibir 100% del precio de cada producto
+- 📊 Ver comisión actual que se cobra al usuario
 
 ### Para Administradores (Panel Admin)
 - 🎛️ **Control Total del Sistema**

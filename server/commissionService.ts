@@ -45,15 +45,17 @@ export class CommissionService {
   }
 
   // Calculate split based on commission
-  static calculateSplit(totalAmount: number, platformCommission: number) {
-    const platformAmount = Math.round(totalAmount * platformCommission);
-    const businessAmount = totalAmount - platformAmount;
+  // Bar receives 100% of product price, platform charges commission on top
+  static calculateSplit(productPrice: number, platformCommission: number) {
+    const businessAmount = productPrice; // Bar gets 100% of product price
+    const platformAmount = Math.round(productPrice * platformCommission); // Platform charges commission
+    const totalAmount = businessAmount + platformAmount; // Total user pays
 
     return {
       platform: platformAmount,
       business: businessAmount,
+      total: totalAmount,
       platformPercentage: platformCommission,
-      businessPercentage: 1 - platformCommission,
     };
   }
 
