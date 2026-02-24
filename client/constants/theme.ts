@@ -1,30 +1,30 @@
-// Unified Design System for NEMY App
+// AstroBar Design System - Nocturnal Theme
 export const theme = {
   colors: {
-    primary: '#FF8C00',
-    primaryDark: '#FF7F00',
-    primaryLight: '#FFA500',
-    secondary: '#FF6B35',
-    background: '#FFFFFF',
-    backgroundSecondary: '#F5F5F5',
-    surface: '#FFFFFF',
-    error: '#F44336',
-    warning: '#FF9800',
-    success: '#4CAF50',
-    info: '#2196F3',
+    primary: '#8B5CF6',
+    primaryDark: '#7C3AED',
+    primaryLight: '#A78BFA',
+    secondary: '#3B82F6',
+    background: '#0F172A',
+    backgroundSecondary: '#1E293B',
+    surface: '#1E293B',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    success: '#10B981',
+    info: '#3B82F6',
     text: {
-      primary: '#212121',
-      secondary: '#757575',
-      disabled: '#BDBDBD',
-      inverse: '#FFFFFF',
+      primary: '#F1F5F9',
+      secondary: '#94A3B8',
+      disabled: '#475569',
+      inverse: '#0F172A',
     },
-    border: '#E0E0E0',
-    divider: '#EEEEEE',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-    carnival: {
-      pink: '#E91E63',
-      purple: '#9C27B0',
-      gold: '#FF8C00',
+    border: '#334155',
+    divider: '#1E293B',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+    astrobar: {
+      purple: '#8B5CF6',
+      blue: '#3B82F6',
+      gold: '#FFD700',
     },
   },
   spacing: {
@@ -83,7 +83,7 @@ export const theme = {
 export type Theme = typeof theme;
 
 // Export individual objects for easier imports
-export const NemyColors = theme.colors;
+export const AstroBarColors = theme.colors;
 export const Spacing = theme.spacing;
 export const BorderRadius = theme.borderRadius;
 export const Typography = theme.typography;
