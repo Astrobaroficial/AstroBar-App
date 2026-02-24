@@ -46,6 +46,7 @@ export default function BusinessDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [promotions, setPromotions] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,6 +96,18 @@ export default function BusinessDetailScreen() {
         } else {
           setBusiness(null);
           setProducts([]);
+        }
+
+        // Load promotions
+        try {
+          const promosResponse = await apiRequest('GET', `/api/promotions?businessId=${businessId}`);
+          const promosData = await promosResponse.json();
+          if (promosData.success) {
+            setPromotions(promosData.promotions || []);
+          }
+        } catch (error) {
+          console.error('Error loading promotions:', error);
+          setPromotions([]);
         }
       } catch (error) {
         console.error('Error loading business:', error);
@@ -268,6 +281,85 @@ export default function BusinessDetailScreen() {
                 </Pressable>
               </View>
             </View>
+
+            {/* Promotions Section */}
+            {promotions.length > 0 && (
+              <View style={styles.promotionsSection}>
+                <ThemedText type="h3" style={styles.sectionTitle}>
+                  Promociones Activas ⚡
+                </ThemedText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.promotionsScroll}
+                >
+                  {promotions.map((promo) => {
+                    const discount = promo.discountPercentage || 0;
+                    const promoPrice = (promo.promoPrice / 100).toFixed(2);
+                    const originalPrice = (promo.originalPrice / 100).toFixed(2);
+                    const stockRemaining = promo.stockRemaining || 0;
+                    const isFlash = promo.type === 'flash';
+
+                    return (
+                      <Pressable
+                        key={promo.id}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          navigation.navigate('ConfirmPromotion', {
+                            promotion: promo,
+                            business: business,
+                          });
+                        }}
+                        style={[
+                          styles.promoCard,
+                          { backgroundColor: theme.card },
+                          isFlash && styles.promoCardFlash,
+                        ]}
+                      >
+                        {isFlash && (
+                          <View style={styles.flashBadge}>
+                            <Feather name="zap" size={12} color="#FFFFFF" />
+                            <ThemedText type="caption" style={styles.flashBadgeText}>
+                              FLASH
+                            </ThemedText>
+                          </View>
+                        )}
+                        <View style={styles.discountBadge}>
+                          <ThemedText type="h3" style={styles.discountText}>
+                            {discount}%
+                          </ThemedText>
+                          <ThemedText type="caption" style={styles.discountLabel}>
+                            OFF
+                          </ThemedText>
+                        </View>
+                        <ThemedText type="body" style={styles.promoTitle} numberOfLines={2}>
+                          {promo.title}
+                        </ThemedText>
+                        <View style={styles.promoPriceRow}>
+                          <ThemedText type="small" style={styles.originalPrice}>
+                            ${originalPrice}
+                          </ThemedText>
+                          <ThemedText type="h3" style={styles.promoPrice}>
+                            ${promoPrice}
+                          </ThemedText>
+                        </View>
+                        <View style={styles.promoStock}>
+                          <Feather name="users" size={12} color={theme.textSecondary} />
+                          <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 4 }}>
+                            {stockRemaining} disponibles
+                          </ThemedText>
+                        </View>
+                        <View style={[styles.promoButton, { backgroundColor: isFlash ? '#FFD700' : AstroBarColors.primary }]}>
+                          <ThemedText type="small" style={styles.promoButtonText}>
+                            ACEPTAR
+                          </ThemedText>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
 
             {categories.length > 0 ? (
               <ScrollView
@@ -486,5 +578,89 @@ const styles = StyleSheet.create({
   },
   productsSectionTitle: {
     marginBottom: Spacing.md,
+  },
+  promotionsSection: {
+    marginBottom: Spacing.xl,
+  },
+  sectionTitle: {
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  promotionsScroll: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+  },
+  promoCard: {
+    width: 200,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    position: 'relative',
+  },
+  promoCardFlash: {
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  flashBadge: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFD700',
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    gap: 2,
+  },
+  flashBadgeText: {
+    color: '#000000',
+    fontWeight: '800',
+    fontSize: 10,
+  },
+  discountBadge: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  discountText: {
+    color: AstroBarColors.primary,
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  discountLabel: {
+    color: AstroBarColors.primary,
+    fontWeight: '700',
+  },
+  promoTitle: {
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
+    minHeight: 40,
+  },
+  promoPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  originalPrice: {
+    textDecorationLine: 'line-through',
+    color: '#999999',
+  },
+  promoPrice: {
+    color: '#4CAF50',
+    fontWeight: '800',
+  },
+  promoStock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  promoButton: {
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  promoButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
 });
