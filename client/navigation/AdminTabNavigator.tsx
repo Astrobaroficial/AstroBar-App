@@ -4,6 +4,7 @@ import { Feather } from "@expo/vector-icons";
 
 import AdminScreenNew from "@/screens/AdminScreenNew";
 import AdminTransactionsMonitor from "@/screens/AdminTransactionsMonitor";
+import AdminPromotionsDashboard from "@/screens/AdminPromotionsDashboard";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -37,6 +38,16 @@ export default function AdminTabNavigator() {
           title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AdminPromotions"
+        component={AdminPromotionsDashboard}
+        options={{
+          title: "Promociones",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="zap" size={size} color={color} />
           ),
         }}
       />

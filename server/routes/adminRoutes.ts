@@ -180,6 +180,88 @@ router.get("/transactions", authenticateToken, requireRole("admin", "super_admin
   }
 });
 
+// Get promotions dashboard
+router.get("/promotions/dashboard", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { promotions, promotionTransactions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and, gte, lte, sql } = await import("drizzle-orm");
+
+    const now = new Date();
+
+    // Get active promotions
+    const activePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.isActive, true),
+          lte(promotions.startTime, now),
+          gte(promotions.endTime, now),
+          sql`${promotions.stock} > ${promotions.stockConsumed}`
+        )
+      );
+
+    const totalFlash = activePromotions.filter(p => p.type === 'flash').length;
+    const totalCommon = activePromotions.filter(p => p.type === 'common').length;
+
+    // Get all transactions
+    const allTransactions = await db.select().from(promotionTransactions);
+    const acceptedCount = allTransactions.length;
+    const redeemedCount = allTransactions.filter(t => t.status === 'redeemed').length;
+    const acceptanceRate = acceptedCount > 0 ? Math.round((redeemedCount / acceptedCount) * 100) : 0;
+
+    // Calculate avg redemption time
+    const redeemedTransactions = allTransactions.filter(t => t.status === 'redeemed' && t.redeemedAt);
+    const avgRedemptionTime = redeemedTransactions.length > 0
+      ? Math.round(
+          redeemedTransactions.reduce((sum, t) => {
+            const created = new Date(t.createdAt).getTime();
+            const redeemed = new Date(t.redeemedAt!).getTime();
+            return sum + (redeemed - created) / 60000; // minutes
+          }, 0) / redeemedTransactions.length
+        )
+      : 0;
+
+    // Get top bars by redemptions
+    const barStats = new Map<string, { name: string; count: number }>();
+    for (const transaction of redeemedTransactions) {
+      const existing = barStats.get(transaction.businessId) || { name: '', count: 0 };
+      existing.count++;
+      
+      if (!existing.name) {
+        const [business] = await db
+          .select({ name: businesses.name })
+          .from(businesses)
+          .where(eq(businesses.id, transaction.businessId))
+          .limit(1);
+        existing.name = business?.name || 'Bar';
+      }
+      
+      barStats.set(transaction.businessId, existing);
+    }
+
+    const topBars = Array.from(barStats.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    res.json({
+      success: true,
+      dashboard: {
+        totalActive: activePromotions.length,
+        totalFlash,
+        totalCommon,
+        acceptanceRate,
+        avgRedemptionTime,
+        topBars,
+      },
+    });
+  } catch (error: any) {
+    console.error('Promotions dashboard error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all users
 router.get("/users", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
