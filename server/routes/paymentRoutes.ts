@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Stripe from "stripe";
 import { authenticateToken } from "../authMiddleware";
-import pool from "../database";
+import pool from "../db";
 
 const router = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2024-12-18.acacia" });
