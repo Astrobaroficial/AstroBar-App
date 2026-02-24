@@ -6,6 +6,7 @@ import AdminScreenNew from "@/screens/AdminScreenNew";
 import AdminTransactionsMonitor from "@/screens/AdminTransactionsMonitor";
 import AdminPromotionsDashboard from "@/screens/AdminPromotionsDashboard";
 import AdminCommissionsManager from "@/screens/AdminCommissionsManager";
+import AdminBusinessApproval from "@/screens/AdminBusinessApproval";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -69,6 +70,16 @@ export default function AdminTabNavigator() {
           title: "Comisiones",
           tabBarIcon: ({ color, size }) => (
             <Feather name="dollar-sign" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AdminBusinesses"
+        component={AdminBusinessApproval}
+        options={{
+          title: "Bares",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="briefcase" size={size} color={color} />
           ),
         }}
       />

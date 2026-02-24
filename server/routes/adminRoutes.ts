@@ -444,15 +444,51 @@ router.get("/businesses/:id/products", authenticateToken, requireRole("admin", "
 // Get all businesses
 router.get("/businesses", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
-    const { businesses } = await import("@shared/schema-mysql");
+    const { businesses, users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
 
     const allBusinesses = await db
       .select()
       .from(businesses)
       .orderBy(businesses.createdAt);
+
+    const enriched = await Promise.all(
+      allBusinesses.map(async (business) => {
+        const [owner] = await db
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, business.ownerId))
+          .limit(1);
+
+        return {
+          ...business,
+          ownerName: owner?.name || 'Propietario',
+        };
+      })
+    );
       
-    res.json({ success: true, businesses: allBusinesses });
+    res.json({ success: true, businesses: enriched });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update business verification status
+router.patch("/businesses/:id/verification", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { isActive } = req.body;
+
+    await db
+      .update(businesses)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(businesses.id, req.params.id));
+
+    res.json({ success: true, message: isActive ? 'Bar aprobado' : 'Bar rechazado' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
