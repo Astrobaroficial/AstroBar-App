@@ -19,6 +19,7 @@ import MyBusinessesScreen from "@/screens/MyBusinessesScreen";
 import EditProfileScreen from "@/screens/EditProfileScreen";
 import ConfirmPromotionScreen from "@/screens/ConfirmPromotionScreen";
 import PromotionQRScreen from "@/screens/PromotionQRScreen";
+import ScanQRScreen from "@/screens/ScanQRScreen";
 
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
@@ -63,6 +64,7 @@ export type RootStackParamList = {
     promotion: any;
     business: any;
   };
+  ScanQR: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -142,6 +144,11 @@ export default function RootStackNavigator() {
           <Stack.Screen
             name="PromotionQR"
             component={PromotionQRScreen}
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
+          />
+          <Stack.Screen
+            name="ScanQR"
+            component={ScanQRScreen}
             options={{ headerShown: false, presentation: "fullScreenModal" }}
           />
         </>
