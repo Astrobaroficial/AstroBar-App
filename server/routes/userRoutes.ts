@@ -38,4 +38,75 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Get user stats
+router.get("/stats", authenticateToken, async (req, res) => {
+  try {
+    const { userPoints, promotionTransactions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and, sql } = await import("drizzle-orm");
+
+    const userId = req.user!.id;
+
+    // Get points
+    const [points] = await db
+      .select()
+      .from(userPoints)
+      .where(eq(userPoints.userId, userId))
+      .limit(1);
+
+    const totalPoints = points?.totalPoints || 0;
+    const promotionsRedeemed = points?.promotionsRedeemed || 0;
+    const currentLevel = points?.currentLevel || 'copper';
+
+    // Get unique bars visited
+    const transactions = await db
+      .select({ businessId: promotionTransactions.businessId })
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.status, 'redeemed')
+        )
+      );
+
+    const uniqueBars = new Set(transactions.map(t => t.businessId));
+    const barsVisited = uniqueBars.size;
+
+    // Get total spent
+    const redeemedTransactions = await db
+      .select({ amountPaid: promotionTransactions.amountPaid })
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.status, 'redeemed')
+        )
+      );
+
+    const totalSpent = redeemedTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
+
+    // Calculate points to next level
+    let pointsToNextLevel = 0;
+    if (currentLevel === 'copper') pointsToNextLevel = 100 - totalPoints;
+    else if (currentLevel === 'bronze') pointsToNextLevel = 250 - totalPoints;
+    else if (currentLevel === 'silver') pointsToNextLevel = 500 - totalPoints;
+    else if (currentLevel === 'gold') pointsToNextLevel = 1000 - totalPoints;
+
+    res.json({
+      success: true,
+      stats: {
+        totalPoints,
+        promotionsRedeemed,
+        currentLevel,
+        barsVisited,
+        totalSpent,
+        pointsToNextLevel: Math.max(0, pointsToNextLevel),
+      },
+    });
+  } catch (error: any) {
+    console.error("Error loading user stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

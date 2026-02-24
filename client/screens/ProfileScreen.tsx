@@ -483,6 +483,16 @@ export default function ProfileScreen() {
               navigation.navigate("EditProfile");
             }}
           />
+          {user?.role === "customer" && (
+            <SettingsItem
+              icon="bar-chart-2"
+              label="Mis Estadísticas"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate("UserStats" as any);
+              }}
+            />
+          )}
           {user?.role === "business_owner" && (
             <>
               <SettingsItem

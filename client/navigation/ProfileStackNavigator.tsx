@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import ProfileScreen from "@/screens/ProfileScreen";
+import UserProfileStats from "@/screens/UserProfileStats";
 import SavedAddressesScreen from "@/screens/SavedAddressesScreen";
 import AddAddressScreen from "@/screens/AddAddressScreen";
 import LocationPickerScreen from "@/screens/LocationPickerScreen";
@@ -12,6 +13,7 @@ import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type ProfileStackParamList = {
   Profile: undefined;
+  UserStats: undefined;
   SavedAddresses: undefined;
   AddAddress: { address?: any; fromCheckout?: boolean } | undefined;
   LocationPicker: {
@@ -34,6 +36,13 @@ export default function ProfileStackNavigator() {
         component={ProfileScreen}
         options={{
           headerTitle: "Mi Perfil",
+        }}
+      />
+      <Stack.Screen
+        name="UserStats"
+        component={UserProfileStats}
+        options={{
+          headerTitle: "Mis Estadísticas",
         }}
       />
       <Stack.Screen
