@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -22,13 +22,13 @@ import { Button } from "@/components/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { UserRole } from "@/types";
 import { useToast } from "@/contexts/ToastContext";
 
-const foodBgImage = require("../../assets/images/food-ingredients-bg.png");
-const PENDING_BUSINESS_DRAFT_KEY = "@nemy_pending_business_draft";
+const foodBgImage = require("../../assets/astrobarfondo.jpeg");
+const PENDING_BUSINESS_DRAFT_KEY = "@AstroBar_pending_business_draft";
 
 type SignupScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Signup">;
@@ -45,28 +45,22 @@ const ROLES: {
     value: "customer",
     label: "Cliente",
     icon: "user",
-    description: "Pide comida y productos",
+    description: "Descubre promociones en bares",
   },
   {
     value: "business_owner",
-    label: "Negocio",
-    icon: "shopping-bag",
-    description: "Vende tus productos",
-  },
-  {
-    value: "delivery_driver",
-    label: "Repartidor",
-    icon: "truck",
-    description: "Entrega pedidos",
+    label: "Dueño de Bar",
+    icon: "zap",
+    description: "Crea promociones para tu bar",
   },
 ];
 
 const BUSINESS_TYPES = [
-  { id: "restaurant", name: "Restaurante" },
-  { id: "market", name: "Mercado" },
-  { id: "bakery", name: "Panaderia" },
-  { id: "grocery", name: "Abarrotes" },
-  { id: "pharmacy", name: "Farmacia" },
+  { id: "bar", name: "Bar" },
+  { id: "nightclub", name: "Discoteca" },
+  { id: "pub", name: "Pub" },
+  { id: "lounge", name: "Lounge" },
+  { id: "restaurant_bar", name: "Restaurante Bar" },
   { id: "other", name: "Otro" },
 ];
 
@@ -85,13 +79,41 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState(initialPhone);
   const [role, setRole] = useState<UserRole>("customer");
+  const [birthDate, setBirthDate] = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [businessType, setBusinessType] = useState("restaurant");
+  const [businessType, setBusinessType] = useState("bar");
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showUserExistsModal, setShowUserExistsModal] = useState(false);
+
+  const calculateAge = (dateString: string) => {
+    const [day, month, year] = dateString.split('/').map(Number);
+    const birthDate = new Date(year, month - 1, day);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const formatDateDisplay = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+  };
+
+  const handleDateChange = (text: string) => {
+    const numbers = text.replace(/\D/g, "").slice(0, 8);
+    setBirthDate(numbers);
+    if (errors.birthDate) {
+      setErrors((prev) => ({ ...prev, birthDate: "" }));
+    }
+  };
 
   const formatPhoneDisplay = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -144,6 +166,15 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
       newErrors.phone = "Ingresa 10 dígitos";
     }
 
+    if (!birthDate) {
+      newErrors.birthDate = "La fecha de nacimiento es requerida";
+    } else {
+      const age = calculateAge(birthDate);
+      if (age < 18) {
+        newErrors.birthDate = "Debes ser mayor de 18 años para usar AstroBar";
+      }
+    }
+
     if (role === "business_owner") {
       if (!businessName.trim()) {
         newErrors.businessName = "El nombre del negocio es requerido";
@@ -167,7 +198,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const formattedPhone = phone.startsWith('+') ? phone : `+52${phone}`;
+      const formattedPhone = phone.startsWith('+') ? phone : `+54${phone}`;
       const result = await signup(
         name,
         role,
@@ -208,8 +239,8 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
     try {
       await Share.share({
         message:
-          "Descubre NEMY - Tu delivery local de confianza en Autlán. Pide comida y productos del mercado con un toque. Descarga ahora: https://nemy.replit.app",
-        title: "NEMY - Delivery Local",
+          "Descubre AstroBar - Tu Promociones Nocturnas de confianza en Autlán. Descubre promociones en bares del mercado con un toque. Descarga ahora: https://AstroBar.replit.app",
+        title: "AstroBar - Promociones Nocturnas",
       });
     } catch (error) {
       console.log("Error sharing:", error);
@@ -305,7 +336,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                   secureTextEntry={!showPassword}
                   placeholderTextColor="#999999"
                   style={styles.textInput}
-                  selectionColor={NemyColors.primary}
+                  selectionColor={AstroBarColors.primary}
                   testID="input-password"
                 />
                 <Pressable onPress={() => setShowPassword(!showPassword)}>
@@ -349,7 +380,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                   secureTextEntry={!showPassword}
                   placeholderTextColor="#999999"
                   style={styles.textInput}
-                  selectionColor={NemyColors.primary}
+                  selectionColor={AstroBarColors.primary}
                   testID="input-confirm-password"
                 />
               </View>
@@ -367,7 +398,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               <View style={styles.phoneInputContainer}>
                 <View style={styles.countryCode}>
                   <ThemedText type="body" style={styles.countryCodeText}>
-                    +52
+                    +54
                   </ThemedText>
                 </View>
                 <View
@@ -390,7 +421,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                     autoComplete="tel"
                     placeholderTextColor="#999999"
                     style={styles.textInput}
-                    selectionColor={NemyColors.primary}
+                    selectionColor={AstroBarColors.primary}
                     maxLength={12}
                     testID="input-phone"
                   />
@@ -403,6 +434,44 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               ) : null}
               <ThemedText type="caption" style={styles.phoneHint}>
                 Te enviaremos un SMS para verificar tu número
+              </ThemedText>
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <ThemedText type="small" style={styles.inputLabel}>
+                Fecha de nacimiento (DD/MM/AAAA)
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputBox,
+                  errors.birthDate ? styles.inputBoxError : null,
+                ]}
+              >
+                <Feather
+                  name="calendar"
+                  size={20}
+                  color="#666666"
+                  style={styles.inputBoxIcon}
+                />
+                <TextInput
+                  placeholder="01/01/2000"
+                  value={formatDateDisplay(birthDate)}
+                  onChangeText={handleDateChange}
+                  keyboardType="number-pad"
+                  placeholderTextColor="#999999"
+                  style={styles.textInput}
+                  selectionColor={AstroBarColors.primary}
+                  maxLength={10}
+                  testID="input-birthdate"
+                />
+              </View>
+              {errors.birthDate ? (
+                <ThemedText type="caption" style={styles.inputError}>
+                  {errors.birthDate}
+                </ThemedText>
+              ) : null}
+              <ThemedText type="caption" style={styles.phoneHint}>
+                Debes ser mayor de 18 años para usar AstroBar
               </ThemedText>
             </View>
 
@@ -442,7 +511,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                       }}
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                     />
                   </View>
                   {errors.businessName ? (
@@ -519,7 +588,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                       }}
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                     />
                   </View>
                   {errors.businessAddress ? (
@@ -547,7 +616,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                       keyboardType="phone-pad"
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                       maxLength={12}
                     />
                   </View>
@@ -556,7 +625,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
             ) : null}
 
             <ThemedText type="small" style={styles.roleLabel}>
-              ¿Cómo quieres usar NEMY?
+              ¿Cómo quieres usar AstroBar?
             </ThemedText>
             <View style={styles.rolesContainer}>
               {ROLES.map((r) => (
@@ -570,9 +639,9 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                     styles.roleCard,
                     {
                       backgroundColor:
-                        role === r.value ? NemyColors.primaryLight : "#F5F5F5",
+                        role === r.value ? AstroBarColors.primaryLight : "#F5F5F5",
                       borderColor:
-                        role === r.value ? NemyColors.primary : "#E0E0E0",
+                        role === r.value ? AstroBarColors.primary : "#E0E0E0",
                       borderWidth: role === r.value ? 2 : 1,
                     },
                   ]}
@@ -583,7 +652,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                       styles.roleIcon,
                       {
                         backgroundColor:
-                          role === r.value ? NemyColors.primary : "#E0E0E0",
+                          role === r.value ? AstroBarColors.primary : "#E0E0E0",
                       },
                     ]}
                   >
@@ -617,13 +686,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               ))}
             </View>
 
-            {role === "delivery_driver" ? (
-              <ThemedText type="caption" style={styles.roleInlineNote}>
-                Repartidor: INE, selfie, licencia, vehiculo, placas, CLABE y contacto de emergencia.
-              </ThemedText>
-            ) : null}
-
-            <Button
+<Button
               onPress={handleSignup}
               disabled={isLoading}
               style={styles.signupButton}
@@ -657,7 +720,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
           <Pressable onPress={handleShare} style={styles.shareButton}>
             <Feather name="share-2" size={18} color="#FFFFFF" />
             <ThemedText type="small" style={styles.shareText}>
-              Compartir NEMY
+              Compartir AstroBar
             </ThemedText>
           </Pressable>
 
@@ -754,7 +817,7 @@ const styles = StyleSheet.create({
     height: 52,
   },
   inputBoxError: {
-    borderColor: NemyColors.error,
+    borderColor: AstroBarColors.error,
   },
   inputBoxIcon: {
     marginRight: Spacing.sm,
@@ -767,7 +830,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   inputError: {
-    color: NemyColors.error,
+    color: AstroBarColors.error,
     marginTop: Spacing.xs,
   },
   phoneHint: {
@@ -825,15 +888,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   businessTypeChipActive: {
-    borderColor: NemyColors.primary,
-    backgroundColor: NemyColors.primaryLight,
+    borderColor: AstroBarColors.primary,
+    backgroundColor: AstroBarColors.primaryLight,
   },
   businessTypeChipText: {
     color: "#5D5A78",
     fontWeight: "600",
   },
   businessTypeChipTextActive: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "700",
   },
   signupButton: {
@@ -864,7 +927,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
   },
   loginLinkText: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "600",
   },
 });

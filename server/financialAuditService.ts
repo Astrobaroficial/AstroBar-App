@@ -1,4 +1,4 @@
-// Financial Audit Service - Blindaje económico nivel bancario
+﻿// Financial Audit Service - Blindaje económico nivel bancario
 import { db } from "./db";
 import { orders, wallets, transactions, payments } from "@shared/schema-mysql";
 import { eq, sql } from "drizzle-orm";
@@ -60,9 +60,9 @@ export class FinancialAuditService {
       const invalidOrders: string[] = [];
 
       for (const order of allOrders) {
-        // Nueva lógica: total = costo producto + 15% comisión NEMY + costo delivery
-        const nemyCommission = Math.round(order.subtotal * 0.15);
-        const expectedTotal = order.subtotal + nemyCommission + order.deliveryFee;
+        // Nueva lógica: total = costo producto + 15% comisión AstroBar + costo delivery
+        const AstroBarCommission = Math.round(order.subtotal * 0.15);
+        const expectedTotal = order.subtotal + AstroBarCommission + order.deliveryFee;
         if (order.total !== expectedTotal) {
           invalidOrders.push(`${order.id.slice(-6)}: expected ${expectedTotal}, got ${order.total}`);
         }

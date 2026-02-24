@@ -1,7 +1,7 @@
-// PWA Configuration for NEMY - Progressive Web App
+﻿// PWA Configuration for AstroBar - Progressive Web App
 {
-  "name": "NEMY - Delivery Autlán",
-  "short_name": "NEMY",
+  "name": "AstroBar - Delivery Autlán",
+  "short_name": "AstroBar",
   "description": "Plataforma de entrega de comida y productos para Autlán, México",
   "start_url": "/",
   "display": "standalone",

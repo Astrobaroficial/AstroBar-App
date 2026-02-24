@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, ActivityIndicator, Pressable, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -14,7 +14,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 
 function resolveProfileImageUrl(profileImage: string): string {
@@ -196,11 +196,11 @@ export default function EditProfileScreen() {
             <View
               style={[
                 styles.avatar,
-                { backgroundColor: NemyColors.primary + "20" },
+                { backgroundColor: AstroBarColors.primary + "20" },
               ]}
             >
               {isUploadingImage ? (
-                <ActivityIndicator size="large" color={NemyColors.primary} />
+                <ActivityIndicator size="large" color={AstroBarColors.primary} />
               ) : user?.profileImage ? (
                 <Image
                   source={{ uri: resolveProfileImageUrl(user.profileImage) }}
@@ -208,10 +208,10 @@ export default function EditProfileScreen() {
                   contentFit="cover"
                 />
               ) : (
-                <Feather name="user" size={40} color={NemyColors.primary} />
+                <Feather name="user" size={40} color={AstroBarColors.primary} />
               )}
             </View>
-            <View style={[styles.cameraButton, { backgroundColor: NemyColors.primary }]}>
+            <View style={[styles.cameraButton, { backgroundColor: AstroBarColors.primary }]}>
               <Feather name="camera" size={16} color="#fff" />
             </View>
           </Pressable>
@@ -271,7 +271,7 @@ export default function EditProfileScreen() {
             { backgroundColor: theme.backgroundSecondary },
           ]}
         >
-          <Feather name="info" size={20} color={NemyColors.primary} />
+          <Feather name="info" size={20} color={AstroBarColors.primary} />
           <ThemedText
             type="caption"
             style={{

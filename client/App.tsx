@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
+import { registerForPushNotifications, setupNotificationListeners } from "@/services/pushNotifications";
 import {
   useFonts,
   Nunito_400Regular,
@@ -59,6 +60,28 @@ export default function App() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  // Registrar push notifications
+  useEffect(() => {
+    const initPushNotifications = async () => {
+      if (Platform.OS !== "web") {
+        await registerForPushNotifications();
+        
+        const cleanup = setupNotificationListeners(
+          (notification) => {
+            console.log('📱 Notification received:', notification);
+          },
+          (response) => {
+            console.log('📱 Notification tapped:', response);
+          }
+        );
+        
+        return cleanup;
+      }
+    };
+    
+    initPushNotifications();
+  }, []);
 
   useEffect(() => {
     const checkOnboarding = async () => {

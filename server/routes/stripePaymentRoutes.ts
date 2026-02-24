@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import { authenticateToken } from "../authMiddleware";
 import { db } from "../db";
 import { users } from "@shared/schema-mysql";
@@ -78,7 +78,7 @@ router.get("/payment-method/:userId", authenticateToken, async (req, res) => {
     }
 
     // Drivers don't need payment methods (they receive money)
-    if (user.role === "delivery_driver") {
+    if (user.role === ) {
       return res.json({ hasCard: false });
     }
 

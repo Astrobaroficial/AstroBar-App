@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
@@ -130,8 +130,8 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({ transactions, onTransact
             <>
               <View style={styles.legendCard}>
                 <ThemedText style={styles.legendTitle}>Cómo leer estas transacciones</ThemedText>
-                <ThemedText style={styles.legendLine}>Pago: ingreso total del pedido (cliente → NEMY)</ThemedText>
-                <ThemedText style={styles.legendLine}>Comisión: 15% NEMY; Retiros: saldo enviado al usuario</ThemedText>
+                <ThemedText style={styles.legendLine}>Pago: ingreso total del pedido (cliente → AstroBar)</ThemedText>
+                <ThemedText style={styles.legendLine}>Comisión: 15% AstroBar; Retiros: saldo enviado al usuario</ThemedText>
                 <ThemedText style={styles.legendLine}>Efectivo a liquidar: montos negativos pendientes por cobrar en cash</ThemedText>
               </View>
               {transactions.map((transaction) => (

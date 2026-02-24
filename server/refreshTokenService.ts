@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
+﻿import jwt from 'jsonwebtoken';
 import { db } from './db';
 import { refreshTokens } from '../shared/schema-mysql';
 import { eq, and, lt } from 'drizzle-orm';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'nemy-secret-key-change-in-production';
-const REFRESH_SECRET = process.env.REFRESH_SECRET || 'nemy-refresh-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'AstroBar-secret-key-change-in-production';
+const REFRESH_SECRET = process.env.REFRESH_SECRET || 'AstroBar-refresh-secret-change-in-production';
 const ACCESS_TOKEN_EXPIRY = '30d'; // 30 días
 const REFRESH_TOKEN_EXPIRY = '90d'; // 90 días
 

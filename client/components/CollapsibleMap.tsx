@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -18,7 +18,7 @@ let PROVIDER_GOOGLE: any = null;
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 
 interface Location {
   latitude: number;
@@ -139,17 +139,17 @@ export function CollapsibleMap({
           <View
             style={[
               styles.iconContainer,
-              { backgroundColor: NemyColors.primary + "20" },
+              { backgroundColor: AstroBarColors.primary + "20" },
             ]}
           >
-            <Feather name="map" size={20} color={NemyColors.primary} />
+            <Feather name="map" size={20} color={AstroBarColors.primary} />
           </View>
           <View style={styles.headerText}>
             <ThemedText type="body" style={{ fontWeight: "600" }}>
               Seguimiento en tiempo real
             </ThemedText>
             {deliveryPersonLocation ? (
-              <ThemedText type="caption" style={{ color: NemyColors.success }}>
+              <ThemedText type="caption" style={{ color: AstroBarColors.success }}>
                 Repartidor en movimiento
               </ThemedText>
             ) : (
@@ -188,12 +188,12 @@ export function CollapsibleMap({
               <Marker
                 coordinate={businessLocation}
                 title="Negocio"
-                pinColor={NemyColors.primary}
+                pinColor={AstroBarColors.primary}
               >
                 <View
                   style={[
                     styles.markerContainer,
-                    { backgroundColor: NemyColors.primary },
+                    { backgroundColor: AstroBarColors.primary },
                   ]}
                 >
                   <Feather name="shopping-bag" size={16} color="#FFFFFF" />
@@ -205,12 +205,12 @@ export function CollapsibleMap({
               <Marker
                 coordinate={deliveryPersonLocation}
                 title="Repartidor"
-                pinColor={NemyColors.success}
+                pinColor={AstroBarColors.success}
               >
                 <View
                   style={[
                     styles.markerContainer,
-                    { backgroundColor: NemyColors.success },
+                    { backgroundColor: AstroBarColors.success },
                   ]}
                 >
                   <Feather name="navigation" size={16} color="#FFFFFF" />
@@ -238,7 +238,7 @@ export function CollapsibleMap({
             {getRouteCoordinates().length >= 2 ? (
               <Polyline
                 coordinates={getRouteCoordinates()}
-                strokeColor={NemyColors.primary}
+                strokeColor={AstroBarColors.primary}
                 strokeWidth={3}
                 lineDashPattern={[5, 5]}
               />
@@ -250,7 +250,7 @@ export function CollapsibleMap({
               <View
                 style={[
                   styles.legendDot,
-                  { backgroundColor: NemyColors.primary },
+                  { backgroundColor: AstroBarColors.primary },
                 ]}
               />
               <ThemedText type="caption">Negocio</ThemedText>
@@ -259,7 +259,7 @@ export function CollapsibleMap({
               <View
                 style={[
                   styles.legendDot,
-                  { backgroundColor: NemyColors.success },
+                  { backgroundColor: AstroBarColors.success },
                 ]}
               />
               <ThemedText type="caption">Repartidor</ThemedText>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -23,10 +23,10 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ThemedText } from "@/components/ThemedText";
-import { NemyColors, Spacing, BorderRadius } from "@/constants/theme";
+import { AstroBarColors, Spacing, BorderRadius } from "@/constants/theme";
 
 const { width, height } = Dimensions.get("window");
-const ONBOARDING_KEY = "@nemy_onboarding_completed";
+const ONBOARDING_KEY = "@AstroBar_onboarding_completed";
 
 interface OnboardingSlide {
   id: number;
@@ -40,16 +40,16 @@ interface OnboardingSlide {
 const slides: OnboardingSlide[] = [
   {
     id: 1,
-    title: "NEMY",
+    title: "AstroBar",
     subtitle: "Tu app de entregas local",
     description:
-      "Conecta con restaurantes y mercados de Autlan. Pedidos frescos directo a tu puerta.",
+      "Descubre las mejores promociones nocturnas en bares de Buenos Aires. Promos flash y ofertas exclusivas.",
     icon: "heart",
-    gradient: [NemyColors.primary, "#E65100"],
+    gradient: [AstroBarColors.primary, "#E65100"],
   },
   {
     id: 2,
-    title: "NEMY",
+    title: "AstroBar",
     subtitle: 'En Nahuatl significa "vivir"',
     description:
       '"Vivir es conectar"\n\nConectamos a la comunidad con los sabores locales que amamos.',
@@ -58,10 +58,10 @@ const slides: OnboardingSlide[] = [
   },
   {
     id: 3,
-    title: "Cómo usar NEMY",
+    title: "Cómo usar AstroBar",
     subtitle: "Es muy fácil",
     description:
-      "1. Explora restaurantes y mercados\n2. Agrega productos al carrito\n3. Paga con tarjeta o efectivo\n4. Recibe en tu puerta",
+      "1. Explora bares y promociones\n2. Agrega productos al carrito\n3. Paga con tarjeta o efectivo\n4. Recibe en tu puerta",
     icon: "check-circle",
     gradient: ["#00897B", "#00695C"],
   },

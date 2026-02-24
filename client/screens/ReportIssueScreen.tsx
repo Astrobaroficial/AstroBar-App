@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -20,7 +20,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -37,9 +37,9 @@ const ISSUE_TYPES = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { id: "low", label: "Bajo", color: NemyColors.success },
-  { id: "medium", label: "Medio", color: NemyColors.warning },
-  { id: "high", label: "Alto", color: NemyColors.error },
+  { id: "low", label: "Bajo", color: AstroBarColors.success },
+  { id: "medium", label: "Medio", color: AstroBarColors.warning },
+  { id: "high", label: "Alto", color: AstroBarColors.error },
 ];
 
 export default function ReportIssueScreen() {
@@ -173,7 +173,7 @@ export default function ReportIssueScreen() {
                     backgroundColor: theme.card,
                     borderColor:
                       selectedType === type.id
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : "transparent",
                     borderWidth: 2,
                   },
@@ -185,7 +185,7 @@ export default function ReportIssueScreen() {
                     {
                       backgroundColor:
                         selectedType === type.id
-                          ? NemyColors.primary + "20"
+                          ? AstroBarColors.primary + "20"
                           : theme.border,
                     },
                   ]}
@@ -195,7 +195,7 @@ export default function ReportIssueScreen() {
                     size={24}
                     color={
                       selectedType === type.id
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : theme.textSecondary
                     }
                   />
@@ -206,7 +206,7 @@ export default function ReportIssueScreen() {
                     textAlign: "center",
                     color:
                       selectedType === type.id
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : theme.text,
                     fontWeight: selectedType === type.id ? "600" : "400",
                   }}
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: NemyColors.error,
+    backgroundColor: AstroBarColors.error,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   submitButton: {
-    backgroundColor: NemyColors.primary,
+    backgroundColor: AstroBarColors.primary,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     alignItems: "center",

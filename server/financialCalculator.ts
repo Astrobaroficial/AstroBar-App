@@ -1,4 +1,4 @@
-// Financial Calculator - Centralized financial operations
+﻿// Financial Calculator - Centralized financial operations
 // All monetary calculations MUST go through this service
 
 import { financialService } from './unifiedFinancialService';
@@ -20,7 +20,7 @@ export class FinancialCalculator {
     total: number,
     deliveryFee: number = 0,
     productosBase?: number,
-    nemyCommission?: number
+    AstroBarCommission?: number
   ): Promise<{
     platform: number;
     business: number;
@@ -30,7 +30,7 @@ export class FinancialCalculator {
       total,
       deliveryFee,
       productosBase,
-      nemyCommission
+      AstroBarCommission
     );
     return {
       platform: result.platform,

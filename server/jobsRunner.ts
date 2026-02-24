@@ -1,4 +1,4 @@
-// Jobs Runner - Standalone process for background jobs
+﻿// Jobs Runner - Standalone process for background jobs
 import dotenv from "dotenv";
 import path from "path";
 import { startBackgroundJobs } from "./backgroundJobs";
@@ -10,7 +10,7 @@ if (!process.env.DATABASE_URL) {
   dotenv.config();
 }
 
-console.log("🚀 NEMY Background Jobs Runner");
+console.log("🚀 AstroBar Background Jobs Runner");
 console.log(`📅 Started at: ${new Date().toISOString()}`);
 console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
 

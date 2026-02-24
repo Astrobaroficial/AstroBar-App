@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+﻿import { sql } from "drizzle-orm";
 import {
   mysqlTable,
   text,
@@ -19,6 +19,7 @@ export const users = mysqlTable("users", {
   password: text("password"), // Optional - can be null for phone-only auth
   name: text("name").notNull(),
   phone: text("phone").notNull(), // Required and unique for phone-only auth
+  pushToken: text("push_token"), // Expo push notification token
   role: text("role").notNull().default("customer"),
   emailVerified: boolean("email_verified").notNull().default(false),
   phoneVerified: boolean("phone_verified").notNull().default(false),
@@ -65,8 +66,8 @@ export const orders = mysqlTable("orders", {
   items: text("items").notNull(),
   status: text("status").notNull().default("pending"),
   subtotal: int("subtotal").notNull(),
-  productosBase: int("productos_base").default(0), // Precio base sin markup NEMY
-  nemyCommission: int("nemy_commission").default(0), // 15% markup NEMY
+  productosBase: int("productos_base").default(0), // Precio base sin markup AstroBar
+  AstroBarCommission: int("AstroBar_commission").default(0), // 15% markup AstroBar
   deliveryFee: int("delivery_fee").notNull(),
   total: int("total").notNull(),
   paymentMethod: text("payment_method").notNull(),
@@ -84,7 +85,7 @@ export const orders = mysqlTable("orders", {
   penaltyAmount: int("penalty_amount"), // penalización por cancelación
   refundStatus: text("refund_status"), // pending, processed, failed
   businessResponseAt: timestamp("business_response_at"), // cuando el negocio respondió
-  platformFee: int("platform_fee"), // comisión NEMY
+  platformFee: int("platform_fee"), // comisión AstroBar
   businessEarnings: int("business_earnings"), // ganancia negocio
   deliveryEarnings: int("delivery_earnings"), // ganancia repartidor
   distanceKm: int("distance_km"), // distancia en metros x100

@@ -3,9 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
-import apiRoutes from './apiRoutes';  // ← Volver al original
-import devRoutes from './devRoutes';
-import financialTestRoute from './financialTestRoute';
+import apiRoutes from './apiRoutes';
 import { validateEnv } from './env';
 
 // Validate environment variables at startup so we never run with bad Stripe/Twilio keys
@@ -36,7 +34,7 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Request logging with error capture
+// Request logging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.originalUrl}`);
   
@@ -44,7 +42,6 @@ app.use((req, res, next) => {
   res.send = function(data) {
     if (res.statusCode >= 400) {
       console.error(`❌ ${req.method} ${req.originalUrl} - Status: ${res.statusCode}`);
-      console.error('Response:', data);
     }
     return originalSend.call(this, data);
   };
@@ -80,36 +77,20 @@ app.use(express.static(staticBuildPath, {
 // API routes
 app.use('/api', apiRoutes);
 
-// Wallet routes (from routes folder)
-import walletRoutesV2 from './routes/walletRoutes';
-app.use('/api/wallet', walletRoutesV2);
+// Wallet routes removed
 
 // Admin Panel routes
 import adminPanelRoutes from './routes/adminPanelRoutes';
 console.log('🔧 Registering Admin Panel routes at /api/admin');
 app.use('/api/admin', adminPanelRoutes);
 
-// Favorites routes
-import favoritesRoutes from './favoritesRoutes';
-console.log('🔧 Registering favorites routes at /api/favorites');
-app.use('/api/favorites', favoritesRoutes);
+// Favorites routes removed
 
-// Stripe Connect routes
-import connectRoutes from './connectRoutes';
-console.log('🔧 Registering Stripe Connect routes at /api/stripe/connect');
-app.use('/api/stripe/connect', connectRoutes);
+// Stripe Connect routes removed
 
-// Secure payment routes
-import securePaymentRoutes from './securePaymentIntegration';
-app.use('/api', securePaymentRoutes);
+// Secure payment routes removed
 
-// Financial system test routes
-app.use('/api/financial', financialTestRoute);
-
-// Development routes (only in development)
-if (!isProduction) {
-  app.use('/api', devRoutes);
-}
+// Development routes removed
 
 // Health check
 app.get('/health', (req, res) => {
@@ -131,10 +112,10 @@ if (isProduction) {
   // Development: just show API is running
   app.get('/', (req, res) => {
     res.json({ 
-      message: 'NEMY API Server',
+      message: '🌙 AstroBar API - Promociones Nocturnas',
+      location: 'Buenos Aires, Argentina 🇦🇷',
       frontend: process.env.FRONTEND_URL || 'http://localhost:8081',
-      docs: '/api',
-      financialTests: '/api/financial/test-financial-system'
+      docs: '/api'
     });
   });
 }
@@ -152,32 +133,26 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  console.log(`🌙 AstroBar Server - Buenos Aires, Argentina 🇦🇷`);
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`💰 Financial Tests: http://localhost:${PORT}/api/financial/test-financial-system`);
   
-  // Check optional services
+  // Initialize audit logs table
+  const { createAuditTable } = await import('./routes/auditRoutes');
+  await createAuditTable();
+  
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('⚠️  Stripe not configured - payments disabled');
   }
   if (!process.env.TWILIO_ACCOUNT_SID) {
     console.warn('⚠️  Twilio not configured - SMS disabled');
   }
-
-  // Start business hours cron
-  import('./businessHoursCron').then(({ startBusinessHoursCron }) => {
-    startBusinessHoursCron();
-  }).catch(console.error);
-  
-  // Start weekly settlement cron
-  import('./weeklySettlementCron').then(({ WeeklySettlementCron }) => {
-    WeeklySettlementCron.start();
-  }).catch(console.error);
-  
-  // Start cash security cron
-  import('./cashSecurityCron').then(({ initializeCashSecurityCron }) => {
-    initializeCashSecurityCron();
-  }).catch(console.error);
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    console.warn('⚠️  Google Maps not configured');
+  }
+  if (!process.env.EXPO_ACCESS_TOKEN) {
+    console.warn('⚠️  Expo Push Notifications not configured');
+  }
 });

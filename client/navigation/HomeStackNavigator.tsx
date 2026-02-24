@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
@@ -7,7 +7,7 @@ import HomeScreen from "@/screens/HomeScreen";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
-import { Spacing, NemyColors } from "@/constants/theme";
+import { Spacing, AstroBarColors } from "@/constants/theme";
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -19,12 +19,12 @@ function HeaderTitle() {
   return (
     <View style={styles.headerTitle}>
       <Image
-        source={require("../../assets/images/icon.png")}
+        source={require("../../assets/astrobarlogo.jpg")}
         style={styles.headerIcon}
         contentFit="contain"
       />
-      <ThemedText type="h3" style={{ color: NemyColors.primary }}>
-        NEMY
+      <ThemedText type="h3" style={{ color: AstroBarColors.primary }}>
+        AstroBar
       </ThemedText>
     </View>
   );

@@ -1,4 +1,4 @@
-// Unified Financial Service - Single Source of Truth for All Financial Operations
+﻿// Unified Financial Service - Single Source of Truth for All Financial Operations
 import { db } from "./db";
 import { systemSettings, wallets, transactions } from "@shared/schema-mysql";
 import { eq } from "drizzle-orm";
@@ -74,12 +74,12 @@ export class UnifiedFinancialService {
     }
   }
 
-  // Calculate commissions - Modelo: 100% producto al negocio, 15% del producto a NEMY, 100% delivery fee al driver
+  // Calculate commissions - Modelo: 100% producto al negocio, 15% del producto a AstroBar, 100% delivery fee al driver
   async calculateCommissions(
     totalAmount: number,
     deliveryFee: number = 0,
     productosBase?: number,
-    nemyCommission?: number
+    AstroBarCommission?: number
   ): Promise<{
     platform: number;
     business: number;
@@ -89,19 +89,19 @@ export class UnifiedFinancialService {
     const safeTotal = Math.max(0, totalAmount || 0);
     const safeDeliveryFee = Math.max(0, deliveryFee || 0);
 
-    // Si nos dan productosBase o nemyCommission, respetarlos para backwards compatibility
+    // Si nos dan productosBase o AstroBarCommission, respetarlos para backwards compatibility
     let productBase = productosBase && productosBase > 0
       ? productosBase
       : safeTotal - safeDeliveryFee;
 
-    // Si el total ya incluye comisión NEMY, removerla para aislar el producto
+    // Si el total ya incluye comisión AstroBar, removerla para aislar el producto
     if (!productosBase || productosBase <= 0) {
       const baseWithoutDelivery = safeTotal - safeDeliveryFee;
       productBase = baseWithoutDelivery > 0 ? Math.round(baseWithoutDelivery / 1.15) : 0;
     }
 
-    const platformAmount = nemyCommission && nemyCommission > 0
-      ? nemyCommission
+    const platformAmount = AstroBarCommission && AstroBarCommission > 0
+      ? AstroBarCommission
       : Math.round(productBase * 0.15);
 
     const businessAmount = productBase;
@@ -334,7 +334,7 @@ export class UnifiedFinancialService {
   // Check if user can withdraw
   async canUserWithdraw(userId: string, userRole: string): Promise<{ allowed: boolean; reason?: string }> {
     // Only business_owner, delivery_driver, and admin can withdraw
-    if (!['business_owner', 'delivery_driver', 'admin'].includes(userRole)) {
+    if (!['business_owner', 'admin'].includes(userRole)) {
       return { allowed: false, reason: 'Solo negocios, repartidores y administradores pueden retirar' };
     }
 
@@ -377,7 +377,7 @@ export class UnifiedFinancialService {
     const wallet = await this.getWallet(userId);
     methods.push({
       id: 'wallet',
-      name: 'Billetera NEMY',
+      name: 'Billetera AstroBar',
       icon: 'wallet-outline',
       available: wallet.balance > 0,
       balance: wallet.balance,

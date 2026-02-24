@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -19,13 +19,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
-const PENDING_BUSINESS_DRAFT_KEY = "@nemy_pending_business_draft";
-const PENDING_BUSINESS_ONBOARDING_KEY = "@nemy_pending_business_onboarding";
-const PENDING_DRIVER_ONBOARDING_KEY = "@nemy_pending_driver_onboarding";
+const PENDING_BUSINESS_DRAFT_KEY = "@AstroBar_pending_business_draft";
+const PENDING_BUSINESS_ONBOARDING_KEY = "@AstroBar_pending_business_onboarding";
+const PENDING_DRIVER_ONBOARDING_KEY = "@AstroBar_pending_driver_onboarding";
 
 type VerifyPhoneScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "VerifyPhone">;
@@ -105,11 +105,6 @@ export default function VerifyPhoneScreen({
       const verifiedUser = await verifyPhone(phone, fullCode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      if (verifiedUser.role === "delivery_driver") {
-        await AsyncStorage.setItem(PENDING_DRIVER_ONBOARDING_KEY, "1");
-        return;
-      }
-
       if (verifiedUser.role === "business_owner") {
         const draftRaw = await AsyncStorage.getItem(PENDING_BUSINESS_DRAFT_KEY);
         const draft = draftRaw ? JSON.parse(draftRaw) : undefined;
@@ -188,10 +183,10 @@ export default function VerifyPhoneScreen({
           <View
             style={[
               styles.iconCircle,
-              { backgroundColor: NemyColors.primaryLight },
+              { backgroundColor: AstroBarColors.primaryLight },
             ]}
           >
-            <Feather name="smartphone" size={48} color={NemyColors.primary} />
+            <Feather name="smartphone" size={48} color={AstroBarColors.primary} />
           </View>
         </View>
 
@@ -220,9 +215,9 @@ export default function VerifyPhoneScreen({
                 {
                   backgroundColor: theme.card,
                   borderColor: error
-                    ? NemyColors.error
+                    ? AstroBarColors.error
                     : digit
-                      ? NemyColors.primary
+                      ? AstroBarColors.primary
                       : theme.border,
                   color: theme.text,
                 },
@@ -243,7 +238,7 @@ export default function VerifyPhoneScreen({
         {error ? (
           <ThemedText
             type="small"
-            style={[styles.error, { color: NemyColors.error }]}
+            style={[styles.error, { color: AstroBarColors.error }]}
           >
             {error}
           </ThemedText>
@@ -268,11 +263,11 @@ export default function VerifyPhoneScreen({
           {canResend ? (
             <Pressable onPress={handleResend} disabled={isResending}>
               {isResending ? (
-                <ActivityIndicator size="small" color={NemyColors.primary} />
+                <ActivityIndicator size="small" color={AstroBarColors.primary} />
               ) : (
                 <ThemedText
                   type="body"
-                  style={{ color: NemyColors.primary, fontWeight: "600" }}
+                  style={{ color: AstroBarColors.primary, fontWeight: "600" }}
                 >
                   Reenviar
                 </ThemedText>

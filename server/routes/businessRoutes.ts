@@ -3,6 +3,54 @@ import { authenticateToken, requireRole } from "../authMiddleware";
 
 const router = express.Router();
 
+// PUBLIC ROUTES - No authentication required
+
+// Get all businesses (public)
+router.get("/", async (req, res) => {
+  try {
+    const { businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const allBusinesses = await db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.isActive, true));
+
+    res.json({ success: true, businesses: allBusinesses });
+  } catch (error: any) {
+    console.error("Error loading businesses:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get featured businesses (public)
+router.get("/featured", async (req, res) => {
+  try {
+    const { businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and } = await import("drizzle-orm");
+
+    const featuredBusinesses = await db
+      .select()
+      .from(businesses)
+      .where(
+        and(
+          eq(businesses.isActive, true),
+          eq(businesses.isFeatured, true)
+        )
+      )
+      .limit(10);
+
+    res.json({ success: true, businesses: featuredBusinesses });
+  } catch (error: any) {
+    console.error("Error loading featured businesses:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PROTECTED ROUTES - Authentication required
+
 // Get business dashboard
 router.get("/dashboard", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -39,7 +39,7 @@ import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { Business } from "@/types";
 import { apiRequest } from "@/lib/query-client";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -51,8 +51,8 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
 >;
 
 const filters = [
-  { id: "rapido", name: "Rapido", icon: "zap" },
-  { id: "economico", name: "Economico", icon: "dollar-sign" },
+  { id: "cercano", name: "Cercano", icon: "map-pin" },
+  { id: "flash", name: "Flash", icon: "zap" },
   { id: "popular", name: "Popular", icon: "star" },
 ];
 
@@ -96,7 +96,7 @@ export default function HomeScreen() {
         minimumOrder: (b.min_order || 5000) / 100, // Convertir de centavos a pesos
         isOpen: b.isOpen ?? b.is_open ?? false,
         openingHours: [],
-        address: b.address || 'Autlán, Jalisco',
+        address: b.address || 'Autlán, Argentina',
         phone: b.phone || '',
         categories: b.categories ? b.categories.split(',') : [],
         acceptsCash: true,
@@ -141,12 +141,12 @@ export default function HomeScreen() {
 
       if (activeCategory) {
         const categoryMap: Record<string, string[]> = {
-          tacos: ["tacos", "mexicana", "antojitos"],
-          burgers: ["burgers", "hamburguesas", "americana"],
-          pizza: ["pizza", "italiana", "pastas"],
-          sushi: ["sushi", "japonesa"],
-          pollo: ["pollo", "alitas"],
-          mariscos: ["mariscos", "pescado"],
+          flash: ["flash", "promocion"],
+          bar: ["bar"],
+          nightclub: ["discoteca", "nightclub"],
+          pub: ["pub"],
+          lounge: ["lounge"],
+          promo: ["promocion", "oferta"],
         };
         const matchCategories = categoryMap[activeCategory] || [activeCategory];
         filtered = filtered.filter((b) =>
@@ -158,17 +158,15 @@ export default function HomeScreen() {
 
       if (activeFilter) {
         switch (activeFilter) {
-          case "rapido":
-            filtered = filtered.filter((b) => {
-              const time = parseInt(b.deliveryTime.split("-")[0]);
-              return time <= 30;
-            });
+          case "cercano":
+            // Filtrar por distancia (implementar con geolocalización)
             break;
-          case "economico":
-            filtered = filtered.filter((b) => b.deliveryFee <= 30);
+          case "flash":
+            // Filtrar bares con promociones flash activas
+            filtered = filtered.filter((b) => b.featured);
             break;
           case "popular":
-            filtered = filtered.filter((b) => b.rating >= 4.7);
+            filtered = filtered.filter((b) => b.rating >= 4.5);
             break;
         }
       }
@@ -179,8 +177,7 @@ export default function HomeScreen() {
   );
 
   const filteredBusinesses = filterBusinesses(businesses);
-  const restaurants = filteredBusinesses.filter((b) => b.type === "restaurant");
-  const markets = filteredBusinesses.filter((b) => b.type === "market");
+  const bars = filteredBusinesses; // Todos son bares
   const firstName = user?.name.split(" ")[0] || "Usuario";
 
   const hasActiveFilters = searchQuery.trim() || activeCategory || activeFilter;
@@ -206,29 +203,32 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={NemyColors.primary}
+            tintColor={AstroBarColors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo Header */}
+        {/* Banner Header */}
         <Animated.View
           entering={FadeInDown.delay(50).springify()}
-          style={styles.logoHeader}
+          style={styles.bannerContainer}
         >
           <Image
-            source={require("../../assets/images/icon.png")}
-            style={styles.headerLogo}
-            contentFit="contain"
+            source={require("../../assets/astrobarbanner.jpg")}
+            style={styles.bannerImage}
+            contentFit="cover"
           />
-          <View style={styles.logoTextContainer}>
-            <ThemedText type="h2" style={styles.logoTitle}>
-              NEMY
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.7)']}
+            style={styles.bannerOverlay}
+          >
+            <ThemedText type="h1" style={styles.bannerTitle}>
+              AstroBar 🌙
             </ThemedText>
-            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-              Autlan de Navarro
+            <ThemedText type="body" style={styles.bannerSubtitle}>
+              Promociones Nocturnas · Buenos Aires
             </ThemedText>
-          </View>
+          </LinearGradient>
         </Animated.View>
 
         {/* Question Header */}
@@ -237,7 +237,7 @@ export default function HomeScreen() {
           style={styles.questionContainer}
         >
           <ThemedText type="h1" style={styles.questionText}>
-            Que vas a comer hoy?
+            ¿Qué bar visitarás esta noche?
           </ThemedText>
         </Animated.View>
 
@@ -252,27 +252,12 @@ export default function HomeScreen() {
             contentContainerStyle={styles.quickAccessScroll}
           >
             {[
-              { id: "tacos", icon: "sun", label: "Tacos", color: "#FF8C00" },
-              {
-                id: "burgers",
-                icon: "coffee",
-                label: "Burgers",
-                color: "#E91E63",
-              },
-              { id: "pizza", icon: "disc", label: "Pizza", color: "#F44336" },
-              { id: "sushi", icon: "star", label: "Sushi", color: "#9C27B0" },
-              {
-                id: "pollo",
-                icon: "feather",
-                label: "Pollo",
-                color: "#FF5722",
-              },
-              {
-                id: "mariscos",
-                icon: "anchor",
-                label: "Mariscos",
-                color: "#03A9F4",
-              },
+              { id: "flash", icon: "zap", label: "Flash", color: "#FFD700" },
+              { id: "bar", icon: "coffee", label: "Bares", color: "#E91E63" },
+              { id: "nightclub", icon: "music", label: "Discotecas", color: "#9C27B0" },
+              { id: "pub", icon: "beer", label: "Pubs", color: "#FF5722" },
+              { id: "lounge", icon: "moon", label: "Lounges", color: "#3F51B5" },
+              { id: "promo", icon: "gift", label: "Promos", color: "#00BCD4" },
             ].map((item) => {
               const isActive = activeCategory === item.id;
               return (
@@ -333,7 +318,7 @@ export default function HomeScreen() {
           <Feather name="search" size={20} color={theme.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: theme.text }]}
-            placeholder="Buscar platillo o restaurante..."
+            placeholder="Buscar bar o promoción..."
             placeholderTextColor={theme.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -384,7 +369,7 @@ export default function HomeScreen() {
               style={({ pressed }) => [
                 styles.filterChip,
                 activeFilter === filter.id
-                  ? { backgroundColor: NemyColors.primary }
+                  ? { backgroundColor: AstroBarColors.primary }
                   : { backgroundColor: theme.backgroundSecondary },
                 {
                   opacity: pressed ? 0.8 : 1,
@@ -396,7 +381,7 @@ export default function HomeScreen() {
                 name={filter.icon as any}
                 size={14}
                 color={
-                  activeFilter === filter.id ? "#FFFFFF" : NemyColors.primary
+                  activeFilter === filter.id ? "#FFFFFF" : AstroBarColors.primary
                 }
               />
               <ThemedText
@@ -426,7 +411,7 @@ export default function HomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={[NemyColors.carnival.pink, "#7B1FA2", "#6A1B9A"]}
+                colors={[AstroBarColors.carnival.pink, "#7B1FA2", "#6A1B9A"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.carnivalGradient}
@@ -443,7 +428,7 @@ export default function HomeScreen() {
                       <Feather
                         name="star"
                         size={10}
-                        color={NemyColors.carnival.gold}
+                        color="#FFD700"
                       />
                       <ThemedText
                         type="caption"
@@ -453,7 +438,7 @@ export default function HomeScreen() {
                       </ThemedText>
                     </View>
                     <ThemedText type="h3" style={styles.carnivalTitle}>
-                      Carnaval Autlan 2026
+                      Carnaval Buenos Aires 2026
                     </ThemedText>
                     <View style={styles.carnivalCTA}>
                       <ThemedText type="small" style={styles.carnivalSubtitle}>
@@ -483,7 +468,7 @@ export default function HomeScreen() {
           <>
             <View style={styles.section}>
               <ThemedText type="h3" style={styles.sectionTitle}>
-                Restaurantes populares
+                Bares populares
               </ThemedText>
               {[1, 2].map((i) => (
                 <BusinessCardSkeleton key={i} />
@@ -519,7 +504,7 @@ export default function HomeScreen() {
               }}
               style={[
                 styles.emptyStateClearButton,
-                { backgroundColor: NemyColors.primary },
+                { backgroundColor: AstroBarColors.primary },
               ]}
             >
               <Feather name="x" size={16} color="#FFFFFF" />
@@ -580,11 +565,11 @@ export default function HomeScreen() {
                           <Feather
                             name="zap"
                             size={12}
-                            color={NemyColors.primary}
+                            color={AstroBarColors.primary}
                           />
                           <ThemedText
                             type="small"
-                            style={{ color: NemyColors.primary, marginLeft: 4 }}
+                            style={{ color: AstroBarColors.primary, marginLeft: 4 }}
                           >
                             Rapido
                           </ThemedText>
@@ -618,9 +603,9 @@ export default function HomeScreen() {
               </View>
             ) : null}
 
-            {/* Restaurant Grid */}
+            {/* Bar Grid */}
             <View style={styles.gridSection}>
-              {restaurants.slice(0, 4).map((business, index) => (
+              {bars.slice(0, 4).map((business, index) => (
                 <Pressable
                   key={business.id}
                   onPress={() =>
@@ -651,24 +636,24 @@ export default function HomeScreen() {
                     </ThemedText>
                     <View style={styles.gridMeta}>
                       {index === 0 ? (
-                        <View style={styles.economicBadge}>
+                        <View style={styles.flashBadge}>
                           <Feather
-                            name="dollar-sign"
+                            name="zap"
                             size={10}
-                            color="#4CAF50"
+                            color="#FFD700"
                           />
                           <ThemedText
                             type="caption"
-                            style={{ color: "#4CAF50", marginLeft: 2 }}
+                            style={{ color: "#FFD700", marginLeft: 2 }}
                           >
-                            ECONOMICO
+                            FLASH
                           </ThemedText>
                         </View>
                       ) : index === 1 ? (
                         <View style={styles.popularSmallBadge}>
                           <ThemedText
                             type="caption"
-                            style={{ color: NemyColors.primary }}
+                            style={{ color: AstroBarColors.primary }}
                           >
                             POPULAR
                           </ThemedText>
@@ -691,7 +676,7 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {/* Markets Section - Prominent Button */}
+            {/* Mapa de Bares - Botón Principal */}
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
               style={styles.section}
@@ -699,34 +684,34 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  navigation.navigate("BusinessList");
+                  navigation.navigate("Map");
                 }}
                 style={({ pressed }) => [
-                  styles.marketsBanner,
+                  styles.mapBanner,
                   {
-                    backgroundColor: NemyColors.primary,
+                    backgroundColor: AstroBarColors.primary,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
                 ]}
               >
                 <LinearGradient
-                  colors={[NemyColors.primary, "#E65100", "#D84315"]}
+                  colors={["#6A1B9A", "#8E24AA", "#9C27B0"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.marketsGradient}
                 >
                   <View style={styles.marketsContent}>
                     <View style={styles.marketsIconContainer}>
-                      <Feather name="compass" size={32} color="#FFFFFF" />
+                      <Feather name="map" size={32} color="#FFFFFF" />
                     </View>
                     <View style={styles.marketsTextContainer}>
                       <ThemedText type="h3" style={styles.marketsTitle}>
-                        Explorar Negocios
+                        Ver Mapa de Bares 🗺️
                       </ThemedText>
                       <View style={styles.marketsCTA}>
                         <ThemedText type="small" style={styles.marketsSubtitle}>
-                          Ver todos los restaurantes y mercados
+                          Encuentra bares cercanos con promociones
                         </ThemedText>
                       </View>
                     </View>
@@ -738,7 +723,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Markets Section - Original */}
+            {/* Promociones Flash - Botón Secundario */}
             <Animated.View
               entering={FadeInDown.delay(350).springify()}
               style={styles.section}
@@ -751,29 +736,29 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.marketsBanner,
                   {
-                    backgroundColor: "#4CAF50",
+                    backgroundColor: "#FFD700",
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
                 ]}
               >
                 <LinearGradient
-                  colors={["#66BB6A", "#4CAF50", "#43A047"]}
+                  colors={["#FFD700", "#FFA000", "#FF6F00"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.marketsGradient}
                 >
                   <View style={styles.marketsContent}>
                     <View style={styles.marketsIconContainer}>
-                      <Feather name="shopping-bag" size={32} color="#FFFFFF" />
+                      <Feather name="zap" size={32} color="#FFFFFF" />
                     </View>
                     <View style={styles.marketsTextContainer}>
                       <ThemedText type="h3" style={styles.marketsTitle}>
-                        Ver Mercados
+                        Promociones Flash ⚡
                       </ThemedText>
                       <View style={styles.marketsCTA}>
                         <ThemedText type="small" style={styles.marketsSubtitle}>
-                          Frutas, verduras, carnes y mas
+                          Ofertas por tiempo limitado ⚡
                         </ThemedText>
                       </View>
                     </View>
@@ -785,32 +770,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Markets Preview */}
-            {markets.length > 0 ? (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <ThemedText type="h3" style={styles.sectionTitle}>
-                    Mercados cerca de ti
-                  </ThemedText>
-                  <Feather
-                    name="shopping-bag"
-                    size={20}
-                    color={theme.textSecondary}
-                  />
-                </View>
-                {markets.slice(0, 2).map((business) => (
-                  <BusinessCard
-                    key={business.id}
-                    business={business}
-                    onPress={() =>
-                      navigation.navigate("BusinessDetail", {
-                        businessId: business.id,
-                      })
-                    }
-                  />
-                ))}
-              </View>
-            ) : null}
+
 
             {/* Filtered Results Section */}
             {hasActiveFilters && filteredBusinesses.length > 0 ? (
@@ -819,7 +779,7 @@ export default function HomeScreen() {
                   <ThemedText type="h3" style={styles.sectionTitle}>
                     Resultados ({filteredBusinesses.length})
                   </ThemedText>
-                  <Feather name="filter" size={20} color={NemyColors.primary} />
+                  <Feather name="filter" size={20} color={AstroBarColors.primary} />
                 </View>
                 {filteredBusinesses.map((business) => (
                   <BusinessCard
@@ -856,22 +816,33 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.lg,
   },
-  logoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+  bannerContainer: {
     marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    height: 200,
   },
-  headerLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.md,
+  bannerImage: {
+    width: '100%',
+    height: '100%',
   },
-  logoTextContainer: {
-    marginLeft: Spacing.md,
+  bannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    padding: Spacing.lg,
   },
-  logoTitle: {
-    color: NemyColors.primary,
-    fontWeight: "700",
+  bannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  bannerSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    marginTop: Spacing.xs,
   },
   questionContainer: {
     marginBottom: Spacing.lg,
@@ -994,7 +965,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   carnivalBadgeText: {
-    color: NemyColors.carnival.gold,
+    color: "#FFD700",
     fontWeight: "600",
     marginLeft: 4,
     fontSize: 10,
@@ -1028,7 +999,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Spacing.md,
     right: Spacing.md,
-    backgroundColor: NemyColors.primary,
+    backgroundColor: AstroBarColors.primary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
@@ -1078,9 +1049,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  economicBadge: {
+  flashBadge: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  mapBanner: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    padding: Spacing.lg,
   },
   popularSmallBadge: {
     flexDirection: "row",

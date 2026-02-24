@@ -1,4 +1,4 @@
-// Validación de estados de pedidos para el frontend
+﻿// Validación de estados de pedidos para el frontend
 export interface StateTransition {
   from: string;
   to: string;
@@ -48,23 +48,22 @@ export const VALID_TRANSITIONS: StateTransition[] = [
   { from: 'preparing', to: 'cancelled', allowedRoles: ['business_owner', 'admin'], requiresConfirmation: true, message: 'Cancelar pedido' },
   
   // Repartidor recoge el pedido
-  { from: 'ready', to: 'picked_up', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: true, message: 'Recoger pedido' },
+  { from: 'ready', to: 'picked_up', allowedRoles: ['admin'], requiresConfirmation: true, message: 'Recoger pedido' },
   
   // Repartidor se dirige al cliente
-  { from: 'picked_up', to: 'on_the_way', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: false, message: 'En camino' },
-  { from: 'picked_up', to: 'in_transit', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: false, message: 'En tránsito' },
+  { from: 'picked_up', to: 'on_the_way', allowedRoles: ['admin'], requiresConfirmation: false, message: 'En camino' },
+  { from: 'picked_up', to: 'in_transit', allowedRoles: ['admin'], requiresConfirmation: false, message: 'En tránsito' },
   
   // Estados equivalentes de entrega
-  { from: 'on_the_way', to: 'in_transit', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: false, message: 'Actualizar estado' },
-  { from: 'in_transit', to: 'on_the_way', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: false, message: 'Actualizar estado' },
+  { from: 'on_the_way', to: 'in_transit', allowedRoles: ['admin'], requiresConfirmation: false, message: 'Actualizar estado' },
+  { from: 'in_transit', to: 'on_the_way', allowedRoles: ['admin'], requiresConfirmation: false, message: 'Actualizar estado' },
   
   // Completar entrega
-  { from: 'on_the_way', to: 'delivered', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: true, message: 'Marcar como entregado' },
-  { from: 'in_transit', to: 'delivered', allowedRoles: ['delivery_driver', 'admin'], requiresConfirmation: true, message: 'Marcar como entregado' },
-];
+  { from: 'on_the_way', to: 'delivered', allowedRoles: ['admin'], requiresConfirmation: true, message: 'Marcar como entregado' },
+  { from: 'in_transit', to: 'delivered', allowedRoles: ['admin'], requiresConfirmation: true, message: 'Marcar como entregado' }];
 
 // Información inteligente para botones según el estado
-export const getSmartButtonInfo = (status: string, userRole: string = 'delivery_driver'): SmartButtonInfo => {
+export const getSmartButtonInfo = (status: string, userRole: string = ): SmartButtonInfo => {
   switch (status) {
     case ORDER_STATES.PENDING:
       return {

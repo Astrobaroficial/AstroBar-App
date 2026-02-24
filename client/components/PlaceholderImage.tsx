@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
-import { NemyColors, BorderRadius } from '@/constants/theme';
+import { AstroBarColors, BorderRadius } from '@/constants/theme';
 
 interface PlaceholderImageProps {
   width?: number;
@@ -30,7 +30,7 @@ export function PlaceholderImage({
       <Feather 
         name={icon} 
         size={Math.min(width, height) * 0.3} 
-        color={NemyColors.textSecondary} 
+        color={AstroBarColors.textSecondary} 
       />
       {text && (
         <ThemedText type="caption" style={styles.text}>
@@ -53,6 +53,6 @@ const styles = StyleSheet.create({
   text: {
     marginTop: 4,
     textAlign: 'center',
-    color: NemyColors.textSecondary,
+    color: AstroBarColors.textSecondary,
   },
 });

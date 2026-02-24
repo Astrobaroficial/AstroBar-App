@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Pressable, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
 import { useTheme } from '@/hooks/useTheme';
-import { Spacing, BorderRadius, NemyColors } from '@/constants/theme';
+import { Spacing, BorderRadius, AstroBarColors } from '@/constants/theme';
 
 // Función local para evitar problemas de importación
 const getButtonInfo = (status: string) => {
@@ -70,8 +70,7 @@ interface SmartOrderButtonProps {
 
 export const SmartOrderButton: React.FC<SmartOrderButtonProps> = ({
   orderStatus,
-  userRole = 'delivery_driver',
-  onPress,
+  userRole = onPress,
   showStatusInfo = true,
   disabled = false,
   loading = false,
@@ -82,10 +81,10 @@ export const SmartOrderButton: React.FC<SmartOrderButtonProps> = ({
   // Mapear colores del sistema a los colores del tema
   const getThemeColor = (color: string) => {
     switch (color) {
-      case "#3B82F6": return NemyColors.primary;
-      case "#F59E0B": return NemyColors.warning;
-      case "#10B981": return NemyColors.success;
-      case "#EF4444": return NemyColors.error;
+      case "#3B82F6": return AstroBarColors.primary;
+      case "#F59E0B": return AstroBarColors.warning;
+      case "#10B981": return AstroBarColors.success;
+      case "#EF4444": return AstroBarColors.error;
       default: return theme.textSecondary;
     }
   };
@@ -154,7 +153,7 @@ export const SmartOrderButton: React.FC<SmartOrderButtonProps> = ({
           {buttonInfo.requiresBusinessAction && (
             <ThemedText
               type="caption"
-              style={{ color: NemyColors.warning, marginTop: Spacing.xs, fontStyle: 'italic' }}
+              style={{ color: AstroBarColors.warning, marginTop: Spacing.xs, fontStyle: 'italic' }}
             >
               ⚠️ Requiere acción del negocio
             </ThemedText>
@@ -171,8 +170,7 @@ export const SmartOrderButton: React.FC<SmartOrderButtonProps> = ({
           { 
             backgroundColor: (buttonInfo.disabled || disabled || loading) ? theme.textSecondary : themeColor,
             opacity: (buttonInfo.disabled || disabled || loading) ? 0.6 : 1
-          },
-        ]}
+          }]}
       >
         {loading ? (
           <ActivityIndicator size="small" color="#FFF" />
@@ -196,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: NemyColors.primary,
+    borderLeftColor: AstroBarColors.primary,
   },
   statusRow: {
     flexDirection: "row",

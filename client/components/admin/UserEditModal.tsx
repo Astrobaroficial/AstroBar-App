@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Modal, Pressable, TextInput, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { AdminUser } from '@/components/admin/types/admin.types';
@@ -90,7 +90,7 @@ export const UserEditModal: React.FC<UserEditModalProps> = ({
           <View style={{ marginBottom: 15 }}>
             <ThemedText style={{ marginBottom: 5, fontWeight: '600' }}>Rol:</ThemedText>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {['customer', 'business', 'delivery_driver', 'admin'].map(role => (
+              {['customer', 'business', 'admin'].map(role => (
                 <Pressable
                   key={role}
                   style={{

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -6,7 +6,7 @@ import type { RootStackParamList } from '@/navigation/RootStackNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '@/lib/query-client';
-import { isInCoverageArea, AUTLAN_CENTER } from '@/utils/coverage';
+import { isInCoverageArea, BUENOS_AIRES_CENTER } from '@/utils/coverage';
 import { checkDuplicateAddress, suggestSimilarAddresses, Address } from '@/utils/addressValidation';
 import { useDebounce, usePerformanceMonitor } from '@/hooks/usePerformance';
 import { Feather } from '@expo/vector-icons';
@@ -40,7 +40,7 @@ export default function AddAddressScreen() {
   const [label, setLabel] = useState(existingAddress?.label || '');
   const [street, setStreet] = useState(existingAddress?.street || '');
   const [city, setCity] = useState(existingAddress?.city || 'Autlán');
-  const [state, setState] = useState(existingAddress?.state || 'Jalisco');
+  const [state, setState] = useState(existingAddress?.state || 'Argentina');
   const [zipCode, setZipCode] = useState(existingAddress?.zipCode || '');
   const [loading, setLoading] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -98,8 +98,8 @@ export default function AddAddressScreen() {
       return;
     }
 
-    // On web, use default coordinates for Autlán center if no coordinates selected
-    const finalCoordinates = coordinates || (Platform.OS === 'web' ? AUTLAN_CENTER : null);
+    // On web, use default coordinates for Buenos Aires center if no coordinates selected
+    const finalCoordinates = coordinates || (Platform.OS === 'web' ? BUENOS_AIRES_CENTER : null);
     
     if (!finalCoordinates) {
       setError('Por favor selecciona la ubicación en el mapa');

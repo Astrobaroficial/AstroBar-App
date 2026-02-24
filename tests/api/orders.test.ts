@@ -1,4 +1,4 @@
-import request from "supertest";
+﻿import request from "supertest";
 import { createTestApp } from "../testApp";
 import { authHeader, loginAs } from "../testUtils";
 
@@ -17,8 +17,8 @@ describe("Orders (customer flow)", () => {
     const token = await loginAs(app, "test-customer");
     const subtotal = 10000;
     const deliveryFee = 2000;
-    const nemyCommission = Math.round(subtotal * 0.15);
-    const total = subtotal + deliveryFee + nemyCommission;
+    const AstroBarCommission = Math.round(subtotal * 0.15);
+    const total = subtotal + deliveryFee + AstroBarCommission;
     const res = await request(app)
       .post("/api/orders")
       .set(authHeader(token))
@@ -29,7 +29,7 @@ describe("Orders (customer flow)", () => {
         items: "[]",
         subtotal,
         productosBase: subtotal,
-        nemyCommission,
+        AstroBarCommission,
         deliveryFee,
         total,
         paymentMethod: "card",
@@ -48,7 +48,7 @@ describe("Orders (customer flow)", () => {
     const token = await loginAs(app, "test-customer");
     const subtotal = 10000;
     const deliveryFee = 2000;
-    const nemyCommission = Math.round(subtotal * 0.15);
+    const AstroBarCommission = Math.round(subtotal * 0.15);
     const res = await request(app)
       .post("/api/orders")
       .set(authHeader(token))
@@ -59,7 +59,7 @@ describe("Orders (customer flow)", () => {
         items: "[]",
         subtotal,
         productosBase: subtotal,
-        nemyCommission,
+        AstroBarCommission,
         deliveryFee,
         total: 9999,
         paymentMethod: "card",
@@ -90,8 +90,8 @@ describe("Orders (customer flow)", () => {
     const token = await loginAs(app, "test-customer");
     const subtotal = 9000;
     const deliveryFee = 2000;
-    const nemyCommission = Math.round(subtotal * 0.15);
-    const total = subtotal + deliveryFee + nemyCommission;
+    const AstroBarCommission = Math.round(subtotal * 0.15);
+    const total = subtotal + deliveryFee + AstroBarCommission;
 
     const createRes = await request(app)
       .post("/api/orders")
@@ -103,7 +103,7 @@ describe("Orders (customer flow)", () => {
         items: "[]",
         subtotal,
         productosBase: subtotal,
-        nemyCommission,
+        AstroBarCommission,
         deliveryFee,
         total,
         paymentMethod: "card",

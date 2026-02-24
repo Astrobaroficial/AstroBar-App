@@ -1,4 +1,4 @@
-// System Settings Service - Admin Configuration
+﻿// System Settings Service - Admin Configuration
 import { db } from "./db";
 import { systemSettings, auditLogs } from "@shared/schema-mysql";
 import { eq } from "drizzle-orm";
@@ -164,7 +164,7 @@ const DEFAULT_SETTINGS = [
   },
   {
     key: "support_email",
-    value: "soporte@nemy.mx",
+    value: "soporte@AstroBar.mx",
     type: "string",
     category: "app",
     description: "Email de soporte",

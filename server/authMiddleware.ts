@@ -1,4 +1,4 @@
-// Authentication & Authorization Middleware - Production Implementation
+﻿// Authentication & Authorization Middleware - Production Implementation
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
@@ -27,7 +27,6 @@ const ROLE_HIERARCHY = {
   super_admin: 100,
   admin: 80,
   business_owner: 60,
-  delivery_driver: 40,
   customer: 20,
 };
 
@@ -35,8 +34,7 @@ const ROLE_HIERARCHY = {
 export async function authenticateToken(
   req: Request,
   res: Response,
-  next: NextFunction,
-) {
+  next: NextFunction) {
   try {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -46,7 +44,7 @@ export async function authenticateToken(
     }
 
     // Verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "nemy_local_secret_key") as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "AstroBar_local_secret_key") as any;
     // Get user from database
     const [user] = await db
       .select()

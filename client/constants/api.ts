@@ -1,4 +1,4 @@
-// API Configuration for NEMY Frontend
+﻿// API Configuration for AstroBar Frontend
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 
@@ -34,8 +34,8 @@ export const getApiBaseUrl = (): string => {
   }
 
   // Production fallback
-  console.log('⚠️ Using fallback URL: https://nemy-app.replit.app');
-  return "https://nemy-app.replit.app";
+  console.log('⚠️ Using fallback URL: https://AstroBar-app.replit.app');
+  return "https://AstroBar-app.replit.app";
 };
 
 export const API_CONFIG = {

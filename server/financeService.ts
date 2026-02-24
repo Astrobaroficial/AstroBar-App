@@ -1,4 +1,4 @@
-// Central Finance Service - Manages all financial data consistently
+﻿// Central Finance Service - Manages all financial data consistently
 import { db } from './db';
 import { users, businesses, orders, wallets, transactions } from '@shared/schema-mysql';
 import { eq, and, gte, sum, count, desc } from 'drizzle-orm';
@@ -78,7 +78,7 @@ export class FinanceService {
       const usersByRole = {
         customers: allUsers.filter((u) => u.role === 'customer').length,
         businesses: allUsers.filter((u) => u.role === 'business_owner').length,
-        delivery: allUsers.filter((u) => u.role === 'delivery_driver').length,
+        delivery: allUsers.filter((u) => u.role === ).length,
         admins: allUsers.filter((u) => u.role === 'admin' || u.role === 'super_admin').length,
       };
 

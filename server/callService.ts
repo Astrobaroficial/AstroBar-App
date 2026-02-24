@@ -1,4 +1,4 @@
-// Automatic Calling Service with Twilio Studio Flows
+﻿// Automatic Calling Service with Twilio Studio Flows
 import twilio from "twilio";
 import { db } from "./db";
 import { orders, businesses, callLogs } from "@shared/schema-mysql";
@@ -279,7 +279,7 @@ export async function testCall(phoneNumber: string): Promise<CallResult> {
       from: fromNumber,
       twiml: `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="es-MX">Esta es una llamada de prueba del sistema NEMY. Todo funciona correctamente.</Say>
+  <Say voice="alice" language="es-MX">Esta es una llamada de prueba del sistema AstroBar. Todo funciona correctamente.</Say>
 </Response>`,
     });
 

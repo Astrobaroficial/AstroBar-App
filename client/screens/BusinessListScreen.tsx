@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+﻿import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -18,7 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { Business } from "@/types";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
@@ -70,7 +70,7 @@ export default function BusinessListScreen() {
         minimumOrder: (b.min_order || 5000) / 100,
         isOpen: b.isOpen ?? b.is_open ?? false,
         openingHours: [],
-        address: b.address || "Autlán, Jalisco",
+        address: b.address || "Autlán, Argentina",
         phone: b.phone || "",
         categories: b.categories ? b.categories.split(",") : [],
         acceptsCash: true,
@@ -227,7 +227,7 @@ export default function BusinessListScreen() {
                   style={({ pressed }) => [
                     styles.tab,
                     activeTab === tab.id
-                      ? { backgroundColor: NemyColors.primary }
+                      ? { backgroundColor: AstroBarColors.primary }
                       : { backgroundColor: theme.card },
                     { opacity: pressed ? 0.8 : 1 },
                     Shadows.sm,
@@ -261,15 +261,15 @@ export default function BusinessListScreen() {
                     {
                       backgroundColor: theme.card,
                       borderWidth: 1,
-                      borderColor: NemyColors.error,
+                      borderColor: AstroBarColors.error,
                       opacity: pressed ? 0.8 : 1,
                     },
                   ]}
                 >
-                  <Feather name="x" size={14} color={NemyColors.error} />
+                  <Feather name="x" size={14} color={AstroBarColors.error} />
                   <ThemedText
                     type="caption"
-                    style={{ color: NemyColors.error, marginLeft: 4 }}
+                    style={{ color: AstroBarColors.error, marginLeft: 4 }}
                   >
                     Limpiar
                   </ThemedText>
@@ -282,7 +282,7 @@ export default function BusinessListScreen() {
                   style={({ pressed }) => [
                     styles.filterChip,
                     activeFilters.includes(filter.id)
-                      ? { backgroundColor: NemyColors.primaryLight, borderWidth: 1, borderColor: NemyColors.primary }
+                      ? { backgroundColor: AstroBarColors.primaryLight, borderWidth: 1, borderColor: AstroBarColors.primary }
                       : { backgroundColor: theme.card },
                     { opacity: pressed ? 0.8 : 1 },
                   ]}
@@ -292,7 +292,7 @@ export default function BusinessListScreen() {
                     size={14}
                     color={
                       activeFilters.includes(filter.id)
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : theme.textSecondary
                     }
                   />
@@ -300,7 +300,7 @@ export default function BusinessListScreen() {
                     type="caption"
                     style={{
                       color: activeFilters.includes(filter.id)
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : theme.text,
                       marginLeft: 4,
                       fontWeight: activeFilters.includes(filter.id) ? "600" : "400",
@@ -358,7 +358,7 @@ export default function BusinessListScreen() {
                   onPress={clearFilters}
                   style={[
                     styles.emptyButton,
-                    { backgroundColor: NemyColors.primary },
+                    { backgroundColor: AstroBarColors.primary },
                   ]}
                 >
                   <Feather name="x" size={16} color="#FFFFFF" />
@@ -389,7 +389,7 @@ export default function BusinessListScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={NemyColors.primary}
+            tintColor={AstroBarColors.primary}
           />
         }
         showsVerticalScrollIndicator={false}

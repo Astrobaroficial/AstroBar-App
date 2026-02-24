@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -26,7 +26,7 @@ import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { LinearGradient } from "expo-linear-gradient";
 import { useToast } from "@/contexts/ToastContext";
@@ -43,7 +43,7 @@ interface FeaturedBusiness {
   deliveryTime?: string;
 }
 
-const autlanBgImage = require("../../assets/images/autlan-background.jpg");
+const astrobarBgImage = require("../../assets/astrobarfondo.jpeg");
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">;
@@ -229,7 +229,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <ImageBackground
-      source={autlanBgImage}
+      source={astrobarBgImage}
       style={styles.container}
       resizeMode="cover"
     >
@@ -252,7 +252,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         >
           <View style={styles.logoContainer}>
             <Image
-              source={require("../../assets/images/icon.png")}
+              source={require("../../assets/astrobarlogo.jpg")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -303,7 +303,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                       autoComplete="email"
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                       testID="input-identifier"
                     />
                   </View>
@@ -335,7 +335,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                       secureTextEntry={!showPassword}
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                       testID="input-password"
                     />
                     <Pressable onPress={() => setShowPassword(!showPassword)}>
@@ -379,7 +379,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                       autoComplete="tel"
                       placeholderTextColor="#999999"
                       style={styles.textInput}
-                      selectionColor={NemyColors.primary}
+                      selectionColor={AstroBarColors.primary}
                       maxLength={12}
                       testID="input-phone"
                     />
@@ -415,7 +415,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               <Feather
                 name={loginMode === "password" ? "message-circle" : "key"}
                 size={16}
-                color={NemyColors.primary}
+                color={AstroBarColors.primary}
               />
               <ThemedText type="small" style={styles.switchModeText}>
                 {loginMode === "password" 
@@ -442,7 +442,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 >
                   {isBiometricLoading ? (
                     <ActivityIndicator
-                      color={NemyColors.primary}
+                      color={AstroBarColors.primary}
                       size="small"
                     />
                   ) : (
@@ -451,7 +451,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                         <Feather
                           name={getBiometricIcon()}
                           size={22}
-                          color={NemyColors.primary}
+                          color={AstroBarColors.primary}
                         />
                       </View>
                       <ThemedText type="body" style={styles.biometricText}>
@@ -509,7 +509,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                         <Feather
                           name="star"
                           size={12}
-                          color={NemyColors.primary}
+                          color={AstroBarColors.primary}
                         />
                         <ThemedText
                           type="caption"
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   slogan: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontStyle: "italic",
     fontWeight: "500",
   },
@@ -678,11 +678,11 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   inputError: {
-    color: NemyColors.error,
+    color: AstroBarColors.error,
     marginTop: Spacing.xs,
   },
   inputBoxError: {
-    borderColor: NemyColors.error,
+    borderColor: AstroBarColors.error,
   },
   loginButton: {
     marginTop: Spacing.sm,
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
   },
   switchModeText: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "500",
   },
   divider: {
@@ -721,20 +721,20 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
-    borderColor: NemyColors.primary,
+    borderColor: AstroBarColors.primary,
     gap: Spacing.sm,
   },
   biometricIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: NemyColors.primaryLight,
+    backgroundColor: AstroBarColors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
   biometricText: {
     fontWeight: "600",
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
   },
   shareButton: {
     flexDirection: "row",
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
   },
   signupLink: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "600",
   },
   contactInfo: {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { AUTLAN_CENTER, isInCoverageArea } from '@/utils/coverage';
+import { BUENOS_AIRES_CENTER, isInCoverageArea } from '@/utils/coverage';
 import { useOptimizedGeocoding, usePerformanceMonitor } from '@/hooks/usePerformance';
 
 // Conditional import for MapView - only works on native platforms
@@ -61,7 +61,7 @@ export default function LocationPickerScreen() {
       ? 'Necesitamos acceso al GPS para autocompletar tu dirección.'
       : 'Activa el GPS desde ajustes para autocompletar tu dirección.';
     Alert.alert('GPS requerido', message);
-    setLocation(AUTLAN_CENTER);
+    setLocation(BUENOS_AIRES_CENTER);
   };
 
   const getCurrentLocation = async () => {
@@ -78,7 +78,7 @@ export default function LocationPickerScreen() {
       await handleReverseGeocode(coords);
     } catch (error) {
       console.error('Error getting location:', error);
-      setLocation(AUTLAN_CENTER);
+      setLocation(BUENOS_AIRES_CENTER);
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function LocationPickerScreen() {
         <MapView
           style={styles.map}
           initialRegion={{
-            ...AUTLAN_CENTER,
+            ...BUENOS_AIRES_CENTER,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}

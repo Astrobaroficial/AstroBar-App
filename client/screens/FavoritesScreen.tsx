@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   View,
   StyleSheet,
@@ -20,7 +20,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
@@ -81,7 +81,7 @@ function FavoriteCard({
           {isBusiness && favorite.business ? (
             <View style={styles.businessMeta}>
               <View style={styles.ratingRow}>
-                <Feather name="star" size={14} color={NemyColors.primary} />
+                <Feather name="star" size={14} color={AstroBarColors.primary} />
                 <ThemedText type="caption" style={{ marginLeft: 4 }}>
                   {parseFloat(favorite.business.rating).toFixed(1)}
                 </ThemedText>
@@ -95,7 +95,7 @@ function FavoriteCard({
           ) : favorite.product ? (
             <ThemedText
               type="body"
-              style={{ color: NemyColors.primary, fontWeight: "600" }}
+              style={{ color: AstroBarColors.primary, fontWeight: "600" }}
             >
               ${(favorite.product.price / 100).toFixed(2)}
             </ThemedText>
@@ -218,7 +218,7 @@ export default function FavoritesScreen() {
         end={{ x: 1, y: 1 }}
       >
         <EmptyState
-          image={require("../../assets/images/market-basket.png")}
+          image={require("../../assets/astrobarlogo.jpg")}
           title="🔴 PRUEBA - Sin favoritos aún"
           description="SI VES ESTO EL ARCHIVO ES CORRECTO - Guarda tus negocios y productos favoritos para acceder rápidamente"
         />
@@ -255,7 +255,7 @@ export default function FavoritesScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={NemyColors.primary}
+            tintColor={AstroBarColors.primary}
           />
         }
       />

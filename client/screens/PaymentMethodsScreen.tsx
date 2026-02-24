@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -225,9 +225,6 @@ export default function PaymentMethodsScreen({ navigation }: any) {
       case 'admin':
       case 'super_admin':
         return 'Cuenta de Negocio';
-      case 'driver':
-      case 'delivery_driver':
-        return 'Cuenta de Repartidor';
       default:
         return 'Cuenta de Usuario';
     }
@@ -296,9 +293,7 @@ export default function PaymentMethodsScreen({ navigation }: any) {
               <Text style={styles.cardTitle}>Configurar Stripe para Retiros</Text>
             </View>
             <Text style={styles.cardDescription}>
-                {user?.role === 'driver' || user?.role === 'delivery_driver'
-                  ? 'Configura Stripe Connect para recibir retiros automaticos por tus entregas.'
-                  : 'Configura Stripe Connect para recibir retiros automaticos de tus ventas.'}
+              Configura Stripe Connect para recibir retiros automaticos de tus ventas.
             </Text>
             <TouchableOpacity 
               style={styles.primaryButton}

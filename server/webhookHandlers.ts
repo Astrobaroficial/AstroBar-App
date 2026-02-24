@@ -1,4 +1,4 @@
-// Enhanced Webhook Handlers for NEMY - Production Ready
+﻿// Enhanced Webhook Handlers for AstroBar - Production Ready
 import { Request, Response } from "express";
 import { stripe } from "./stripeClient";
 import { db } from "./db";

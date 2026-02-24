@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -21,7 +21,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 import { useToast } from "@/contexts/ToastContext";
 import { NativeMap } from "@/components/NativeMap";
@@ -525,17 +525,17 @@ export default function AdminScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return NemyColors.warning;
+        return AstroBarColors.warning;
       case "confirmed":
         return "#2196F3";
       case "preparing":
-        return NemyColors.primary;
+        return AstroBarColors.primary;
       case "on_the_way":
         return "#9C27B0";
       case "delivered":
-        return NemyColors.success;
+        return AstroBarColors.success;
       case "cancelled":
-        return NemyColors.error;
+        return AstroBarColors.error;
       default:
         return theme.textSecondary;
     }
@@ -578,17 +578,17 @@ export default function AdminScreen() {
   const getLogActionColor = (action: string) => {
     switch (action) {
       case "LOGIN_SUCCESS":
-        return NemyColors.success;
+        return AstroBarColors.success;
       case "LOGIN_FAILED":
-        return NemyColors.error;
+        return AstroBarColors.error;
       case "RATE_LIMIT_BLOCKED":
-        return NemyColors.error;
+        return AstroBarColors.error;
       case "CREATE":
         return "#2196F3";
       case "UPDATE":
-        return NemyColors.warning;
+        return AstroBarColors.warning;
       case "DELETE":
-        return NemyColors.error;
+        return AstroBarColors.error;
       default:
         return theme.textSecondary;
     }
@@ -597,7 +597,7 @@ export default function AdminScreen() {
   if (isLoading) {
     return (
       <ThemedView style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={NemyColors.primary} />
+        <ActivityIndicator size="large" color={AstroBarColors.primary} />
       </ThemedView>
     );
   }
@@ -657,20 +657,20 @@ export default function AdminScreen() {
                 styles.tab,
                 {
                   backgroundColor:
-                    activeTab === tab ? NemyColors.primary : "transparent",
-                  borderColor: NemyColors.primary,
+                    activeTab === tab ? AstroBarColors.primary : "transparent",
+                  borderColor: AstroBarColors.primary,
                 },
               ]}
             >
               <Feather
                 name={config.icon as any}
                 size={18}
-                color={activeTab === tab ? "#FFFFFF" : NemyColors.primary}
+                color={activeTab === tab ? "#FFFFFF" : AstroBarColors.primary}
               />
               <ThemedText
                 type="small"
                 style={{
-                  color: activeTab === tab ? "#FFFFFF" : NemyColors.primary,
+                  color: activeTab === tab ? "#FFFFFF" : AstroBarColors.primary,
                   marginLeft: Spacing.xs,
                 }}
               >
@@ -689,7 +689,7 @@ export default function AdminScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={NemyColors.primary}
+            tintColor={AstroBarColors.primary}
           />
         }
       >
@@ -757,9 +757,9 @@ export default function AdminScreen() {
                         {
                           backgroundColor:
                             selectedBusinessId === b.id
-                              ? NemyColors.primary
+                              ? AstroBarColors.primary
                               : "transparent",
-                          borderColor: NemyColors.primary,
+                          borderColor: AstroBarColors.primary,
                         },
                       ]}
                     >
@@ -769,7 +769,7 @@ export default function AdminScreen() {
                           color:
                             selectedBusinessId === b.id
                               ? "#FFFFFF"
-                              : NemyColors.primary,
+                              : AstroBarColors.primary,
                         }}
                       >
                         {b.name}
@@ -799,7 +799,7 @@ export default function AdminScreen() {
                   }}
                   style={[
                     styles.addButton,
-                    { backgroundColor: NemyColors.primary },
+                    { backgroundColor: AstroBarColors.primary },
                   ]}
                 >
                   <Feather name="plus" size={20} color="#FFFFFF" />
@@ -848,7 +848,7 @@ export default function AdminScreen() {
                               styles.orderIcon,
                               {
                                 backgroundColor: p.isAvailable
-                                  ? NemyColors.primaryLight
+                                  ? AstroBarColors.primaryLight
                                   : theme.backgroundSecondary,
                               },
                             ]}
@@ -858,7 +858,7 @@ export default function AdminScreen() {
                               size={20}
                               color={
                                 p.isAvailable
-                                  ? NemyColors.primary
+                                  ? AstroBarColors.primary
                                   : theme.textSecondary
                               }
                             />
@@ -877,7 +877,7 @@ export default function AdminScreen() {
                         </View>
                         <ThemedText
                           type="h4"
-                          style={{ color: NemyColors.primary }}
+                          style={{ color: AstroBarColors.primary }}
                         >
                           ${(p.price / 100).toFixed(2)}
                         </ThemedText>
@@ -894,12 +894,12 @@ export default function AdminScreen() {
                             <View
                               style={[
                                 styles.badge,
-                                { backgroundColor: NemyColors.warning + "20" },
+                                { backgroundColor: AstroBarColors.warning + "20" },
                               ]}
                             >
                               <ThemedText
                                 type="caption"
-                                style={{ color: NemyColors.warning }}
+                                style={{ color: AstroBarColors.warning }}
                               >
                                 Por peso
                               </ThemedText>
@@ -910,8 +910,8 @@ export default function AdminScreen() {
                               styles.badge,
                               {
                                 backgroundColor: p.isAvailable
-                                  ? NemyColors.success + "20"
-                                  : NemyColors.error + "20",
+                                  ? AstroBarColors.success + "20"
+                                  : AstroBarColors.error + "20",
                               },
                             ]}
                           >
@@ -919,8 +919,8 @@ export default function AdminScreen() {
                               type="caption"
                               style={{
                                 color: p.isAvailable
-                                  ? NemyColors.success
-                                  : NemyColors.error,
+                                  ? AstroBarColors.success
+                                  : AstroBarColors.error,
                               }}
                             >
                               {p.isAvailable ? "Disponible" : "Agotado"}
@@ -932,14 +932,14 @@ export default function AdminScreen() {
                             <Feather
                               name="edit-2"
                               size={18}
-                              color={NemyColors.primary}
+                              color={AstroBarColors.primary}
                             />
                           </Pressable>
                           <Pressable onPress={() => handleDeleteProduct(p.id)}>
                             <Feather
                               name="trash-2"
                               size={18}
-                              color={NemyColors.error}
+                              color={AstroBarColors.error}
                             />
                           </Pressable>
                         </View>
@@ -1127,9 +1127,9 @@ export default function AdminScreen() {
                       {
                         backgroundColor:
                           businessForm.type === t
-                            ? NemyColors.primary
+                            ? AstroBarColors.primary
                             : "transparent",
-                        borderColor: NemyColors.primary,
+                        borderColor: AstroBarColors.primary,
                       },
                     ]}
                   >
@@ -1139,7 +1139,7 @@ export default function AdminScreen() {
                         color:
                           businessForm.type === t
                             ? "#FFFFFF"
-                            : NemyColors.primary,
+                            : AstroBarColors.primary,
                       }}
                     >
                       {t === "restaurant" ? "Restaurante" : "Mercado"}
@@ -1293,9 +1293,9 @@ export default function AdminScreen() {
                   style={[
                     styles.checkbox,
                     {
-                      borderColor: NemyColors.primary,
+                      borderColor: AstroBarColors.primary,
                       backgroundColor: businessForm.isActive
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : "transparent",
                     },
                   ]}
@@ -1313,7 +1313,7 @@ export default function AdminScreen() {
               onPress={handleSaveBusiness}
               style={[
                 styles.saveButton,
-                { backgroundColor: NemyColors.primary },
+                { backgroundColor: AstroBarColors.primary },
               ]}
             >
               <ThemedText
@@ -1468,9 +1468,9 @@ export default function AdminScreen() {
                   style={[
                     styles.checkbox,
                     {
-                      borderColor: NemyColors.primary,
+                      borderColor: AstroBarColors.primary,
                       backgroundColor: productForm.isWeightBased
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : "transparent",
                     },
                   ]}
@@ -1507,9 +1507,9 @@ export default function AdminScreen() {
                             {
                               backgroundColor:
                                 productForm.weightUnit === u
-                                  ? NemyColors.primary
+                                  ? AstroBarColors.primary
                                   : "transparent",
-                              borderColor: NemyColors.primary,
+                              borderColor: AstroBarColors.primary,
                               paddingHorizontal: Spacing.sm,
                             },
                           ]}
@@ -1520,7 +1520,7 @@ export default function AdminScreen() {
                               color:
                                 productForm.weightUnit === u
                                   ? "#FFFFFF"
-                                  : NemyColors.primary,
+                                  : AstroBarColors.primary,
                             }}
                           >
                             {u}
@@ -1563,9 +1563,9 @@ export default function AdminScreen() {
                   style={[
                     styles.checkbox,
                     {
-                      borderColor: NemyColors.primary,
+                      borderColor: AstroBarColors.primary,
                       backgroundColor: productForm.isAvailable
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : "transparent",
                     },
                   ]}
@@ -1583,7 +1583,7 @@ export default function AdminScreen() {
               onPress={handleSaveProduct}
               style={[
                 styles.saveButton,
-                { backgroundColor: NemyColors.primary },
+                { backgroundColor: AstroBarColors.primary },
               ]}
             >
               <ThemedText
@@ -1610,8 +1610,8 @@ export default function AdminScreen() {
               {selectedUser ? (
                 <>
                   <View style={[styles.userDetailCard, { backgroundColor: theme.backgroundSecondary }]}>
-                    <View style={[styles.avatar, { backgroundColor: NemyColors.primaryLight, width: 60, height: 60 }]}>
-                      <ThemedText type="h2" style={{ color: NemyColors.primaryDark }}>
+                    <View style={[styles.avatar, { backgroundColor: AstroBarColors.primaryLight, width: 60, height: 60 }]}>
+                      <ThemedText type="h2" style={{ color: AstroBarColors.primaryDark }}>
                         {selectedUser.name.charAt(0).toUpperCase()}
                       </ThemedText>
                     </View>
@@ -1632,7 +1632,7 @@ export default function AdminScreen() {
                         <Feather
                           name={selectedUser.emailVerified ? "check-circle" : "x-circle"}
                           size={14}
-                          color={selectedUser.emailVerified ? NemyColors.success : NemyColors.error}
+                          color={selectedUser.emailVerified ? AstroBarColors.success : AstroBarColors.error}
                         />
                         <ThemedText type="caption" style={{ marginLeft: 4 }}>
                           Email {selectedUser.emailVerified ? "verificado" : "sin verificar"}
@@ -1642,7 +1642,7 @@ export default function AdminScreen() {
                         <Feather
                           name={(selectedUser as any).phoneVerified ? "check-circle" : "x-circle"}
                           size={14}
-                          color={(selectedUser as any).phoneVerified ? NemyColors.success : NemyColors.error}
+                          color={(selectedUser as any).phoneVerified ? AstroBarColors.success : AstroBarColors.error}
                         />
                         <ThemedText type="caption" style={{ marginLeft: 4 }}>
                           Tel {(selectedUser as any).phoneVerified ? "verificado" : "sin verificar"}
@@ -1662,14 +1662,14 @@ export default function AdminScreen() {
                           style={[
                             styles.tab,
                             {
-                              backgroundColor: userRoleEdit === role ? NemyColors.primary : "transparent",
-                              borderColor: NemyColors.primary,
+                              backgroundColor: userRoleEdit === role ? AstroBarColors.primary : "transparent",
+                              borderColor: AstroBarColors.primary,
                             },
                           ]}
                         >
                           <ThemedText
                             type="small"
-                            style={{ color: userRoleEdit === role ? "#FFFFFF" : NemyColors.primary }}
+                            style={{ color: userRoleEdit === role ? "#FFFFFF" : AstroBarColors.primary }}
                           >
                             {getRoleLabel(role)}
                           </ThemedText>
@@ -1685,7 +1685,7 @@ export default function AdminScreen() {
             </ScrollView>
             <Pressable
               onPress={handleUpdateUserRole}
-              style={[styles.saveButton, { backgroundColor: NemyColors.primary }]}
+              style={[styles.saveButton, { backgroundColor: AstroBarColors.primary }]}
             >
               <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
                 Guardar Cambios
@@ -1708,8 +1708,8 @@ export default function AdminScreen() {
               {selectedOrder ? (
                 <>
                   <View style={[styles.userDetailCard, { backgroundColor: theme.backgroundSecondary }]}>
-                    <View style={[styles.orderIcon, { backgroundColor: NemyColors.primaryLight, width: 50, height: 50 }]}>
-                      <Feather name="package" size={24} color={NemyColors.primary} />
+                    <View style={[styles.orderIcon, { backgroundColor: AstroBarColors.primaryLight, width: 50, height: 50 }]}>
+                      <Feather name="package" size={24} color={AstroBarColors.primary} />
                     </View>
                     <ThemedText type="h3" style={{ marginTop: Spacing.md }}>
                       #{selectedOrder.id.slice(0, 8)}
@@ -1759,7 +1759,7 @@ export default function AdminScreen() {
                           const url = `https://www.google.com/maps?q=${selectedOrder.deliveryLatitude},${selectedOrder.deliveryLongitude}`;
                           Linking.openURL(url);
                         }}
-                        style={[styles.mapButton, { backgroundColor: NemyColors.primary }]}
+                        style={[styles.mapButton, { backgroundColor: AstroBarColors.primary }]}
                       >
                         <Feather name="map" size={16} color="#FFFFFF" />
                         <ThemedText type="small" style={{ color: "#FFFFFF", marginLeft: Spacing.xs }}>
@@ -1801,7 +1801,7 @@ export default function AdminScreen() {
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: theme.border }}>
                       <ThemedText type="h4">Total</ThemedText>
-                      <ThemedText type="h4" style={{ color: NemyColors.primary }}>
+                      <ThemedText type="h4" style={{ color: AstroBarColors.primary }}>
                         ${(selectedOrder.total / 100).toFixed(2)}
                       </ThemedText>
                     </View>

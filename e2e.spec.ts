@@ -1,4 +1,4 @@
-import { test, expect, request } from "@playwright/test";
+﻿import { test, expect, request } from "@playwright/test";
 
 const getBaseUrl = () =>
   process.env.BACKEND_URL ||
@@ -26,7 +26,7 @@ test("health endpoint responds", async ({ request }) => {
   expect(res.ok()).toBeTruthy();
 });
 
-test("order totals include NEMY commission", async ({ request }) => {
+test("order totals include AstroBar commission", async ({ request }) => {
   const token = await getAuthToken();
   if (!token) {
     test.skip(true, "dev-login unavailable or test user missing");
@@ -34,8 +34,8 @@ test("order totals include NEMY commission", async ({ request }) => {
 
   const subtotal = 10000;
   const deliveryFee = 2000;
-  const nemyCommission = Math.round(subtotal * 0.15);
-  const total = subtotal + deliveryFee + nemyCommission;
+  const AstroBarCommission = Math.round(subtotal * 0.15);
+  const total = subtotal + deliveryFee + AstroBarCommission;
 
   const createRes = await request.post("/api/orders", {
     headers: {
@@ -48,7 +48,7 @@ test("order totals include NEMY commission", async ({ request }) => {
       items: "[]",
       subtotal,
       productosBase: subtotal,
-      nemyCommission,
+      AstroBarCommission,
       deliveryFee,
       total,
       paymentMethod: "card",

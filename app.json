@@ -4,7 +4,7 @@
     "slug": "astrobar-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/astrobarlogo.jpg",
     "scheme": "astrobar",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1A1A2E",
-        "foregroundImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/astrobarlogo.jpg"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -31,19 +31,15 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/astrobarlogo.jpg"
     },
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
           "backgroundColor": "#1A1A2E",
           "dark": {
-            "backgroundColor": "#0F0F1E",
-            "image": "./assets/images/splash-icon.png"
+            "backgroundColor": "#0F0F1E"
           }
         }
       ],

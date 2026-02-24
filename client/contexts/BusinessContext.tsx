@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "@/lib/query-client";
 import { useAuth } from "./AuthContext";
@@ -41,7 +41,7 @@ interface BusinessContextType {
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
-const SELECTED_BUSINESS_KEY = "@nemy_selected_business";
+const SELECTED_BUSINESS_KEY = "@AstroBar_selected_business";
 
 export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();

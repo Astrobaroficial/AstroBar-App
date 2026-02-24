@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import { authenticateToken, requireRole } from "../authMiddleware";
 import { sql } from "drizzle-orm";
 
@@ -34,8 +34,6 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const timeframe = todayOrders.length > 0 ? "hoy" : "últimos 7 días";
     
     const cancelledToday = ordersToShow.filter(o => o.status === "cancelled").length;
-    const driversOnline = allUsers.filter(u => u.role === "delivery_driver" && u.isActive).length;
-    const totalDrivers = allUsers.filter(u => u.role === "delivery_driver").length;
     const pausedBusinesses = allBusinesses.filter(b => !b.isActive).length;
     const totalBusinesses = allBusinesses.length;
 
@@ -50,14 +48,9 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     res.json({
       activeOrders: activeOrdersCount,
       ordersToday: ordersToShow.length,
-      onlineDrivers: driversOnline,
-      todayOrders: ordersToShow.length,
       todayRevenue: todayRevenue,
       cancelledToday,
       cancellationRate: ordersToShow.length > 0 ? ((cancelledToday / ordersToShow.length) * 100).toFixed(1) + "%" : "0%",
-      avgDeliveryTime: 35,
-      driversOnline,
-      totalDrivers,
       pausedBusinesses,
       totalBusinesses,
       timeframe,
@@ -132,27 +125,8 @@ router.get("/dashboard/online-drivers", authenticateToken, requireRole("admin", 
   try {
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
 
-    const drivers = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, "delivery_driver"));
-
-    const driversWithDetails = drivers.map(driver => ({
-      id: driver.id,
-      name: driver.name,
-      isOnline: driver.isActive,
-      lastActiveAt: driver.updatedAt,
-      location: {
-        latitude: "20.6736",
-        longitude: "-104.3647",
-        updatedAt: new Date().toISOString(),
-      },
-      activeOrder: null,
-    }));
-
-    res.json({ drivers: driversWithDetails });
+    res.json({ drivers: [] });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -330,14 +304,8 @@ router.get("/drivers", authenticateToken, requireRole("admin", "super_admin"), a
   try {
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
 
-    const drivers = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, "delivery_driver"));
-
-    res.json({ success: true, drivers });
+    res.json({ success: true, drivers: [] });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

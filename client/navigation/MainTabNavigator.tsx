@@ -1,26 +1,26 @@
-import React from "react";
+﻿import React from "react";
 import { BottomTabBarButtonProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
+import MapScreen from "@/screens/MapScreen";
 import OrdersStackNavigator from "@/navigation/OrdersStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import AdminScreenNew from "@/screens/AdminScreenNew";
 import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
-import DeliveryDashboardScreen from "@/screens/DeliveryDashboardScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { NemyColors, Spacing } from "@/constants/theme";
+import { AstroBarColors, Spacing } from "@/constants/theme";
 
 export type MainTabParamList = {
   HomeTab: undefined;
+  MapTab: undefined;
   OrdersTab: undefined;
   ProfileTab: undefined;
   AdminTab: undefined;
   BusinessTab: undefined;
-  DeliveryTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -31,7 +31,6 @@ export default function MainTabNavigator() {
   const insets = useSafeAreaInsets();
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isBusiness = user?.role === "business_owner";
-  const isDelivery = user?.role === "delivery_driver";
 
   const TabBarOrdersButton = ({ children, onPress, ...rest }: BottomTabBarButtonProps) => {
     // Strip ref to avoid Pressable ref type mismatch
@@ -58,7 +57,7 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="HomeTab"
       screenOptions={{
-        tabBarActiveTintColor: NemyColors.primary,
+        tabBarActiveTintColor: AstroBarColors.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
           backgroundColor: theme.background,
@@ -88,6 +87,16 @@ export default function MainTabNavigator() {
           title: "Inicio",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MapTab"
+        component={MapScreen}
+        options={{
+          title: "Mapa",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map" size={size} color={color} />
           ),
         }}
       />
@@ -142,18 +151,6 @@ export default function MainTabNavigator() {
             title: "Mi Negocio",
             tabBarIcon: ({ color, size }) => (
               <Feather name="briefcase" size={size} color={color} />
-            ),
-          }}
-        />
-      ) : null}
-      {isDelivery ? (
-        <Tab.Screen
-          name="DeliveryTab"
-          component={DeliveryDashboardScreen}
-          options={{
-            title: "Entregas",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="truck" size={size} color={color} />
             ),
           }}
         />

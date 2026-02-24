@@ -1,4 +1,4 @@
-import { db } from "./db";
+﻿import { db } from "./db";
 import { businesses } from "@shared/schema-mysql";
 import { eq } from "drizzle-orm";
 
@@ -10,7 +10,7 @@ type DaySchedule = {
 };
 
 function getZonedNow(): Date {
-  const timezone = process.env.BUSINESS_TIMEZONE || "America/Mexico_City";
+  const timezone = process.env.BUSINESS_TIMEZONE || "America/Argentina_City";
   return new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
 }
 

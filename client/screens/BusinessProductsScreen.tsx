@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -25,7 +25,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useBusiness } from "@/contexts/BusinessContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -213,7 +213,7 @@ export default function BusinessProductsScreen() {
         source={
           item.image
             ? { uri: item.image }
-            : require("../../assets/images/delivery-hero.png")
+            : require("../../assets/astrobarlogo.jpg")
         }
         style={styles.productImage}
         contentFit="cover"
@@ -229,20 +229,20 @@ export default function BusinessProductsScreen() {
         >
           {item.description}
         </ThemedText>
-        <ThemedText type="h4" style={{ color: NemyColors.primary, marginTop: Spacing.xs }}>
+        <ThemedText type="h4" style={{ color: AstroBarColors.primary, marginTop: Spacing.xs }}>
           ${(item.price / 100).toFixed(2)}
         </ThemedText>
       </Pressable>
       <View style={styles.productActions}>
         <Pressable onPress={() => handleDelete(item.id)} style={{ marginBottom: Spacing.sm }}>
-          <Feather name="trash-2" size={20} color={NemyColors.error} />
+          <Feather name="trash-2" size={20} color={AstroBarColors.error} />
         </Pressable>
         <Switch
           value={item.isAvailable === 1 || item.isAvailable === true}
           onValueChange={() =>
             toggleAvailability(item.id, item.isAvailable === 1 || item.isAvailable === true)
           }
-          trackColor={{ false: "#767577", true: NemyColors.primary }}
+          trackColor={{ false: "#767577", true: AstroBarColors.primary }}
           thumbColor="#fff"
         />
       </View>
@@ -267,10 +267,10 @@ export default function BusinessProductsScreen() {
                 navigation.navigate("MyBusinesses");
               }}
             >
-              <ThemedText type="caption" style={{ color: NemyColors.primary }}>
+              <ThemedText type="caption" style={{ color: AstroBarColors.primary }}>
                 {selectedBusiness?.name || "Seleccionar negocio"}
               </ThemedText>
-              <Feather name="chevron-down" size={14} color={NemyColors.primary} />
+              <Feather name="chevron-down" size={14} color={AstroBarColors.primary} />
             </Pressable>
           ) : selectedBusiness ? (
             <ThemedText type="caption" style={{ color: theme.textSecondary }}>
@@ -280,7 +280,7 @@ export default function BusinessProductsScreen() {
         </View>
         <Pressable
           onPress={openAddModal}
-          style={[styles.addButton, { backgroundColor: NemyColors.primary }]}
+          style={[styles.addButton, { backgroundColor: AstroBarColors.primary }]}
         >
           <Feather name="plus" size={24} color="#FFF" />
         </Pressable>
@@ -295,7 +295,7 @@ export default function BusinessProductsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={NemyColors.primary}
+            tintColor={AstroBarColors.primary}
           />
         }
         ListEmptyComponent={
@@ -373,7 +373,7 @@ export default function BusinessProductsScreen() {
               </View>
               {isUploadingImage ? (
                 <View style={[styles.previewImage, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.backgroundSecondary }]}>
-                  <ActivityIndicator size="large" color={NemyColors.primary} />
+                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
                   <ThemedText type="small" style={{ marginTop: Spacing.sm }}>Subiendo imagen...</ThemedText>
                 </View>
               ) : form.image ? (
@@ -397,7 +397,7 @@ export default function BusinessProductsScreen() {
               </Pressable>
               <Pressable
                 onPress={handleSave}
-                style={[styles.modalButton, { backgroundColor: NemyColors.primary }]}
+                style={[styles.modalButton, { backgroundColor: AstroBarColors.primary }]}
               >
                 <ThemedText type="body" style={{ color: "#FFF" }}>Guardar</ThemedText>
               </Pressable>

@@ -1,8 +1,8 @@
-import express from "express";
+﻿import express from "express";
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || "nemy_local_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || "AstroBar_local_secret_key";
 
 // Phone login
 router.post("/phone-login", async (req, res) => {
@@ -13,7 +13,7 @@ router.post("/phone-login", async (req, res) => {
       return res.status(400).json({ error: "Phone and code are required" });
     }
 
-    const { users, deliveryDrivers, wallets } = await import("@shared/schema-mysql");
+    const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq, or, like } = await import("drizzle-orm");
     const jwt = await import("jsonwebtoken");
@@ -65,44 +65,6 @@ router.post("/phone-login", async (req, res) => {
         phoneVerified: true 
       })
       .where(eq(users.id, user[0].id));
-
-    if (user[0].role === "delivery_driver") {
-      const [existingDriver] = await db
-        .select({ id: deliveryDrivers.id })
-        .from(deliveryDrivers)
-        .where(eq(deliveryDrivers.userId, user[0].id))
-        .limit(1);
-
-      if (!existingDriver) {
-        await db.insert(deliveryDrivers).values({
-          userId: user[0].id,
-          vehicleType: "bike",
-          vehiclePlate: null,
-          isAvailable: false,
-          totalDeliveries: 0,
-          rating: 0,
-          totalRatings: 0,
-          strikes: 0,
-          isBlocked: false,
-        });
-      }
-
-      const [existingWallet] = await db
-        .select({ id: wallets.id })
-        .from(wallets)
-        .where(eq(wallets.userId, user[0].id))
-        .limit(1);
-
-      if (!existingWallet) {
-        await db.insert(wallets).values({
-          userId: user[0].id,
-          balance: 0,
-          pendingBalance: 0,
-          totalEarned: 0,
-          totalWithdrawn: 0,
-        });
-      }
-    }
 
     const token = jwt.default.sign(
       { id: user[0].id, phone: user[0].phone, role: user[0].role },
@@ -256,7 +218,7 @@ router.post("/send-code", async (req, res) => {
         const twilio = await import("twilio");
         const client = twilio.default(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
         await client.messages.create({
-          body: `Tu código NEMY: ${code}`,
+          body: `Tu código AstroBar: ${code}`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: normalizedPhone
         });
@@ -319,7 +281,7 @@ router.post("/phone-signup", async (req, res) => {
       });
     }
 
-    const validRoles = ['customer', 'business_owner', 'delivery_driver'];
+    const validRoles = ['customer', 'business_owner'];
     const userRole = validRoles.includes(role) ? role : 'customer';
     const requiresApproval = false;
 
@@ -333,51 +295,7 @@ router.post("/phone-signup", async (req, res) => {
         isActive: true,
       });
 
-    if (userRole === "delivery_driver") {
-      const [createdUser] = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.phone, normalizedPhone))
-        .limit(1);
 
-      if (createdUser?.id) {
-        const [existingDriver] = await db
-          .select({ id: deliveryDrivers.id })
-          .from(deliveryDrivers)
-          .where(eq(deliveryDrivers.userId, createdUser.id))
-          .limit(1);
-
-        if (!existingDriver) {
-          await db.insert(deliveryDrivers).values({
-            userId: createdUser.id,
-            vehicleType: "bike",
-            vehiclePlate: null,
-            isAvailable: false,
-            totalDeliveries: 0,
-            rating: 0,
-            totalRatings: 0,
-            strikes: 0,
-            isBlocked: false,
-          });
-        }
-
-        const [existingWallet] = await db
-          .select({ id: wallets.id })
-          .from(wallets)
-          .where(eq(wallets.userId, createdUser.id))
-          .limit(1);
-
-        if (!existingWallet) {
-          await db.insert(wallets).values({
-            userId: createdUser.id,
-            balance: 0,
-            pendingBalance: 0,
-            totalEarned: 0,
-            totalWithdrawn: 0,
-          });
-        }
-      }
-    }
 
     res.json({ 
       success: true, 

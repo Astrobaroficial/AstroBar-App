@@ -1,7 +1,7 @@
-/**
- * Coordenadas de cobertura de Autlán, Jalisco
+﻿/**
+ * Coordenadas de cobertura de Buenos Aires, Argentina
  */
-export const AUTLAN_BOUNDS = {
+export const BUENOS_AIRES_BOUNDS = {
   minLat: 19.75,
   maxLat: 19.80,
   minLng: -104.40,
@@ -9,9 +9,9 @@ export const AUTLAN_BOUNDS = {
 };
 
 /**
- * Centro de Autlán para inicializar mapas
+ * Centro de Buenos Aires para inicializar mapas
  */
-export const AUTLAN_CENTER = {
+export const BUENOS_AIRES_CENTER = {
   latitude: 19.7708,
   longitude: -104.3636,
 };
@@ -21,9 +21,9 @@ export const AUTLAN_CENTER = {
  */
 export const isInCoverageArea = (latitude: number, longitude: number): boolean => {
   return (
-    latitude >= AUTLAN_BOUNDS.minLat &&
-    latitude <= AUTLAN_BOUNDS.maxLat &&
-    longitude >= AUTLAN_BOUNDS.minLng &&
-    longitude <= AUTLAN_BOUNDS.maxLng
+    latitude >= BUENOS_AIRES_BOUNDS.minLat &&
+    latitude <= BUENOS_AIRES_BOUNDS.maxLat &&
+    longitude >= BUENOS_AIRES_BOUNDS.minLng &&
+    longitude <= BUENOS_AIRES_BOUNDS.maxLng
   );
 };

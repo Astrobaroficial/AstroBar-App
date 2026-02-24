@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { View, StyleSheet, ScrollView, Pressable, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -14,9 +14,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { mockBusinesses } from "@/data/mockData";
 
 type CartScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -100,8 +99,8 @@ export default function CartScreen() {
   
   // Precio base de productos (sin comision)
   const productosBase = subtotal;
-  const nemyCommission = productosBase * 0.15;
-  const total = productosBase + nemyCommission + deliveryFee;
+  const AstroBarCommission = productosBase * 0.15;
+  const total = productosBase + AstroBarCommission + deliveryFee;
   const canProceed = subtotal >= minimumOrder;
 
   const handleCheckout = () => {
@@ -129,9 +128,9 @@ export default function CartScreen() {
           <View style={{ width: 44 }} />
         </View>
         <EmptyState
-          image={require("../../assets/images/empty-cart.png")}
+          image={require("../../assets/astrobarlogo.jpg")}
           title="Tu carrito está vacío"
-          description="Agrega productos de tus restaurantes y mercados favoritos"
+          description="Agrega productos de tus bares y promociones favoritos"
           actionLabel="Explorar negocios"
           onAction={() => navigation.goBack()}
         />
@@ -156,7 +155,7 @@ export default function CartScreen() {
           }}
           style={styles.clearButton}
         >
-          <Feather name="trash-2" size={20} color={NemyColors.error} />
+          <Feather name="trash-2" size={20} color={AstroBarColors.error} />
         </Pressable>
       </View>
 
@@ -214,11 +213,11 @@ export default function CartScreen() {
                       <Feather
                         name="file-text"
                         size={12}
-                        color={NemyColors.primary}
+                        color={AstroBarColors.primary}
                       />
                       <ThemedText
                         type="caption"
-                        style={{ color: NemyColors.primary, marginLeft: 4 }}
+                        style={{ color: AstroBarColors.primary, marginLeft: 4 }}
                       >
                         {item.note}
                       </ThemedText>
@@ -226,7 +225,7 @@ export default function CartScreen() {
                   ) : null}
                   <ThemedText
                     type="h4"
-                    style={{ color: NemyColors.primary, marginTop: Spacing.sm }}
+                    style={{ color: AstroBarColors.primary, marginTop: Spacing.sm }}
                   >
                     ${itemTotal.toFixed(2)}
                   </ThemedText>
@@ -271,7 +270,7 @@ export default function CartScreen() {
                     <Feather
                       name="trash-2"
                       size={18}
-                      color={NemyColors.error}
+                      color={AstroBarColors.error}
                     />
                   </Pressable>
                 </View>
@@ -298,9 +297,9 @@ export default function CartScreen() {
         </View>
         <View style={styles.summaryRow}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            Comision NEMY (15%)
+            Comision AstroBar (15%)
           </ThemedText>
-          <ThemedText type="body">${nemyCommission.toFixed(2)}</ThemedText>
+          <ThemedText type="body">${AstroBarCommission.toFixed(2)}</ThemedText>
         </View>
         <View style={styles.summaryRow}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
@@ -310,7 +309,7 @@ export default function CartScreen() {
         </View>
         <View style={[styles.summaryRow, styles.totalRow]}>
           <ThemedText type="h3">Total</ThemedText>
-          <ThemedText type="h2" style={{ color: NemyColors.primary }}>
+          <ThemedText type="h2" style={{ color: AstroBarColors.primary }}>
             ${total.toFixed(2)}
           </ThemedText>
         </View>

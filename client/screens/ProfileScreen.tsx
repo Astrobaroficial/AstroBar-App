@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -29,7 +29,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp, ThemeMode } from "@/contexts/AppContext";
 import { useToast } from "@/contexts/ToastContext";
-import { Spacing, BorderRadius, NemyColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 
@@ -60,25 +60,23 @@ function SettingsItem({
         styles.settingsItem,
         {
           backgroundColor: pressed ? theme.backgroundSecondary : "transparent",
-        },
-      ]}
+        }]}
     >
       <View
         style={[
           styles.settingsIcon,
-          { backgroundColor: danger ? "#FFEBEE" : theme.backgroundSecondary },
-        ]}
+          { backgroundColor: danger ? "#FFEBEE" : theme.backgroundSecondary }]}
       >
         <Feather
           name={icon}
           size={20}
-          color={danger ? NemyColors.error : NemyColors.primary}
+          color={danger ? AstroBarColors.error : AstroBarColors.primary}
         />
       </View>
       <View style={styles.settingsContent}>
         <ThemedText
           type="body"
-          style={{ color: danger ? NemyColors.error : theme.text }}
+          style={{ color: danger ? AstroBarColors.error : theme.text }}
         >
           {label}
         </ThemedText>
@@ -96,8 +94,7 @@ function SettingsItem({
 const themeOptions: { value: ThemeMode; label: string }[] = [
   { value: "system", label: "Sistema" },
   { value: "light", label: "Claro" },
-  { value: "dark", label: "Oscuro" },
-];
+  { value: "dark", label: "Oscuro" }];
 
 function resolveProfileImageUrl(profileImage: string): string {
   const apiBase = getApiUrl().replace(/\/+$/, "");
@@ -143,8 +140,7 @@ export default function ProfileScreen() {
   const [notificationStatus, setNotificationStatus] = useState<Notifications.PermissionStatus>("undetermined");
 
   const approvalStatus =
-    user?.role === "business_owner" || user?.role === "delivery_driver"
-      ? user?.isActive
+    user?.role === "business_owner" ? user?.isActive
         ? { text: "Aprobado", variant: "success" as const }
         : { text: "En revision", variant: "warning" as const }
       : null;
@@ -153,17 +149,7 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const loadDriverStatus = async () => {
-      if (user?.role === "delivery_driver") {
-        try {
-          const response = await apiRequest("GET", "/api/delivery/status");
-          const data = await response.json();
-          if (data.success) {
-            setDriverStrikes(data.strikes || 0);
-          }
-        } catch (error) {
-          console.log("Error loading driver status:", error);
-        }
-      }
+      // Removed delivery driver functionality
     };
     loadDriverStatus();
   }, [user?.role]);
@@ -305,8 +291,8 @@ export default function ProfileScreen() {
     try {
       await Share.share({
         message:
-          "Descubre NEMY - Tu delivery local de confianza en Autlan. Pide comida y productos del mercado con un toque. https://nemy.replit.app",
-        title: "NEMY - Delivery Local",
+          "Descubre AstroBar - Tu Promociones Nocturnas de confianza en Buenos Aires. Descubre promociones en bares del mercado con un toque. https://AstroBar.replit.app",
+        title: "AstroBar - Promociones Nocturnas",
       });
     } catch (error) {
       console.error("Error sharing:", error);
@@ -316,9 +302,8 @@ export default function ProfileScreen() {
   const shareToSocialMedia = (platform: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const message = encodeURIComponent(
-      "Descubre NEMY - Tu delivery local de confianza en Autlan. Pide comida y productos del mercado con un toque.",
-    );
-    const url = encodeURIComponent("https://nemy.replit.app");
+      "Descubre AstroBar - Tu Promociones Nocturnas de confianza en Buenos Aires. Descubre promociones en bares del mercado con un toque.");
+    const url = encodeURIComponent("https://AstroBar.replit.app");
 
     let shareUrl = "";
     switch (platform) {
@@ -404,9 +389,7 @@ export default function ProfileScreen() {
       case "customer":
         return "Cliente";
       case "business_owner":
-        return "Dueño de Negocio";
-      case "delivery_driver":
-        return "Repartidor";
+        return "Dueño de Bar";
       case "admin":
       case "super_admin":
         return "Administrador";
@@ -429,16 +412,14 @@ export default function ProfileScreen() {
           {
             paddingTop: Spacing.md,
             paddingBottom: Spacing.xl + Math.max(tabBarHeight, insets.bottom + 64),
-          },
-        ]}
+          }]}
         showsVerticalScrollIndicator={false}
       >
         <View
           style={[
             styles.profileCard,
             { backgroundColor: theme.card },
-            Shadows.md,
-          ]}
+            Shadows.md]}
         >
           <Pressable 
             style={styles.avatarContainer} 
@@ -449,21 +430,20 @@ export default function ProfileScreen() {
               source={
                 profileImage
                   ? { uri: profileImage }
-                  : require("../../assets/images/avatar-placeholder.png")
+                  : require("../../assets/astrobarlogo.jpg")
               }
               style={[styles.avatar, isUploadingImage && { opacity: 0.5 }]}
               contentFit="cover"
             />
             {isUploadingImage ? (
-              <View style={[styles.editBadge, { backgroundColor: NemyColors.primary }]}>
+              <View style={[styles.editBadge, { backgroundColor: AstroBarColors.primary }]}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
               </View>
             ) : (
               <View
                 style={[
                   styles.editBadge,
-                  { backgroundColor: NemyColors.primary },
-                ]}
+                  { backgroundColor: AstroBarColors.primary }]}
               >
                 <Feather name="camera" size={14} color="#FFFFFF" />
               </View>
@@ -538,87 +518,24 @@ export default function ProfileScreen() {
           />
           {user?.role === "customer" && (
             <SettingsItem
-              icon="truck"
-              label="Ser repartidor"
+              icon="briefcase"
+              label="Registrar mi bar"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                navigation.navigate("BecomeDriver");
+                navigation.navigate("RegisterBusiness" as any);
               }}
             />
           )}
-          {(user?.role === "delivery_driver" || user?.role === "business_owner") && (
+          {user?.role === "business_owner" && (
             <SettingsItem
               icon="dollar-sign"
               label="Mi Billetera"
               onPress={() => {
-                if (user?.role === 'delivery_driver') {
-                  navigation.navigate('DriverEarnings' as any);
-                } else {
-                  navigation.navigate("Wallet");
-                }
+                navigation.navigate("Wallet");
               }}
             />
           )}
         </View>
-
-        {user?.role === "delivery_driver" && (
-          <View
-            style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
-          >
-            <ThemedText type="h4" style={styles.sectionTitle}>
-              Estado del Repartidor
-            </ThemedText>
-            <View style={styles.strikesContainer}>
-              <View style={styles.strikesHeader}>
-                <View style={styles.strikesIconContainer}>
-                  <Feather 
-                    name="alert-triangle" 
-                    size={24} 
-                    color={driverStrikes > 0 ? NemyColors.warning : NemyColors.success} 
-                  />
-                </View>
-                <View style={styles.strikesInfo}>
-                  <ThemedText type="body" style={{ fontWeight: "600" }}>
-                    Strikes Acumulados
-                  </ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-                    {driverStrikes === 0 
-                      ? "Sin strikes - Excelente trabajo" 
-                      : driverStrikes >= maxStrikes 
-                        ? "Cuenta en riesgo de suspensión"
-                        : `${maxStrikes - driverStrikes} strikes restantes antes de suspensión`}
-                  </ThemedText>
-                </View>
-              </View>
-              <View style={styles.strikesVisual}>
-                {Array.from({ length: maxStrikes }).map((_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.strikeIndicator,
-                      {
-                        backgroundColor: index < driverStrikes ? NemyColors.error : theme.backgroundSecondary,
-                        borderColor: index < driverStrikes ? NemyColors.error : theme.border,
-                      },
-                    ]}
-                  >
-                    {index < driverStrikes ? (
-                      <Feather name="x" size={16} color="#FFF" />
-                    ) : (
-                      <Feather name="check" size={16} color={NemyColors.success} />
-                    )}
-                  </View>
-                ))}
-              </View>
-              <View style={[styles.strikeInfoCard, { backgroundColor: theme.backgroundSecondary }]}>
-                <Feather name="info" size={16} color={theme.textSecondary} />
-                <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: Spacing.sm, flex: 1 }}>
-                  Los strikes se acumulan por cancelaciones injustificadas, quejas de clientes o incumplimiento de normas. Con 3 strikes tu cuenta puede ser suspendida.
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-        )}
 
         <View
           style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
@@ -663,7 +580,7 @@ export default function ProfileScreen() {
           </ThemedText>
           <SettingsItem
             icon="share-2"
-            label="Compartir NEMY"
+            label="Compartir AstroBar"
             onPress={handleShare}
           />
           <View style={styles.socialButtons}>
@@ -733,7 +650,7 @@ export default function ProfileScreen() {
           type="caption"
           style={[styles.version, { color: theme.textSecondary }]}
         >
-          NEMY v1.0.0
+          AstroBar v1.0.0
         </ThemedText>
       </ScrollView>
 
@@ -749,7 +666,7 @@ export default function ProfileScreen() {
         >
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <View style={[styles.modalIcon, { backgroundColor: "#FFEBEE" }]}>
-              <Feather name="log-out" size={28} color={NemyColors.error} />
+              <Feather name="log-out" size={28} color={AstroBarColors.error} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Cerrar sesión
@@ -765,8 +682,7 @@ export default function ProfileScreen() {
                 style={[
                   styles.modalButton,
                   styles.cancelButton,
-                  { borderColor: theme.border },
-                ]}
+                  { borderColor: theme.border }]}
                 onPress={() => setShowLogoutModal(false)}
               >
                 <ThemedText type="body" style={{ color: theme.text }}>
@@ -803,10 +719,9 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.modalIcon,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
             >
-              <Feather name="moon" size={28} color={NemyColors.primary} />
+              <Feather name="moon" size={28} color={AstroBarColors.primary} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Seleccionar tema
@@ -820,14 +735,13 @@ export default function ProfileScreen() {
                     {
                       backgroundColor:
                         themeMode === option.value
-                          ? NemyColors.primaryLight
+                          ? AstroBarColors.primaryLight
                           : theme.backgroundSecondary,
                       borderColor:
                         themeMode === option.value
-                          ? NemyColors.primary
+                          ? AstroBarColors.primary
                           : "transparent",
-                    },
-                  ]}
+                    }]}
                   onPress={() => handleThemeSelect(option.value)}
                 >
                   <Feather
@@ -841,7 +755,7 @@ export default function ProfileScreen() {
                     size={20}
                     color={
                       themeMode === option.value
-                        ? NemyColors.primary
+                        ? AstroBarColors.primary
                         : theme.textSecondary
                     }
                   />
@@ -850,7 +764,7 @@ export default function ProfileScreen() {
                     style={{
                       color:
                         themeMode === option.value
-                          ? NemyColors.primary
+                          ? AstroBarColors.primary
                           : theme.text,
                       marginLeft: Spacing.sm,
                       fontWeight: themeMode === option.value ? "600" : "400",
@@ -862,7 +776,7 @@ export default function ProfileScreen() {
                     <Feather
                       name="check"
                       size={20}
-                      color={NemyColors.primary}
+                      color={AstroBarColors.primary}
                       style={{ marginLeft: "auto" }}
                     />
                   ) : null}
@@ -872,8 +786,7 @@ export default function ProfileScreen() {
             <Pressable
               style={[
                 styles.modalButtonFull,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
               onPress={() => setShowThemeModal(false)}
             >
               <ThemedText type="body" style={{ color: theme.text }}>
@@ -898,10 +811,9 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.modalIcon,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
             >
-              <Feather name="bell" size={28} color={NemyColors.primary} />
+              <Feather name="bell" size={28} color={AstroBarColors.primary} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Notificaciones
@@ -927,10 +839,10 @@ export default function ProfileScreen() {
                 onValueChange={handleNotificationsToggle}
                 trackColor={{
                   false: theme.border,
-                  true: NemyColors.primaryLight,
+                  true: AstroBarColors.primaryLight,
                 }}
                 thumbColor={
-                  settings.notificationsEnabled ? NemyColors.primary : "#f4f3f4"
+                  settings.notificationsEnabled ? AstroBarColors.primary : "#f4f3f4"
                 }
               />
             </View>
@@ -947,8 +859,7 @@ export default function ProfileScreen() {
             <Pressable
               style={[
                 styles.modalButtonFull,
-                { backgroundColor: NemyColors.primary },
-              ]}
+                { backgroundColor: AstroBarColors.primary }]}
               onPress={() => setShowNotificationsModal(false)}
             >
               <ThemedText
@@ -976,10 +887,9 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.modalIcon,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
             >
-              <Feather name="globe" size={28} color={NemyColors.primary} />
+              <Feather name="globe" size={28} color={AstroBarColors.primary} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Idioma
@@ -989,21 +899,20 @@ export default function ProfileScreen() {
                 style={[
                   styles.themeOption,
                   {
-                    backgroundColor: NemyColors.primaryLight,
-                    borderColor: NemyColors.primary,
-                  },
-                ]}
+                    backgroundColor: AstroBarColors.primaryLight,
+                    borderColor: AstroBarColors.primary,
+                  }]}
               >
                 <ThemedText
                   type="body"
-                  style={{ color: NemyColors.primary, fontWeight: "600" }}
+                  style={{ color: AstroBarColors.primary, fontWeight: "600" }}
                 >
                   Español
                 </ThemedText>
                 <Feather
                   name="check"
                   size={20}
-                  color={NemyColors.primary}
+                  color={AstroBarColors.primary}
                   style={{ marginLeft: "auto" }}
                 />
               </View>
@@ -1017,8 +926,7 @@ export default function ProfileScreen() {
             <Pressable
               style={[
                 styles.modalButtonFull,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
               onPress={() => setShowLanguageModal(false)}
             >
               <ThemedText type="body" style={{ color: theme.text }}>
@@ -1037,21 +945,18 @@ export default function ProfileScreen() {
         <View
           style={[
             styles.fullScreenModal,
-            { backgroundColor: theme.backgroundRoot, paddingTop: insets.top },
-          ]}
+            { backgroundColor: theme.backgroundRoot, paddingTop: insets.top }]}
         >
           <View
             style={[
               styles.fullScreenHeader,
-              { borderBottomColor: theme.border },
-            ]}
+              { borderBottomColor: theme.border }]}
           >
             <ThemedText type="h3">Términos y condiciones</ThemedText>
             <Pressable
               style={[
                 styles.closeButton,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
               onPress={() => setShowTermsModal(false)}
             >
               <Feather name="x" size={24} color={theme.text} />
@@ -1069,28 +974,28 @@ export default function ProfileScreen() {
             </ThemedText>
             
             <ThemedText type="body" style={styles.legalText}>
-              Bienvenido a NEMY. Al utilizar nuestra aplicacion, aceptas estos terminos y condiciones. Por favor, leelos cuidadosamente.
+              Bienvenido a AstroBar. Al utilizar nuestra aplicacion, aceptas estos terminos y condiciones. Por favor, leelos cuidadosamente.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               1. Aceptacion de Terminos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Al descargar, instalar o usar la aplicacion NEMY, confirmas que has leido, entendido y aceptas estar sujeto a estos Terminos y Condiciones. Si no estas de acuerdo, no uses la aplicacion.
+              Al descargar, instalar o usar la aplicacion AstroBar, confirmas que has leido, entendido y aceptas estar sujeto a estos Terminos y Condiciones. Si no estas de acuerdo, no uses la aplicacion.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               2. Descripcion del Servicio
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              NEMY es una plataforma de delivery local que conecta a clientes con negocios locales y repartidores en Autlan de Navarro, Jalisco, Mexico. Facilitamos la compra y entrega de alimentos, productos de mercado y otros articulos de negocios participantes.
+              AstroBar es una plataforma de Promociones Nocturnas que conecta a clientes con negocios locales y repartidores en Buenos Aires, Argentina. Facilitamos la compra y entrega de alimentos, productos de mercado y otros articulos de negocios participantes.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               3. Registro y Cuenta
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Para usar NEMY debes registrarte con un numero de telefono valido. Eres responsable de mantener la confidencialidad de tu cuenta y de todas las actividades que ocurran bajo ella. Debes proporcionar informacion veraz y actualizada.
+              Para usar AstroBar debes registrarte con un numero de telefono valido. Eres responsable de mantener la confidencialidad de tu cuenta y de todas las actividades que ocurran bajo ella. Debes proporcionar informacion veraz y actualizada.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1104,7 +1009,7 @@ export default function ProfileScreen() {
               5. Entregas
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Los tiempos de entrega son estimados y pueden variar segun la demanda, condiciones climaticas y trafico. NEMY no se hace responsable por retrasos fuera de nuestro control. Debes estar disponible para recibir tu pedido en la direccion indicada.
+              Los tiempos de entrega son estimados y pueden variar segun la demanda, condiciones climaticas y trafico. AstroBar no se hace responsable por retrasos fuera de nuestro control. Debes estar disponible para recibir tu pedido en la direccion indicada.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1118,28 +1023,28 @@ export default function ProfileScreen() {
               7. Conducta del Usuario
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Te comprometes a usar NEMY de manera responsable y respetuosa. Esta prohibido el uso fraudulento, el acoso a repartidores o negocios, y cualquier actividad ilegal. NEMY se reserva el derecho de suspender cuentas que violen estas normas.
+              Te comprometes a usar AstroBar de manera responsable y respetuosa. Esta prohibido el uso fraudulento, el acoso a repartidores o negocios, y cualquier actividad ilegal. AstroBar se reserva el derecho de suspender cuentas que violen estas normas.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               8. Limitacion de Responsabilidad
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              NEMY actua como intermediario entre clientes, negocios y repartidores. No somos responsables por la calidad de los productos, alergenos no declarados, o problemas de salud derivados del consumo. Los negocios son responsables de la preparacion y calidad de sus productos.
+              AstroBar actua como intermediario entre clientes, negocios y repartidores. No somos responsables por la calidad de los productos, alergenos no declarados, o problemas de salud derivados del consumo. Los negocios son responsables de la preparacion y calidad de sus productos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               9. Modificaciones
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              NEMY puede modificar estos terminos en cualquier momento. Te notificaremos de cambios significativos. El uso continuado de la aplicacion constituye aceptacion de los nuevos terminos.
+              AstroBar puede modificar estos terminos en cualquier momento. Te notificaremos de cambios significativos. El uso continuado de la aplicacion constituye aceptacion de los nuevos terminos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               10. Contacto
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Para dudas o comentarios sobre estos terminos, contactanos a traves de la seccion de Ayuda y Soporte en la aplicacion o al correo soporte@nemy.mx
+              Para dudas o comentarios sobre estos terminos, contactanos a traves de la seccion de Ayuda y Soporte en la aplicacion o al correo soporte@AstroBar.mx
             </ThemedText>
           </ScrollView>
         </View>
@@ -1153,21 +1058,18 @@ export default function ProfileScreen() {
         <View
           style={[
             styles.fullScreenModal,
-            { backgroundColor: theme.backgroundRoot, paddingTop: insets.top },
-          ]}
+            { backgroundColor: theme.backgroundRoot, paddingTop: insets.top }]}
         >
           <View
             style={[
               styles.fullScreenHeader,
-              { borderBottomColor: theme.border },
-            ]}
+              { borderBottomColor: theme.border }]}
           >
             <ThemedText type="h3">Politica de privacidad</ThemedText>
             <Pressable
               style={[
                 styles.closeButton,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
               onPress={() => setShowPrivacyModal(false)}
             >
               <Feather name="x" size={24} color={theme.text} />
@@ -1185,7 +1087,7 @@ export default function ProfileScreen() {
             </ThemedText>
 
             <ThemedText type="body" style={styles.legalText}>
-              En NEMY, tu privacidad es nuestra prioridad. Esta politica describe como recopilamos, usamos y protegemos tu informacion personal.
+              En AstroBar, tu privacidad es nuestra prioridad. Esta politica describe como recopilamos, usamos y protegemos tu informacion personal.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1241,7 +1143,7 @@ export default function ProfileScreen() {
               8. Menores de Edad
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              NEMY no esta dirigido a menores de 18 anios. No recopilamos intencionalmente informacion de menores. Si eres padre y crees que tu hijo ha proporcionado informacion, contactanos.
+              AstroBar no esta dirigido a menores de 18 anios. No recopilamos intencionalmente informacion de menores. Si eres padre y crees que tu hijo ha proporcionado informacion, contactanos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1255,7 +1157,7 @@ export default function ProfileScreen() {
               10. Contacto
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Para ejercer tus derechos o resolver dudas sobre privacidad, contactanos a traves de Ayuda y Soporte o al correo privacidad@nemy.mx
+              Para ejercer tus derechos o resolver dudas sobre privacidad, contactanos a traves de Ayuda y Soporte o al correo privacidad@AstroBar.mx
             </ThemedText>
           </ScrollView>
         </View>
@@ -1275,10 +1177,9 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.modalIcon,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
             >
-              <Feather name="user" size={28} color={NemyColors.primary} />
+              <Feather name="user" size={28} color={AstroBarColors.primary} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Editar perfil
@@ -1293,8 +1194,7 @@ export default function ProfileScreen() {
             <Pressable
               style={[
                 styles.modalButtonFull,
-                { backgroundColor: NemyColors.primary },
-              ]}
+                { backgroundColor: AstroBarColors.primary }]}
               onPress={() => setShowEditProfileModal(false)}
             >
               <ThemedText
@@ -1322,10 +1222,9 @@ export default function ProfileScreen() {
             <View
               style={[
                 styles.modalIcon,
-                { backgroundColor: theme.backgroundSecondary },
-              ]}
+                { backgroundColor: theme.backgroundSecondary }]}
             >
-              <Feather name="map-pin" size={28} color={NemyColors.primary} />
+              <Feather name="map-pin" size={28} color={AstroBarColors.primary} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
               Direcciones guardadas
@@ -1340,8 +1239,7 @@ export default function ProfileScreen() {
             <Pressable
               style={[
                 styles.modalButtonFull,
-                { backgroundColor: NemyColors.primary },
-              ]}
+                { backgroundColor: AstroBarColors.primary }]}
               onPress={() => setShowAddressesModal(false)}
             >
               <ThemedText
@@ -1497,7 +1395,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   logoutButton: {
-    backgroundColor: NemyColors.error,
+    backgroundColor: AstroBarColors.error,
   },
   themeOptions: {
     width: "100%",

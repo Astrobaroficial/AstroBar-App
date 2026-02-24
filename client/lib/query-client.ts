@@ -1,4 +1,4 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+﻿import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { API_CONFIG } from "@/constants/api";
 
 /**
@@ -28,7 +28,7 @@ async function getAuthToken(): Promise<string | null> {
     
     // Fallback to user object
     if (!token) {
-      const stored = await AsyncStorage.getItem('@nemy_user');
+      const stored = await AsyncStorage.getItem('@AstroBar_user');
       if (stored) {
         const user = JSON.parse(stored);
         token = user.token;

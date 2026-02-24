@@ -1,10 +1,10 @@
-import React from "react";
+﻿import React from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 import { useTheme } from "@/hooks/useTheme";
-import { NemyColors, Spacing } from "@/constants/theme";
+import { AstroBarColors, Spacing } from "@/constants/theme";
 
 export function ThemeToggleButton() {
   const { isDark, setThemeMode } = useTheme();
@@ -27,7 +27,7 @@ export function ThemeToggleButton() {
       <Feather
         name={isDark ? "sun" : "moon"}
         size={22}
-        color={isDark ? NemyColors.warning : NemyColors.primary}
+        color={isDark ? AstroBarColors.warning : AstroBarColors.primary}
       />
     </Pressable>
   );

@@ -1,4 +1,4 @@
-// Development utility for NEMY app
+﻿// Development utility for AstroBar app
 // This helps create test data and handle missing orders gracefully
 
 export const DEV_UTILS = {
@@ -39,7 +39,7 @@ export const DEV_UTILS = {
     deliveryFee: 2500, // in cents
     total: 8000, // in cents
     paymentMethod: "card",
-    deliveryAddress: "Calle Ejemplo 123, Autlán, Jalisco",
+    deliveryAddress: "Calle Ejemplo 123, Autlán, Argentina",
     deliveryLatitude: "19.7708",
     deliveryLongitude: "-104.3636",
     createdAt: new Date().toISOString(),

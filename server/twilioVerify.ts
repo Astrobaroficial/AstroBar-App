@@ -1,4 +1,4 @@
-// Twilio Verify API Integration for NEMY - Phone-only Authentication
+﻿// Twilio Verify API Integration for AstroBar - Phone-only Authentication
 import twilio from "twilio";
 
 const client = twilio(
@@ -23,7 +23,7 @@ export async function sendVerificationCode(
         to: formatPhoneNumber(phoneNumber),
         channel: "sms",
         locale: "es",
-        customFriendlyName: "NEMY Autlán",
+        customFriendlyName: "AstroBar Autlán",
       });
 
     console.log(
@@ -69,7 +69,7 @@ export async function verifyCode(
   }
 }
 
-// Format phone number for Mexico
+// Format phone number for Argentina
 function formatPhoneNumber(phone: string): string {
   const cleaned = phone.replace(/\D/g, "");
 

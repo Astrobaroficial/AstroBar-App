@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, ScrollView, StyleSheet, Platform, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { NemyColors, Spacing } from "../../../constants/theme";
+import { AstroBarColors, Spacing } from "../../../constants/theme";
 import { DashboardMetrics, ActiveOrder, OnlineDriver, AdminStats } from "../types/admin.types";
 
 interface DashboardTabProps {
@@ -25,22 +25,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     switch (status?.toLowerCase()) {
       case "pending":
       case "pendiente":
-        return NemyColors.warning;
+        return AstroBarColors.warning;
       case "confirmed":
       case "confirmado":
         return "#3498DB";
       case "preparing":
       case "preparando":
-        return NemyColors.primary;
+        return AstroBarColors.primary;
       case "ready":
       case "listo":
-        return NemyColors.success;
+        return AstroBarColors.success;
       case "in_transit":
       case "en camino":
         return "#9B59B6";
       case "delivered":
       case "entregado":
-        return NemyColors.success;
+        return AstroBarColors.success;
       default:
         return "#666";
     }
@@ -72,7 +72,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <Text style={styles.metricLabel}>Pedidos hoy</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: NemyColors.error }]}>
+          <Text style={[styles.metricValue, { color: AstroBarColors.error }]}>
             {metrics?.cancelledToday || 0}
           </Text>
           <Text style={styles.metricLabel}>Cancelados</Text>
@@ -82,7 +82,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <Text style={styles.metricLabel}>Tiempo prom.</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: NemyColors.success }]}>
+          <Text style={[styles.metricValue, { color: AstroBarColors.success }]}>
             {metrics?.driversOnline || 0}/{metrics?.totalDrivers || 1}
           </Text>
           <Text style={styles.metricLabel}>Repartidores</Text>
@@ -91,12 +91,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       <View style={styles.secondaryMetricsGrid}>
         <View style={[styles.metricCard, styles.secondaryMetric]}>
-          <Feather name="package" size={20} color={NemyColors.primary} />
+          <Feather name="package" size={20} color={AstroBarColors.primary} />
           <Text style={styles.secondaryValue}>{activeOrders.length}</Text>
           <Text style={styles.metricLabel}>Pedidos activos</Text>
         </View>
         <View style={[styles.metricCard, styles.secondaryMetric]}>
-          <Feather name="pause-circle" size={20} color={NemyColors.warning} />
+          <Feather name="pause-circle" size={20} color={AstroBarColors.warning} />
           <Text style={styles.secondaryValue}>{metrics?.pausedBusinesses || 0}</Text>
           <Text style={styles.metricLabel}>Pausados</Text>
         </View>
@@ -104,13 +104,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* Liquidaciones y Cuenta Bancaria */}
       <View style={styles.adminActionsGrid}>
-        <View style={[styles.actionCard, { backgroundColor: NemyColors.warning + "15" }]}>
-          <Feather name="dollar-sign" size={32} color={NemyColors.warning} />
+        <View style={[styles.actionCard, { backgroundColor: AstroBarColors.warning + "15" }]}>
+          <Feather name="dollar-sign" size={32} color={AstroBarColors.warning} />
           <Text style={styles.actionTitle}>Liquidaciones</Text>
           <Text style={styles.actionSubtitle}>Aprobar pagos semanales</Text>
         </View>
-        <View style={[styles.actionCard, { backgroundColor: NemyColors.primary + "15" }]}>
-          <Feather name="credit-card" size={32} color={NemyColors.primary} />
+        <View style={[styles.actionCard, { backgroundColor: AstroBarColors.primary + "15" }]}>
+          <Feather name="credit-card" size={32} color={AstroBarColors.primary} />
           <Text style={styles.actionTitle}>Cuenta Bancaria</Text>
           <Text style={styles.actionSubtitle}>Configurar datos</Text>
         </View>
@@ -136,7 +136,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <Text style={styles.sectionTitle}>Resumen General</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Feather name="users" size={24} color={NemyColors.primary} />
+              <Feather name="users" size={24} color={AstroBarColors.primary} />
               <Text style={styles.statValue}>{stats.totalUsers}</Text>
               <Text style={styles.statLabel}>Usuarios</Text>
             </View>
@@ -146,12 +146,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <Text style={styles.statLabel}>Pedidos</Text>
             </View>
             <View style={styles.statCard}>
-              <Feather name="dollar-sign" size={24} color={NemyColors.success} />
+              <Feather name="dollar-sign" size={24} color={AstroBarColors.success} />
               <Text style={styles.statValue}>${(stats.totalRevenue / 100).toFixed(0)}</Text>
               <Text style={styles.statLabel}>Ingresos</Text>
             </View>
             <View style={styles.statCard}>
-              <Feather name="clock" size={24} color={NemyColors.warning} />
+              <Feather name="clock" size={24} color={AstroBarColors.warning} />
               <Text style={styles.statValue}>{stats.pendingOrders}</Text>
               <Text style={styles.statLabel}>Pendientes</Text>
             </View>
@@ -239,22 +239,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               onPress={() => onDriverPress?.(driver)}
             >
               <View style={styles.driverInfo}>
-                <View style={[styles.driverAvatar, { backgroundColor: NemyColors.primaryLight }]}>
-                  <Feather name="user" size={16} color={NemyColors.primary} />
+                <View style={[styles.driverAvatar, { backgroundColor: AstroBarColors.primaryLight }]}>
+                  <Feather name="user" size={16} color={AstroBarColors.primary} />
                 </View>
                 <Text style={styles.driverName}>{driver.name}</Text>
               </View>
               <View style={[
                 styles.availabilityBadge, 
-                { backgroundColor: isDriverAvailable(driver) ? NemyColors.success + "20" : NemyColors.warning + "20" }
+                { backgroundColor: isDriverAvailable(driver) ? AstroBarColors.success + "20" : AstroBarColors.warning + "20" }
               ]}>
                 <View style={[
                   styles.availabilityDot,
-                  { backgroundColor: isDriverAvailable(driver) ? NemyColors.success : NemyColors.warning }
+                  { backgroundColor: isDriverAvailable(driver) ? AstroBarColors.success : AstroBarColors.warning }
                 ]} />
                 <Text style={[
                   styles.availabilityText,
-                  { color: isDriverAvailable(driver) ? NemyColors.success : NemyColors.warning }
+                  { color: isDriverAvailable(driver) ? AstroBarColors.success : AstroBarColors.warning }
                 ]}>
                   {isDriverAvailable(driver) ? "Disponible" : "Ocupado"}
                 </Text>
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   linkText: {
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "600",
     fontSize: 13,
   },
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     marginBottom: 2,
   },
   metricLabel: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   roleValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
   },
   section: {
     marginBottom: 16,
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   orderTotal: {
     fontSize: 15,
     fontWeight: "700",
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
   },
   orderAddress: {
     fontSize: 12,
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   orderDriver: {
     fontSize: 12,
-    color: NemyColors.primary,
+    color: AstroBarColors.primary,
     fontWeight: "500",
   },
   driverCard: {

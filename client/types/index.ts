@@ -1,4 +1,4 @@
-export type UserRole = "customer" | "business_owner" | "delivery_driver" | "admin" | "super_admin";
+﻿export type UserRole = "customer" | "business_owner" | "admin" | "super_admin";
 
 export interface User {
   id: string;
@@ -94,7 +94,7 @@ export interface Order {
   status: OrderStatus;
   subtotal: number;
   productosBase?: number;
-  nemyCommission?: number;
+  AstroBarCommission?: number;
   deliveryFee: number;
   total: number;
   paymentMethod: "card" | "cash";

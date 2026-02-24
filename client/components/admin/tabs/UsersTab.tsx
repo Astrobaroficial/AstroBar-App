@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
-import { NemyColors } from "../../../constants/theme";
+import { AstroBarColors } from "../../../constants/theme";
 import { AdminUser } from "../types/admin.types";
 
 interface UsersTabProps {
@@ -18,9 +18,6 @@ export const UsersTab: React.FC<UsersTabProps> = ({ users, onUserPress }) => {
       case "business":
       case "business_owner":
         return "#3B82F6"; // Azul
-      case "driver":
-      case "delivery_driver":
-        return "#10B981"; // Verde
       case "customer":
         return "#6B7280"; // Gris
       default:
@@ -33,8 +30,6 @@ export const UsersTab: React.FC<UsersTabProps> = ({ users, onUserPress }) => {
       customer: "Cliente",
       business: "Negocio",
       business_owner: "Negocio",
-      driver: "Repartidor",
-      delivery_driver: "Repartidor",
       admin: "Administrador",
       super_admin: "Super Admin",
     };
@@ -57,8 +52,7 @@ export const UsersTab: React.FC<UsersTabProps> = ({ users, onUserPress }) => {
             <View
               style={[
                 styles.roleBadge,
-                { backgroundColor: getRoleBadgeColor(user.role) },
-              ]}
+                { backgroundColor: getRoleBadgeColor(user.role) }]}
             >
               <Text style={styles.roleBadgeText}>{getRoleLabel(user.role)}</Text>
             </View>

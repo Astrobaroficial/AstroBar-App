@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
-import { NemyColors } from "../../../constants/theme";
+import { AstroBarColors } from "../../../constants/theme";
 import { Business } from "../types/admin.types";
 
 interface BusinessesTabProps {

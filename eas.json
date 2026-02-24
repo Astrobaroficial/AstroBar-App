@@ -1,4 +1,4 @@
-{
+﻿{
   "cli": {
     "version": ">= 5.9.0"
   },
@@ -18,9 +18,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://nemy-app.replit.app",
-        "EXPO_PUBLIC_BACKEND_URL": "https://nemy-app.replit.app",
-        "EXPO_PUBLIC_FRONTEND_URL": "https://nemy-app.replit.app",
+        "EXPO_PUBLIC_API_URL": "https://AstroBar-app.replit.app",
+        "EXPO_PUBLIC_BACKEND_URL": "https://AstroBar-app.replit.app",
+        "EXPO_PUBLIC_FRONTEND_URL": "https://AstroBar-app.replit.app",
         "EXPO_PUBLIC_NODE_ENV": "production"
       }
     }

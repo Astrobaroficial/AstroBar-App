@@ -1,4 +1,4 @@
-// Automated Payment Processor for NEMY - Production Ready
+﻿// Automated Payment Processor for AstroBar - Production Ready
 import { stripe } from "./stripeClient";
 import { db } from "./db";
 import { orders, transactions, businesses, users } from "@shared/schema-mysql";
@@ -27,13 +27,13 @@ async function calculateCommissionsForOrder(order: {
   total: number;
   deliveryFee?: number | null;
   productosBase?: number | null;
-  nemyCommission?: number | null;
+  AstroBarCommission?: number | null;
 }): Promise<PaymentDistribution> {
   const commissions = await financialService.calculateCommissions(
     order.total,
     order.deliveryFee || 0,
     order.productosBase || undefined,
-    order.nemyCommission || undefined
+    order.AstroBarCommission || undefined
   );
   return {
     platformAmount: commissions.platform,
@@ -71,7 +71,7 @@ export async function createPaymentIntent(orderData: {
         total: orders.total,
         deliveryFee: orders.deliveryFee,
         productosBase: orders.productosBase,
-        nemyCommission: orders.nemyCommission,
+        AstroBarCommission: orders.AstroBarCommission,
       })
       .from(orders)
       .where(eq(orders.id, orderData.orderId))
@@ -128,8 +128,8 @@ export async function createPaymentIntent(orderData: {
         businessAmount: distribution.businessAmount.toString(),
         deliveryAmount: distribution.deliveryAmount.toString(),
       },
-      description: `NEMY Order ${orderData.orderId} - ${business.name}`,
-      statement_descriptor: "NEMY DELIVERY",
+      description: `AstroBar Order ${orderData.orderId} - ${business.name}`,
+      statement_descriptor: "ASTROBAR PROMO",
     };
 
     // Add payment method if provided
