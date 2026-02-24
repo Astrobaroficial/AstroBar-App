@@ -132,6 +132,54 @@ router.get("/dashboard/online-drivers", authenticateToken, requireRole("admin", 
   }
 });
 
+// Get all transactions (promotions)
+router.get("/transactions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { promotionTransactions, promotions, businesses, users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, desc } = await import("drizzle-orm");
+
+    const allTransactions = await db
+      .select()
+      .from(promotionTransactions)
+      .orderBy(desc(promotionTransactions.createdAt));
+
+    const enriched = await Promise.all(
+      allTransactions.map(async (transaction) => {
+        const [user] = await db
+          .select({ name: users.name, email: users.email })
+          .from(users)
+          .where(eq(users.id, transaction.userId))
+          .limit(1);
+
+        const [business] = await db
+          .select({ name: businesses.name })
+          .from(businesses)
+          .where(eq(businesses.id, transaction.businessId))
+          .limit(1);
+
+        const [promotion] = await db
+          .select({ title: promotions.title, type: promotions.type })
+          .from(promotions)
+          .where(eq(promotions.id, transaction.promotionId))
+          .limit(1);
+
+        return {
+          ...transaction,
+          user: user || { name: 'Usuario', email: '' },
+          business: business || { name: 'Bar' },
+          promotion: promotion || { title: 'Promoción', type: 'common' },
+        };
+      })
+    );
+
+    res.json({ success: true, transactions: enriched });
+  } catch (error: any) {
+    console.error('Transactions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all users
 router.get("/users", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {

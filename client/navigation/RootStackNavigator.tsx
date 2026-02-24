@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
 import BusinessTabNavigator from "@/navigation/BusinessTabNavigator";
+import AdminTabNavigator from "@/navigation/AdminTabNavigator";
 import LoginScreen from "@/screens/LoginScreen";
 import SignupScreen from "@/screens/SignupScreen";
 import VerifyPhoneScreen from "@/screens/VerifyPhoneScreen";
@@ -78,8 +79,10 @@ export default function RootStackNavigator() {
   }
 
   const isBusinessOwner = user?.role === "business_owner";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
   const getMainNavigator = () => {
+    if (isAdmin) return AdminTabNavigator;
     if (isBusinessOwner) return BusinessTabNavigator;
     return MainTabNavigator;
   };
