@@ -11,14 +11,18 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
 
 import { ThemedText } from "@/components/ThemedText";
+import { BarPinMarker, PinStatus } from "@/components/BarPinMarker";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const SEARCH_RADIUS_OPTIONS = [1, 2, 5, 10, 15]; // km
 
 export default function MapScreen() {
   const { theme } = useTheme();
@@ -27,14 +31,16 @@ export default function MapScreen() {
   const [location, setLocation] = useState<any>(null);
   const [bars, setBars] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searchRadius, setSearchRadius] = useState(5); // km
+  const [showRadiusSelector, setShowRadiusSelector] = useState(false);
 
   useEffect(() => {
     loadMapData();
-  }, []);
+    setupProximityNotifications();
+  }, [searchRadius]);
 
   const loadMapData = async () => {
     try {
-      // Request location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setError('Permiso de ubicación denegado');
@@ -42,16 +48,15 @@ export default function MapScreen() {
         return;
       }
 
-      // Get current location
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // Load bars
-      const response = await apiRequest('GET', '/api/businesses');
+      const response = await apiRequest('GET', `/api/businesses?lat=${currentLocation.coords.latitude}&lng=${currentLocation.coords.longitude}&radius=${searchRadius}`);
       const data = await response.json();
       
       if (data.success) {
         setBars(data.businesses || []);
+        checkProximityNotifications(data.businesses || [], currentLocation);
       }
     } catch (err: any) {
       console.error('Error loading map:', err);
@@ -59,6 +64,49 @@ export default function MapScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const setupProximityNotifications = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      await Notifications.requestPermissionsAsync();
+    }
+  };
+
+  const checkProximityNotifications = async (businesses: any[], userLocation: any) => {
+    const hotPromoBars = businesses.filter(bar => 
+      bar.hasFlashPromo && 
+      calculateDistance(userLocation.coords, { latitude: bar.latitude, longitude: bar.longitude }) <= 1 // 1km radius
+    );
+
+    if (hotPromoBars.length > 0) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🔥 ¡Promoción Flash Cerca!',
+          body: `${hotPromoBars[0].name} tiene promociones activas a ${Math.round(calculateDistance(userLocation.coords, { latitude: hotPromoBars[0].latitude, longitude: hotPromoBars[0].longitude }) * 1000)}m`,
+          data: { businessId: hotPromoBars[0].id, type: 'flash_promo_nearby' },
+        },
+        trigger: { seconds: 1 },
+      });
+    }
+  };
+
+  const calculateDistance = (coord1: any, coord2: any) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
+    const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const getBarStatus = (bar: any): PinStatus => {
+    if (bar.hasFlashPromo) return 'hot_promo';
+    if (bar.isOpen) return 'open';
+    if (bar.openingSoon) return 'opening_soon';
+    return 'closed';
   };
 
   const handleBarPress = (bar: any) => {
@@ -94,53 +142,106 @@ export default function MapScreen() {
   return (
     <View style={[styles.fullContainer, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <ThemedText type="h2">Bares Cercanos 🗺️</ThemedText>
+        <View style={styles.headerTop}>
+          <ThemedText type="h2">Bares Cercanos 🗺️</ThemedText>
+          <Pressable
+            style={[styles.radiusButton, { backgroundColor: theme.card }]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setShowRadiusSelector(!showRadiusSelector);
+            }}
+          >
+            <Feather name="target" size={16} color={AstroBarColors.primary} />
+            <ThemedText type="small" style={{ color: AstroBarColors.primary, marginLeft: 4 }}>
+              {searchRadius}km
+            </ThemedText>
+          </Pressable>
+        </View>
+        
         <ThemedText type="small" style={{ color: theme.textSecondary }}>
-          {bars.length} bares disponibles
+          {bars.length} bares en {searchRadius}km
         </ThemedText>
+
+        {showRadiusSelector && (
+          <View style={[styles.radiusSelector, { backgroundColor: theme.card }]}>
+            {SEARCH_RADIUS_OPTIONS.map(radius => (
+              <Pressable
+                key={radius}
+                style={[
+                  styles.radiusOption,
+                  {
+                    backgroundColor: searchRadius === radius ? AstroBarColors.primaryLight : 'transparent'
+                  }
+                ]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setSearchRadius(radius);
+                  setShowRadiusSelector(false);
+                }}
+              >
+                <ThemedText
+                  type="small"
+                  style={{
+                    color: searchRadius === radius ? AstroBarColors.primary : theme.text,
+                    fontWeight: searchRadius === radius ? '600' : '400'
+                  }}
+                >
+                  {radius}km
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.listContainer}>
         {bars.map((bar) => {
-          const isOpen = bar.is_open || bar.isOpen;
-          const hasFlash = false;
+          const status = getBarStatus(bar);
+          const distance = location ? calculateDistance(location.coords, { latitude: bar.latitude, longitude: bar.longitude }) : 0;
           
           return (
-            <Pressable
-              key={bar.id}
-              onPress={() => handleBarPress(bar)}
-              style={[
-                styles.barCard,
-                { backgroundColor: theme.card },
-                hasFlash && styles.barCardFlash,
-              ]}
-            >
-              <View style={[
-                styles.statusDot,
-                { backgroundColor: hasFlash ? '#FFD700' : isOpen ? '#4CAF50' : '#999999' }
-              ]} />
+            <View key={bar.id} style={styles.barRow}>
+              <BarPinMarker
+                status={status}
+                businessName={bar.name}
+                onPress={() => handleBarPress(bar)}
+                timeUntilOpen={bar.timeUntilOpen}
+                hotPromoCount={bar.flashPromoCount}
+              />
               
-              <View style={styles.barInfo}>
-                <ThemedText type="body" style={styles.barName}>
-                  {bar.name}
-                </ThemedText>
-                <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  {bar.address || 'Buenos Aires'}
-                </ThemedText>
-                <View style={styles.barMeta}>
-                  <View style={styles.statusBadge}>
-                    <ThemedText type="caption" style={[
-                      styles.statusText,
-                      { color: hasFlash ? '#FFD700' : isOpen ? '#4CAF50' : '#999999' }
-                    ]}>
-                      {hasFlash ? '⚡ FLASH ACTIVO' : isOpen ? '● Abierto' : '● Cerrado'}
+              <Pressable
+                onPress={() => handleBarPress(bar)}
+                style={[
+                  styles.barCard,
+                  { backgroundColor: theme.card },
+                  status === 'hot_promo' && styles.barCardFlash,
+                ]}
+              >
+                <View style={styles.barInfo}>
+                  <ThemedText type="body" style={styles.barName}>
+                    {bar.name}
+                  </ThemedText>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                    {bar.address || 'Buenos Aires'} • {distance.toFixed(1)}km
+                  </ThemedText>
+                  <View style={styles.barMeta}>
+                    <ThemedText type="caption" style={{
+                      color: status === 'hot_promo' ? '#FFD700' : 
+                             status === 'open' ? '#4CAF50' : 
+                             status === 'opening_soon' ? '#FFB800' : '#999999',
+                      fontWeight: '700'
+                    }}>
+                      {status === 'hot_promo' ? `⚡ ${bar.flashPromoCount || 1} FLASH ACTIVO` :
+                       status === 'open' ? '● Abierto' :
+                       status === 'opening_soon' ? `🕐 ${bar.timeUntilOpen || 'Próximo a abrir'}` :
+                       '● Cerrado'}
                     </ThemedText>
                   </View>
                 </View>
-              </View>
 
-              <Feather name="chevron-right" size={24} color={theme.textSecondary} />
-            </Pressable>
+                <Feather name="chevron-right" size={24} color={theme.textSecondary} />
+              </Pressable>
+            </View>
           );
         })}
       </ScrollView>
@@ -172,6 +273,31 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingTop: Spacing['3xl'],
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  radiusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  radiusSelector: {
+    flexDirection: 'row',
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.xs,
+    gap: Spacing.xs,
+  },
+  radiusOption: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
   scrollView: {
     flex: 1,
   },
@@ -179,12 +305,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing['4xl'],
   },
+  barRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+  },
   barCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
     gap: Spacing.md,
   },
   barCardFlash: {
