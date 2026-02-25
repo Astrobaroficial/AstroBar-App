@@ -57,6 +57,8 @@ export default function MyBusinessesScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState<Business | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -108,7 +110,8 @@ export default function MyBusinessesScreen() {
   const handleSelectBusiness = async (business: Business) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await selectBusiness(business);
-    navigation.goBack();
+    // Solo volver atrás si no estamos en la pantalla principal de perfil
+    // Permitir editar si estamos navegando desde perfil
   };
 
   const handlePickImage = async () => {
@@ -135,6 +138,43 @@ export default function MyBusinessesScreen() {
     }
   };
 
+  const handleEditBusiness = (business: Business) => {
+    setEditingBusiness(business);
+    setNewBusiness({
+      name: business.name,
+      description: business.description || "",
+      type: business.type || "bar",
+      address: business.address || "",
+      phone: business.phone || "",
+      image: business.image || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateBusiness = async () => {
+    if (!editingBusiness || !newBusiness.name.trim()) {
+      Alert.alert("Error", "El nombre del negocio es requerido");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await apiRequest("PUT", `/api/business/${editingBusiness.id}`, newBusiness);
+      const data = await response.json();
+      
+      if (data.success) {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setShowEditModal(false);
+        setEditingBusiness(null);
+        await loadBusinesses(); // Recargar lista
+        Alert.alert("Éxito", "Negocio actualizado correctamente");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "No se pudo actualizar el negocio");
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const handleCreateBusiness = async () => {
     if (!newBusiness.name.trim()) {
       Alert.alert("Error", "El nombre del negocio es requerido");
@@ -187,7 +227,10 @@ export default function MyBusinessesScreen() {
   };
 
   const getImageUrl = (imagePath: string | undefined): string | undefined => {
-    if (!imagePath) return undefined;
+    if (!imagePath) {
+      // Usar imagen por defecto según el tipo de negocio
+      return "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400&h=300&fit=crop";
+    }
     if (imagePath.startsWith("http")) return imagePath;
     return `${getApiUrl()}${imagePath}`;
   };
@@ -198,10 +241,24 @@ export default function MyBusinessesScreen() {
       backgroundColor: theme.theme.backgroundDefault,
     },
     header: {
+      flexDirection: "row",
+      alignItems: "center",
       paddingTop: insets.top + Spacing.md,
       paddingHorizontal: Spacing.lg,
       paddingBottom: Spacing.md,
       backgroundColor: AstroBarColors.primary,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.2)",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: Spacing.md,
+    },
+    headerContent: {
+      flex: 1,
     },
     headerTitle: {
       fontSize: 24,
@@ -516,10 +573,18 @@ export default function MyBusinessesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Mis Negocios</ThemedText>
-        <ThemedText style={styles.headerSubtitle}>
-          {businesses.length} {businesses.length === 1 ? "negocio" : "negocios"} registrados
-        </ThemedText>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={24} color="#fff" />
+        </Pressable>
+        <View style={styles.headerContent}>
+          <ThemedText style={styles.headerTitle}>Mis Negocios</ThemedText>
+          <ThemedText style={styles.headerSubtitle}>
+            {businesses.length} {businesses.length === 1 ? "negocio" : "negocios"} registrados
+          </ThemedText>
+        </View>
       </View>
 
       <ScrollView
@@ -560,7 +625,7 @@ export default function MyBusinessesScreen() {
                 ]}
                 onPress={() => handleSelectBusiness(business)}
               >
-                {business.image ? (
+                {business.image || true ? (
                   <Image
                     source={{ uri: getImageUrl(business.image) }}
                     style={styles.businessImage}
@@ -624,20 +689,11 @@ export default function MyBusinessesScreen() {
                 <View style={styles.actionsRow}>
                   <Pressable
                     style={styles.actionButton}
-                    onPress={() => handleSelectBusiness(business)}
+                    onPress={() => handleEditBusiness(business)}
                   >
-                    <Feather
-                      name={selectedBusiness?.id === business.id ? "check-circle" : "circle"}
-                      size={18}
-                      color={selectedBusiness?.id === business.id ? AstroBarColors.primary : theme.theme.textSecondary}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.actionText,
-                        { color: selectedBusiness?.id === business.id ? AstroBarColors.primary : theme.theme.textSecondary },
-                      ]}
-                    >
-                      {selectedBusiness?.id === business.id ? "Seleccionado" : "Seleccionar"}
+                    <Feather name="edit-2" size={18} color={AstroBarColors.primary} />
+                    <ThemedText style={[styles.actionText, { color: AstroBarColors.primary }]}>
+                      Editar
                     </ThemedText>
                   </Pressable>
                   <Pressable
@@ -762,6 +818,124 @@ export default function MyBusinessesScreen() {
                 ) : (
                   <ThemedText style={[styles.buttonText, { color: "#fff" }]}>
                     Crear Negocio
+                  </ThemedText>
+                )}
+              </Pressable>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Edit Business Modal */}
+      <Modal
+        visible={showEditModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <ScrollView style={styles.modalContent}>
+            <ThemedText style={styles.modalTitle}>Editar Negocio</ThemedText>
+
+            <ThemedText style={styles.inputLabel}>Nombre *</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre del negocio"
+              placeholderTextColor={theme.theme.textSecondary}
+              value={newBusiness.name}
+              onChangeText={(text) => setNewBusiness(prev => ({ ...prev, name: text }))}
+            />
+
+            <ThemedText style={styles.inputLabel}>Descripción</ThemedText>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Breve descripción de tu negocio"
+              placeholderTextColor={theme.theme.textSecondary}
+              value={newBusiness.description}
+              onChangeText={(text) => setNewBusiness(prev => ({ ...prev, description: text }))}
+              multiline
+            />
+
+            <ThemedText style={styles.inputLabel}>Tipo de negocio</ThemedText>
+            <View style={styles.typeSelector}>
+              {BUSINESS_TYPES.map(type => (
+                <Pressable
+                  key={type.id}
+                  style={[
+                    styles.typeOption,
+                    newBusiness.type === type.id && styles.typeOptionSelected,
+                  ]}
+                  onPress={() => setNewBusiness(prev => ({ ...prev, type: type.id }))}
+                >
+                  <Feather
+                    name={type.icon as any}
+                    size={16}
+                    color={newBusiness.type === type.id ? AstroBarColors.primary : theme.theme.text}
+                  />
+                  <ThemedText style={styles.typeOptionText}>{type.name}</ThemedText>
+                </Pressable>
+              ))}
+            </View>
+
+            <ThemedText style={styles.inputLabel}>Dirección</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Dirección del negocio"
+              placeholderTextColor={theme.theme.textSecondary}
+              value={newBusiness.address}
+              onChangeText={(text) => setNewBusiness(prev => ({ ...prev, address: text }))}
+            />
+
+            <ThemedText style={styles.inputLabel}>Teléfono</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Número de contacto"
+              placeholderTextColor={theme.theme.textSecondary}
+              value={newBusiness.phone}
+              onChangeText={(text) => setNewBusiness(prev => ({ ...prev, phone: text }))}
+              keyboardType="phone-pad"
+            />
+
+            <ThemedText style={styles.inputLabel}>Imagen del negocio</ThemedText>
+            <Pressable style={styles.imagePickerButton} onPress={handlePickImage}>
+              {newBusiness.image ? (
+                <Image
+                  source={{ uri: getImageUrl(newBusiness.image) }}
+                  style={styles.selectedImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <>
+                  <Feather name="camera" size={32} color={theme.theme.textSecondary} />
+                  <ThemedText style={styles.imagePickerText}>
+                    Toca para seleccionar imagen
+                  </ThemedText>
+                </>
+              )}
+            </Pressable>
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowEditModal(false);
+                  setEditingBusiness(null);
+                }}
+              >
+                <ThemedText style={[styles.buttonText, { color: theme.theme.text }]}>
+                  Cancelar
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleUpdateBusiness}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <ThemedText style={[styles.buttonText, { color: "#fff" }]}>
+                    Actualizar
                   </ThemedText>
                 )}
               </Pressable>

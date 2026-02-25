@@ -99,17 +99,9 @@ export default function AdminMenuScreen() {
 
   const fetchDashboardData = async () => {
     try {
-      const [metricsRes, ordersRes, driversRes] = await Promise.all([
-        apiRequest("GET", "/api/admin/dashboard/metrics"),
-        apiRequest("GET", "/api/admin/dashboard/active-orders"),
-        apiRequest("GET", "/api/admin/dashboard/online-drivers"),
-      ]);
+      const metricsRes = await apiRequest("GET", "/api/admin/dashboard/metrics");
       const metricsData = await metricsRes.json();
-      const ordersData = await ordersRes.json();
-      const driversData = await driversRes.json();
       setDashboardMetrics(metricsData);
-      setActiveOrders(ordersData.orders || []);
-      setOnlineDrivers(driversData.drivers || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
@@ -124,6 +116,9 @@ export default function AdminMenuScreen() {
 
       const usersData = await usersRes.json();
       const businessesData = await businessesRes.json();
+
+      console.log('📊 Businesses data:', businessesData);
+      console.log('📊 Businesses array:', businessesData.businesses);
 
       setUsers(usersData.users || []);
       setBusinesses(businessesData.businesses || []);

@@ -731,7 +731,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  navigation.navigate("Markets");
+                  navigation.navigate("BusinessList");
                 }}
                 style={({ pressed }) => [
                   styles.marketsBanner,

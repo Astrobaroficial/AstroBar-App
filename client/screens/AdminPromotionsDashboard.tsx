@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../lib/api';
+import { apiRequest } from '../lib/query-client';
 
 interface PromoDashboard {
   totalActive: number;
@@ -19,8 +19,9 @@ export default function AdminPromotionsDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const response = await api.get('/admin/promotions/dashboard');
-      setDashboard(response.data.dashboard);
+      const response = await apiRequest('GET', '/api/admin/promotions/dashboard');
+      const data = await response.json();
+      setDashboard(data.dashboard);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

@@ -65,69 +65,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionTitle}>Métricas en Tiempo Real</Text>
+      <Text style={styles.sectionTitle}>Métricas de Promociones</Text>
       <View style={styles.metricsGrid}>
         <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{metrics?.ordersToday || 0}</Text>
-          <Text style={styles.metricLabel}>Pedidos hoy</Text>
+          <Text style={styles.metricValue}>{metrics?.totalBars || 0}</Text>
+          <Text style={styles.metricLabel}>Bares activos</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: AstroBarColors.error }]}>
-            {metrics?.cancelledToday || 0}
+          <Text style={[styles.metricValue, { color: AstroBarColors.primary }]}>
+            {metrics?.activePromotions || 0}
           </Text>
-          <Text style={styles.metricLabel}>Cancelados</Text>
-        </View>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{metrics?.avgDeliveryTime || 35}m</Text>
-          <Text style={styles.metricLabel}>Tiempo prom.</Text>
+          <Text style={styles.metricLabel}>Promociones</Text>
         </View>
         <View style={styles.metricCard}>
           <Text style={[styles.metricValue, { color: AstroBarColors.success }]}>
-            {metrics?.driversOnline || 0}/{metrics?.totalDrivers || 1}
+            {metrics?.totalUsers || 0}
           </Text>
-          <Text style={styles.metricLabel}>Repartidores</Text>
+          <Text style={styles.metricLabel}>Usuarios</Text>
         </View>
-      </View>
-
-      <View style={styles.secondaryMetricsGrid}>
-        <View style={[styles.metricCard, styles.secondaryMetric]}>
-          <Feather name="package" size={20} color={AstroBarColors.primary} />
-          <Text style={styles.secondaryValue}>{activeOrders.length}</Text>
-          <Text style={styles.metricLabel}>Pedidos activos</Text>
-        </View>
-        <View style={[styles.metricCard, styles.secondaryMetric]}>
-          <Feather name="pause-circle" size={20} color={AstroBarColors.warning} />
-          <Text style={styles.secondaryValue}>{metrics?.pausedBusinesses || 0}</Text>
+        <View style={styles.metricCard}>
+          <Text style={[styles.metricValue, { color: AstroBarColors.warning }]}>
+            {metrics?.pausedBusinesses || 0}
+          </Text>
           <Text style={styles.metricLabel}>Pausados</Text>
-        </View>
-      </View>
-
-      {/* Liquidaciones y Cuenta Bancaria */}
-      <View style={styles.adminActionsGrid}>
-        <View style={[styles.actionCard, { backgroundColor: AstroBarColors.warning + "15" }]}>
-          <Feather name="dollar-sign" size={32} color={AstroBarColors.warning} />
-          <Text style={styles.actionTitle}>Liquidaciones</Text>
-          <Text style={styles.actionSubtitle}>Aprobar pagos semanales</Text>
-        </View>
-        <View style={[styles.actionCard, { backgroundColor: AstroBarColors.primary + "15" }]}>
-          <Feather name="credit-card" size={32} color={AstroBarColors.primary} />
-          <Text style={styles.actionTitle}>Cuenta Bancaria</Text>
-          <Text style={styles.actionSubtitle}>Configurar datos</Text>
-        </View>
-      </View>
-
-      <View style={styles.mapSection}>
-        <Text style={styles.sectionTitle}>Mapa en tiempo real</Text>
-        <View style={styles.mapPlaceholder}>
-          <Feather name="map" size={48} color="#ccc" />
-          <Text style={styles.mapText}>
-            {Platform.OS === "web" 
-              ? "Mapa disponible en la app móvil" 
-              : "Cargando mapa..."}
-          </Text>
-          <Text style={styles.mapSubtext}>
-            {onlineDrivers.length} repartidores | {activeOrders.length} pedidos activos
-          </Text>
         </View>
       </View>
 
@@ -179,90 +139,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </View>
       ) : null}
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Pedidos activos hoy ({activeOrders.length})</Text>
-          {activeOrders.length > 5 ? (
-            <TouchableOpacity onPress={() => setShowAllOrders((prev) => !prev)}>
-              <Text style={styles.linkText}>{showAllOrders ? "Ver menos" : "Ver todos"}</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-        {activeOrders.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Feather name="inbox" size={32} color="#ccc" />
-            <Text style={styles.emptyText}>No hay pedidos activos</Text>
-          </View>
-        ) : (
-          displayedOrders.map((order) => (
-            <TouchableOpacity
-              key={order.id}
-              style={styles.orderCard}
-              activeOpacity={0.8}
-              onPress={() => onOrderPress?.(order)}
-            >
-              <View style={styles.orderHeader}>
-                <View style={styles.orderInfo}>
-                  <Text style={styles.orderCustomer}>{order.customer?.name || "Cliente"}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) + "20" }]}>
-                    <Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
-                      {translateStatus(order.status)}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.orderTotal}>${((order.total || 0) / 100).toFixed(2)}</Text>
-              </View>
-              <Text style={styles.orderAddress} numberOfLines={1}>
-                {order.deliveryAddress?.address || "Sin dirección"}
-              </Text>
-              <Text style={styles.orderDriver}>
-                {order.driver?.name || "Sin asignar"}
-              </Text>
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Repartidores Online ({onlineDrivers.length})</Text>
-        {onlineDrivers.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Feather name="truck" size={32} color="#ccc" />
-            <Text style={styles.emptyText}>No hay repartidores online</Text>
-          </View>
-        ) : (
-          onlineDrivers.map((driver) => (
-            <TouchableOpacity
-              key={driver.id}
-              style={styles.driverCard}
-              activeOpacity={0.8}
-              onPress={() => onDriverPress?.(driver)}
-            >
-              <View style={styles.driverInfo}>
-                <View style={[styles.driverAvatar, { backgroundColor: AstroBarColors.primaryLight }]}>
-                  <Feather name="user" size={16} color={AstroBarColors.primary} />
-                </View>
-                <Text style={styles.driverName}>{driver.name}</Text>
-              </View>
-              <View style={[
-                styles.availabilityBadge, 
-                { backgroundColor: isDriverAvailable(driver) ? AstroBarColors.success + "20" : AstroBarColors.warning + "20" }
-              ]}>
-                <View style={[
-                  styles.availabilityDot,
-                  { backgroundColor: isDriverAvailable(driver) ? AstroBarColors.success : AstroBarColors.warning }
-                ]} />
-                <Text style={[
-                  styles.availabilityText,
-                  { color: isDriverAvailable(driver) ? AstroBarColors.success : AstroBarColors.warning }
-                ]}>
-                  {isDriverAvailable(driver) ? "Disponible" : "Ocupado"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
 
       <View style={{ height: 100 }} />
     </ScrollView>

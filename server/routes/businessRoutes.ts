@@ -1,694 +1,442 @@
 import express from "express";
 import { authenticateToken, requireRole } from "../authMiddleware";
+import { businesses, promotionTransactions, products, promotions } from "@shared/schema-mysql";
+import { db } from "../db";
+import { eq, desc } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
 
-// PUBLIC ROUTES - No authentication required
+console.log('🔧 Business routes loaded');
 
-// Get all businesses (public)
-router.get("/", async (req, res) => {
-  try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const allBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.isActive, true));
-
-    res.json({ success: true, businesses: allBusinesses });
-  } catch (error: any) {
-    console.error("Error loading businesses:", error);
-    res.status(500).json({ error: error.message });
-  }
+// Test route
+router.get("/test", (req, res) => {
+  res.json({ success: true, message: "Business routes working" });
 });
 
-// Get featured businesses (public)
-router.get("/featured", async (req, res) => {
-  try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, and } = await import("drizzle-orm");
-
-    const featuredBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(
-        and(
-          eq(businesses.isActive, true),
-          eq(businesses.isFeatured, true)
-        )
-      )
-      .limit(10);
-
-    res.json({ success: true, businesses: featuredBusinesses });
-  } catch (error: any) {
-    console.error("Error loading featured businesses:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// PROTECTED ROUTES - Authentication required
-
-// Get business dashboard
-router.get("/dashboard", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses, promotionTransactions } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, desc } = await import("drizzle-orm");
-
-    const [business] = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id))
-      .limit(1);
-
-    if (!business) {
-      return res.status(404).json({ error: "Business not found" });
-    }
-
-    const transactions = await db
-      .select()
-      .from(promotionTransactions)
-      .where(eq(promotionTransactions.businessId, business.id))
-      .orderBy(desc(promotionTransactions.createdAt));
-
-    const pendingTransactions = transactions.filter(t => t.status === "pending");
-    const today = new Date();
-    const todayTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.createdAt);
-      return transactionDate.toDateString() === today.toDateString();
-    });
-
-    const todayRevenue = todayTransactions
-      .filter(t => t.status === "redeemed")
-      .reduce((sum, t) => sum + t.businessRevenue, 0);
-
-    res.json({
-      success: true,
-      dashboard: {
-        business,
-        isOpen: business.isActive,
-        pendingOrders: pendingTransactions.length,
-        todayOrders: todayTransactions.length,
-        todayRevenue,
-        totalOrders: transactions.length,
-        recentOrders: transactions.slice(0, 10).map(t => ({
-          id: t.id,
-          status: t.status,
-          subtotal: t.amountPaid,
-          customerName: 'Cliente',
-          createdAt: t.createdAt,
-        })),
-      },
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get business stats
-router.get("/stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses, promotionTransactions, promotions } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, and, desc } = await import("drizzle-orm");
-
-    const requestedBusinessId = req.query.businessId as string | undefined;
-    
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    if (ownerBusinesses.length === 0) {
-      return res.status(404).json({ error: "No businesses found" });
-    }
-
-    let targetBusiness;
-    if (requestedBusinessId) {
-      targetBusiness = ownerBusinesses.find(b => b.id === requestedBusinessId);
-      if (!targetBusiness) {
-        return res.status(403).json({ error: "No tienes acceso a este negocio" });
-      }
-    } else {
-      targetBusiness = ownerBusinesses[0];
-    }
-    
-    // Get all transactions for this business
-    const transactions = await db
-      .select()
-      .from(promotionTransactions)
-      .where(eq(promotionTransactions.businessId, targetBusiness.id))
-      .orderBy(desc(promotionTransactions.createdAt));
-
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(startOfToday);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const redeemedTransactions = transactions.filter(t => t.status === 'redeemed');
-    const cancelledTransactions = transactions.filter(t => t.status === 'cancelled');
-    
-    const todayTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfToday);
-    const weekTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfWeek);
-    const monthTransactions = redeemedTransactions.filter(t => new Date(t.createdAt) >= startOfMonth);
-
-    // Bar receives businessRevenue (100% of promo price)
-    const todayRevenue = todayTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
-    const weekRevenue = weekTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
-    const monthRevenue = monthTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
-    const totalRevenue = redeemedTransactions.reduce((sum, t) => sum + t.businessRevenue, 0);
-
-    const avgValue = redeemedTransactions.length > 0 ? Math.round(totalRevenue / redeemedTransactions.length) : 0;
-
-    // Get top promotions
-    const promoStats = new Map<string, { count: number; revenue: number; title: string }>();
-    
-    for (const transaction of redeemedTransactions) {
-      const existing = promoStats.get(transaction.promotionId) || { count: 0, revenue: 0, title: '' };
-      existing.count++;
-      existing.revenue += transaction.businessRevenue;
-      
-      if (!existing.title) {
-        const [promo] = await db
-          .select({ title: promotions.title })
-          .from(promotions)
-          .where(eq(promotions.id, transaction.promotionId))
-          .limit(1);
-        existing.title = promo?.title || 'Promoción';
-      }
-      
-      promoStats.set(transaction.promotionId, existing);
-    }
-
-    const topPromotions = Array.from(promoStats.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5)
-      .map(p => ({
-        name: p.title,
-        quantity: p.count,
-        revenue: p.revenue,
-      }));
-
-    res.json({
-      success: true,
-      businessId: targetBusiness.id,
-      businessName: targetBusiness.name,
-      revenue: {
-        today: todayRevenue,
-        week: weekRevenue,
-        month: monthRevenue,
-        total: totalRevenue,
-      },
-      orders: {
-        total: transactions.length,
-        completed: redeemedTransactions.length,
-        cancelled: cancelledTransactions.length,
-        avgValue,
-      },
-      topProducts: topPromotions,
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get business orders
-router.get("/orders", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses, orders, users, addresses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, desc, inArray } = await import("drizzle-orm");
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    if (ownerBusinesses.length === 0) {
-      return res.status(404).json({ error: "No businesses found for this user" });
-    }
-
-    const businessIds = ownerBusinesses.map(b => b.id);
-
-    const businessOrders = await db
-      .select()
-      .from(orders)
-      .where(inArray(orders.businessId, businessIds))
-      .orderBy(desc(orders.createdAt));
-
-    const enrichedOrders = await Promise.all(
-      businessOrders.map(async (order) => {
-        let customer = null;
-        if (order.userId) {
-          const customerResult = await db
-            .select({ id: users.id, name: users.name, phone: users.phone })
-            .from(users)
-            .where(eq(users.id, order.userId))
-            .limit(1);
-          customer = customerResult[0] || null;
-        }
-
-        let address = null;
-        if (order.addressId) {
-          const addressResult = await db
-            .select()
-            .from(addresses)
-            .where(eq(addresses.id, order.addressId))
-            .limit(1);
-          address = addressResult[0] || null;
-        }
-
-        const business = ownerBusinesses.find(b => b.id === order.businessId);
-
-        return {
-          ...order,
-          customer,
-          address,
-          businessName: business?.name || 'Negocio',
-        };
-      })
-    );
-
-    res.json({ success: true, orders: enrichedOrders });
-  } catch (error: any) {
-    console.error("Error loading business orders:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get my businesses
+// My businesses route (PROTECTED - debe ir antes de /:id)
 router.get("/my-businesses", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    const { businesses, orders } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, inArray } = await import("drizzle-orm");
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    const businessIds = ownerBusinesses.map(b => b.id);
-    
-    let allOrders: any[] = [];
-    if (businessIds.length > 0) {
-      allOrders = await db
-        .select()
-        .from(orders)
-        .where(inArray(orders.businessId, businessIds));
-    }
-
-    const businessesWithStats = ownerBusinesses.map(business => {
-      const businessOrders = allOrders.filter(o => o.businessId === business.id);
-      const today = new Date();
-      const todayOrders = businessOrders.filter(o => {
-        const orderDate = new Date(o.createdAt);
-        return orderDate.toDateString() === today.toDateString();
-      });
-      const todayRevenue = todayOrders
-        .filter(o => o.status === "delivered")
-        .reduce((sum, o) => {
-          const subtotalWithMarkup = (o.total || 0) - (o.deliveryFee || 0);
-          const productBase = Math.round(subtotalWithMarkup / 1.15);
-          return sum + productBase;
-        }, 0);
-      const pendingOrders = businessOrders.filter(o => 
-        ["pending", "confirmed", "preparing"].includes(o.status)
-      );
-
-      return {
-        ...business,
-        stats: {
-          pendingOrders: pendingOrders.length,
-          todayOrders: todayOrders.length,
-          todayRevenue: todayRevenue,
-          totalOrders: businessOrders.length,
-        },
-      };
-    });
-
-    res.json({ success: true, businesses: businessesWithStats });
+    const ownerBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    res.json({ success: true, businesses: ownerBusinesses });
   } catch (error: any) {
+    console.error('My businesses error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get business products
+// Products route (PROTECTED - debe ir antes de /:id)
 router.get("/products", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    const { products, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const requestedBusinessId = req.query.businessId as string | undefined;
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    if (ownerBusinesses.length === 0) {
-      return res.status(404).json({ error: "No businesses found" });
-    }
-
-    const ownerBusinessIds = ownerBusinesses.map(b => b.id);
-
-    let targetBusinessId: string;
-    if (requestedBusinessId) {
-      if (!ownerBusinessIds.includes(requestedBusinessId)) {
-        return res.status(403).json({ error: "No tienes acceso a este negocio" });
-      }
-      targetBusinessId = requestedBusinessId;
-    } else {
-      targetBusinessId = ownerBusinesses[0].id;
-    }
-
-    const businessProducts = await db
-      .select()
-      .from(products)
-      .where(eq(products.businessId, targetBusinessId));
-
-    res.json({ success: true, products: businessProducts, businessId: targetBusinessId });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update order status
-router.put("/orders/:id/status", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { orders, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const { status } = req.body;
-
-    const [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.id, req.params.id))
-      .limit(1);
-
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    const ownerBusinessIds = ownerBusinesses.map(b => b.id);
-
-    if (!ownerBusinessIds.includes(order.businessId)) {
-      return res.status(403).json({ error: "No tienes acceso a este pedido" });
-    }
-
-    await db
-      .update(orders)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(orders.id, req.params.id));
-
-    res.json({ success: true, message: "Order status updated" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Create product
-router.post("/products", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { products, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-    const { v4: uuidv4 } = await import("uuid");
-
-    const { businessId, name, description, price, image, category, isAvailable } = req.body;
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    const ownerBusinessIds = ownerBusinesses.map(b => b.id);
-
-    if (!ownerBusinessIds.includes(businessId)) {
-      return res.status(403).json({ error: "No tienes acceso a este negocio" });
-    }
-
-    const productData = {
-      id: uuidv4(),
-      businessId,
-      name,
-      description: description || null,
-      price: parseInt(price) || 0,
-      image: image || null,
-      category: category || null,
-      isAvailable: isAvailable !== false,
-    };
-
-    await db.insert(products).values(productData);
-    res.json({ success: true, productId: productData.id });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update product
-router.put("/products/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { products, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.id, req.params.id))
-      .limit(1);
-
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    const ownerBusinessIds = ownerBusinesses.map(b => b.id);
-
-    if (!ownerBusinessIds.includes(product.businessId)) {
-      return res.status(403).json({ error: "No tienes acceso a este producto" });
-    }
-
-    await db
-      .update(products)
-      .set(req.body)
-      .where(eq(products.id, req.params.id));
-
-    res.json({ success: true, message: "Product updated" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete product
-router.delete("/products/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { products, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.id, req.params.id))
-      .limit(1);
-
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
-    const ownerBusinesses = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id));
-
-    const ownerBusinessIds = ownerBusinesses.map(b => b.id);
-
-    if (!ownerBusinessIds.includes(product.businessId)) {
-      return res.status(403).json({ error: "No tienes acceso a este producto" });
-    }
-
-    await db.delete(products).where(eq(products.id, req.params.id));
-    res.json({ success: true, message: "Product deleted" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Toggle business status (pause/resume)
-router.put("/:id/toggle-status", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, and } = await import("drizzle-orm");
-
-    const [business] = await db
-      .select()
-      .from(businesses)
-      .where(
-        and(
-          eq(businesses.id, req.params.id),
-          eq(businesses.ownerId, req.user!.id)
-        )
-      )
-      .limit(1);
-
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    // Si no tiene negocio, crear uno automáticamente
     if (!business) {
-      return res.status(404).json({ error: "Business not found" });
+      const businessId = uuidv4();
+      const newBusiness = {
+        id: businessId,
+        name: "Mi Bar",
+        address: "Buenos Aires, Argentina",
+        latitude: -34.6037,
+        longitude: -58.3816,
+        phone: "+54 11 1234-5678",
+        description: "Un bar increíble en Buenos Aires",
+        ownerId: req.user!.id,
+        isActive: true,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.insert(businesses).values(newBusiness);
+      business = newBusiness;
     }
+    
+    const businessProducts = await db.select().from(products).where(eq(products.businessId, business.id));
+    res.json({ success: true, products: businessProducts, businessId: business.id });
+  } catch (error: any) {
+    console.error('Products route error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    await db
-      .update(businesses)
-      .set({ isActive: !business.isActive })
-      .where(eq(businesses.id, req.params.id));
-
+// Dashboard route (PROTECTED - debe ir antes de /:id)
+router.get("/dashboard", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    // Si no tiene negocio, crear uno automáticamente
+    if (!business) {
+      const businessId = uuidv4();
+      const newBusiness = {
+        id: businessId,
+        name: "Mi Bar",
+        address: "Buenos Aires, Argentina",
+        latitude: -34.6037,
+        longitude: -58.3816,
+        phone: "+54 11 1234-5678",
+        description: "Un bar increíble en Buenos Aires",
+        ownerId: req.user!.id,
+        isActive: true,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.insert(businesses).values(newBusiness);
+      business = newBusiness;
+    }
+    const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id)).orderBy(desc(promotionTransactions.createdAt));
+    const pendingTransactions = transactions.filter(t => t.status === "pending");
+    const today = new Date();
+    const todayTransactions = transactions.filter(t => new Date(t.createdAt).toDateString() === today.toDateString());
+    const todayRevenue = todayTransactions.filter(t => t.status === "redeemed").reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // Solo mostrar transacciones reales (redeemed o pending)
+    const recentTransactions = transactions
+      .filter(t => t.status === "redeemed" || t.status === "pending")
+      .slice(0, 10)
+      .map(t => ({ 
+        id: t.id, 
+        status: t.status === "redeemed" ? "delivered" : "pending", 
+        subtotal: t.amountPaid || 0, 
+        customerName: 'Cliente', 
+        createdAt: t.createdAt 
+      }));
     res.json({ 
       success: true, 
-      isActive: !business.isActive,
-      message: !business.isActive ? "Negocio activado" : "Negocio pausado"
+      dashboard: { 
+        business, 
+        isOpen: business.isActive, 
+        pendingOrders: pendingTransactions.length, 
+        todayOrders: todayTransactions.length, 
+        todayRevenue, 
+        totalOrders: transactions.length, 
+        recentOrders: recentTransactions 
+      } 
     });
   } catch (error: any) {
+    console.error('Dashboard error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get business hours (simplified - auto-detect business)
-router.get("/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
+// Stats route (PROTECTED - debe ir antes de /:id)
+router.get("/stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    // Si no tiene negocio, crear uno automáticamente
+    if (!business) {
+      const businessId = uuidv4();
+      const newBusiness = {
+        id: businessId,
+        name: "Mi Bar",
+        address: "Buenos Aires, Argentina",
+        latitude: -34.6037,
+        longitude: -58.3816,
+        phone: "+54 11 1234-5678",
+        description: "Un bar increíble en Buenos Aires",
+        ownerId: req.user!.id,
+        isActive: true,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.insert(businesses).values(newBusiness);
+      business = newBusiness;
+    }
+    const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id)).orderBy(desc(promotionTransactions.createdAt));
+    const redeemedTransactions = transactions.filter(t => t.status === 'redeemed');
+    const totalRevenue = redeemedTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // Calcular ingresos por período
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    const todayRevenue = redeemedTransactions
+      .filter(t => new Date(t.createdAt) >= todayStart)
+      .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    const weekRevenue = redeemedTransactions
+      .filter(t => new Date(t.createdAt) >= weekStart)
+      .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    const monthRevenue = redeemedTransactions
+      .filter(t => new Date(t.createdAt) >= monthStart)
+      .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    const avgValue = redeemedTransactions.length > 0 
+      ? Math.round(totalRevenue / redeemedTransactions.length)
+      : 0;
+    
+    res.json({ 
+      success: true, 
+      businessId: business.id, 
+      businessName: business.name, 
+      revenue: { 
+        today: todayRevenue,
+        week: weekRevenue, 
+        month: monthRevenue,
+        total: totalRevenue 
+      }, 
+      orders: { 
+        total: transactions.length, 
+        completed: redeemedTransactions.length,
+        cancelled: transactions.filter(t => t.status === 'cancelled').length,
+        avgValue: avgValue
+      } 
+    });
+  } catch (error: any) {
+    console.error('Stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    const [business] = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id))
-      .limit(1);
+// Promotions route (PROTECTED - debe ir antes de /:id)
+router.get("/promotions", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    // Si no tiene negocio, crear uno automáticamente
+    if (!business) {
+      const businessId = uuidv4();
+      const newBusiness = {
+        id: businessId,
+        name: "Mi Bar",
+        address: "Buenos Aires, Argentina",
+        latitude: -34.6037,
+        longitude: -58.3816,
+        phone: "+54 11 1234-5678",
+        description: "Un bar increíble en Buenos Aires",
+        ownerId: req.user!.id,
+        isActive: true,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.insert(businesses).values(newBusiness);
+      business = newBusiness;
+    }
+    const businessPromotions = await db.select().from(promotions).where(eq(promotions.businessId, business.id));
+    const now = new Date();
+    const activePromotions = businessPromotions.filter(p => p.isActive && new Date(p.endTime) > now);
+    const flashPromotions = activePromotions.filter(p => p.type === 'flash');
+    const commonPromotions = activePromotions.filter(p => p.type === 'common');
+    const totalStock = activePromotions.reduce((sum, p) => sum + (p.stock || 0), 0);
+    res.json({ 
+      success: true, 
+      promotions: businessPromotions,
+      activePromotions: activePromotions.length,
+      flashPromotions: flashPromotions.length,
+      commonPromotions: commonPromotions.length,
+      totalStock
+    });
+  } catch (error: any) {
+    console.error('Promotions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
+// Get business limits status
+router.get("/limits", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     if (!business) {
       return res.status(404).json({ error: "Business not found" });
     }
 
-    const defaultHours = [
-      { day: "Lunes", isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      { day: "Martes", isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      { day: "Miércoles", isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      { day: "Jueves", isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      { day: "Viernes", isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      { day: "Sábado", isOpen: true, openTime: "09:00", closeTime: "14:00" },
-      { day: "Domingo", isOpen: false, openTime: "09:00", closeTime: "14:00" },
-    ];
-
-    const hours = business.openingHours ? JSON.parse(business.openingHours) : defaultHours;
-    res.json({ success: true, hours });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update business hours (simplified - auto-detect business)
-router.put("/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
-
-    const [business] = await db
+    // Contar productos
+    const productCount = await db.select().from(products).where(eq(products.businessId, business.id));
+    
+    // Contar promociones activas
+    const now = new Date();
+    const { and, gte, lte } = await import("drizzle-orm");
+    const activePromotions = await db
       .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id))
-      .limit(1);
-
-    if (!business) {
-      return res.status(404).json({ error: "Business not found" });
-    }
-
-    await db
-      .update(businesses)
-      .set({ openingHours: JSON.stringify(req.body.hours) })
-      .where(eq(businesses.id, business.id));
-
-    res.json({ success: true, message: "Horarios actualizados" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get business hours
-router.get("/:id/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
-  try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, and } = await import("drizzle-orm");
-
-    const [business] = await db
-      .select()
-      .from(businesses)
+      .from(promotions)
       .where(
         and(
-          eq(businesses.id, req.params.id),
-          eq(businesses.ownerId, req.user!.id)
+          eq(promotions.businessId, business.id),
+          eq(promotions.isActive, true),
+          lte(promotions.startTime, now),
+          gte(promotions.endTime, now)
         )
-      )
-      .limit(1);
+      );
 
-    if (!business) {
-      return res.status(404).json({ error: "Business not found" });
-    }
+    const activeFlash = activePromotions.filter(p => p.type === 'flash').length;
+    const activeCommon = activePromotions.filter(p => p.type === 'common').length;
 
-    const hours = business.openingHours ? JSON.parse(business.openingHours) : {};
-    res.json({ success: true, hours });
+    const limits = {
+      products: {
+        current: productCount.length,
+        max: 80,
+        percentage: Math.round((productCount.length / 80) * 100),
+        canAdd: productCount.length < 80
+      },
+      flashPromotions: {
+        current: activeFlash,
+        max: 3,
+        percentage: Math.round((activeFlash / 3) * 100),
+        canAdd: activeFlash < 3
+      },
+      commonPromotions: {
+        current: activeCommon,
+        max: 10,
+        percentage: Math.round((activeCommon / 10) * 100),
+        canAdd: activeCommon < 10
+      }
+    };
+
+    res.json({ success: true, limits });
   } catch (error: any) {
+    console.error('Limits error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Set business hours
-router.put("/:id/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
+// Public route to list all businesses
+router.get("/", async (req, res) => {
   try {
-    const { businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, and } = await import("drizzle-orm");
+    const allBusinesses = await db.select().from(businesses).where(eq(businesses.isActive, true));
+    res.json({ success: true, businesses: allBusinesses });
+  } catch (error: any) {
+    console.error('List businesses error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    const [business] = await db
-      .select()
-      .from(businesses)
-      .where(
-        and(
-          eq(businesses.id, req.params.id),
-          eq(businesses.ownerId, req.user!.id)
-        )
-      )
-      .limit(1);
-
+// Public route to get business by ID (DEBE IR AL FINAL)
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    
     if (!business) {
       return res.status(404).json({ error: "Business not found" });
     }
-
-    await db
-      .update(businesses)
-      .set({ openingHours: JSON.stringify(req.body.hours) })
-      .where(eq(businesses.id, req.params.id));
-
-    res.json({ success: true, message: "Horarios actualizados" });
+    
+    res.json({ success: true, business });
   } catch (error: any) {
+    console.error('Get business error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create product route
+router.post("/products", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    if (!business) return res.status(404).json({ error: "Business not found" });
+    
+    // Check product limit (80 products per bar)
+    const existingProducts = await db.select().from(products).where(eq(products.businessId, business.id));
+    if (existingProducts.length >= 80) {
+      return res.status(400).json({ error: "Máximo 80 productos por bar. Elimina algunos productos para agregar nuevos." });
+    }
+    
+    const { name, category, price, description, image, isAvailable } = req.body;
+    const productId = uuidv4();
+    
+    const newProduct = {
+      id: productId,
+      businessId: business.id,
+      name: name || "Nuevo Producto",
+      category: category || "General",
+      price: price || 1000,
+      description: description || "",
+      image: image,
+      isAvailable: isAvailable !== false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await db.insert(products).values(newProduct);
+    res.json({ success: true, product: newProduct });
+  } catch (error: any) {
+    console.error('Create product error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update business route
+router.put("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, type, address, phone, image } = req.body;
+    
+    // Verificar que el negocio pertenece al usuario
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    if (!business || business.ownerId !== req.user!.id) {
+      return res.status(403).json({ error: "No tienes permiso para editar este negocio" });
+    }
+    
+    const updatedBusiness = {
+      name,
+      description,
+      type,
+      address,
+      phone,
+      image,
+      updatedAt: new Date()
+    };
+    
+    await db.update(businesses).set(updatedBusiness).where(eq(businesses.id, id));
+    res.json({ success: true, business: updatedBusiness });
+  } catch (error: any) {
+    console.error('Update business error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update product route
+router.put("/products/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, category, price, description, image, isAvailable } = req.body;
+    
+    const updatedProduct = {
+      name,
+      category,
+      price,
+      description,
+      image,
+      isAvailable,
+      updatedAt: new Date()
+    };
+    
+    await db.update(products).set(updatedProduct).where(eq(products.id, id));
+    res.json({ success: true, product: updatedProduct });
+  } catch (error: any) {
+    console.error('Update product error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete product route
+router.delete("/products/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar que el producto pertenece al negocio del usuario
+    const [product] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+    if (!product) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, product.businessId)).limit(1);
+    if (!business || business.ownerId !== req.user!.id) {
+      return res.status(403).json({ error: "No tienes permiso para eliminar este producto" });
+    }
+    
+    await db.delete(products).where(eq(products.id, id));
+    res.json({ success: true, message: "Producto eliminado" });
+  } catch (error: any) {
+    console.error('Delete product error:', error);
     res.status(500).json({ error: error.message });
   }
 });

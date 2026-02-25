@@ -13,8 +13,14 @@ import auditRoutes from "./routes/auditRoutes";
 
 const router = Router();
 
+// Test route
+router.get("/test", (req, res) => {
+  res.json({ success: true, message: "API routes working" });
+});
+
 router.use("/auth", authRoutes);
-router.use("/businesses", businessRoutes);
+router.use("/business", businessRoutes);
+router.use("/businesses", businessRoutes); // Alias plural
 router.use("/user", userRoutes);
 router.use("/promotions", promotionRoutes);
 router.use("/payments", paymentRoutes);

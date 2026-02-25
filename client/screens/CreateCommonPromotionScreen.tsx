@@ -1,58 +1,148 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Pressable, TextInput, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Pressable, TextInput, Alert, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { api } from "@/lib/api";
+import { apiRequest } from "@/lib/query-client";
+
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+  image?: string;
+  isAvailable: boolean;
+}
 
 export default function CreateCommonPromotionScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
   
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [originalPrice, setOriginalPrice] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showProductSelector, setShowProductSelector] = useState(false);
   const [discountedPrice, setDiscountedPrice] = useState("");
   const [stock, setStock] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    loadProducts();
+    // Configurar fechas por defecto (hoy y mañana)
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    setStartDate(formatDateTime(now));
+    setEndDate(formatDateTime(tomorrow));
+  }, []);
+
+  const formatDateTime = (date: Date) => {
+    return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+  };
+
+  const loadProducts = async () => {
+    try {
+      const response = await apiRequest("GET", "/api/business/products");
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.products.filter((p: Product) => p.isAvailable));
+      }
+    } catch (error) {
+      console.error("Error loading products:", error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const handleCreate = async () => {
-    if (!name || !discountedPrice || !stock || !startDate || !endDate) {
-      Alert.alert("Error", "Completa todos los campos obligatorios");
+    if (!selectedProduct || !discountedPrice || !stock || !startDate || !endDate) {
+      Alert.alert("Error", "Selecciona un producto y completa todos los campos");
+      return;
+    }
+
+    const discountPrice = parseFloat(discountedPrice) * 100; // Convertir a centavos
+    if (discountPrice >= selectedProduct.price) {
+      Alert.alert("Error", "El precio promocional debe ser menor al precio original");
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (start >= end) {
+      Alert.alert("Error", "La fecha de fin debe ser posterior a la fecha de inicio");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post("/promotions", {
-        name,
-        description,
-        original_price: parseFloat(originalPrice) || 0,
-        discounted_price: parseFloat(discountedPrice),
+      const promotionData = {
+        businessId: "", // Se obtiene automáticamente en el backend
+        title: `${selectedProduct.name} - Promoción`,
+        description: selectedProduct.description || `Promoción de ${selectedProduct.name}`,
+        type: "common",
+        originalPrice: selectedProduct.price,
+        promoPrice: discountPrice,
         stock: parseInt(stock),
-        start_date: startDate,
-        end_date: endDate,
-      });
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        image: selectedProduct.image
+      };
       
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("¡Éxito!", "Promoción creada", [
-        { text: "OK", onPress: () => navigation.goBack() }
-      ]);
+      const response = await apiRequest("POST", "/api/promotions", promotionData);
+      const data = await response.json();
+      
+      if (data.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert("¡Éxito!", "Promoción creada", [
+          { text: "OK", onPress: () => navigation.goBack() }
+        ]);
+      }
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "No se pudo crear la promoción");
+      Alert.alert("Error", "No se pudo crear la promoción");
     } finally {
       setLoading(false);
     }
   };
+
+  const renderProduct = ({ item }: { item: Product }) => (
+    <Pressable
+      style={[styles.productCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+      onPress={() => {
+        setSelectedProduct(item);
+        setShowProductSelector(false);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }}
+    >
+      <Image
+        source={{ uri: item.image || "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" }}
+        style={styles.productImage}
+        contentFit="cover"
+      />
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <ThemedText type="small" style={{ fontWeight: "600" }}>{item.name}</ThemedText>
+        <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.category}</ThemedText>
+        <ThemedText type="small" style={{ color: "#FFD700", fontWeight: "700" }}>${(item.price / 100).toFixed(0)}</ThemedText>
+      </View>
+    </Pressable>
+  );
+
+  if (loadingProducts) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background, justifyContent: "center", alignItems: "center" }]}>
+        <ThemedText>Cargando productos...</ThemedText>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -77,56 +167,43 @@ export default function CreateCommonPromotionScreen() {
         </ThemedText>
 
         <View style={[styles.card, { backgroundColor: theme.card }]}>
-          <ThemedText type="small" style={{ marginBottom: Spacing.xs }}>Nombre *</ThemedText>
-          <TextInput
-            style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
-            value={name}
-            onChangeText={setName}
-            placeholder="Ej: Happy Hour 50% OFF"
-            placeholderTextColor={theme.textSecondary}
-          />
+          <ThemedText type="small" style={{ marginBottom: Spacing.xs }}>Producto *</ThemedText>
+          <Pressable
+            style={[styles.productSelector, { backgroundColor: theme.background, borderColor: theme.border }]}
+            onPress={() => setShowProductSelector(true)}
+          >
+            {selectedProduct ? (
+              <View style={styles.selectedProduct}>
+                <Image
+                  source={{ uri: selectedProduct.image || "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" }}
+                  style={styles.selectedProductImage}
+                  contentFit="cover"
+                />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <ThemedText type="small" style={{ fontWeight: "600" }}>{selectedProduct.name}</ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>{selectedProduct.category}</ThemedText>
+                  <ThemedText type="small" style={{ color: "#FFD700", fontWeight: "700" }}>
+                    Precio original: ${(selectedProduct.price / 100).toFixed(0)}
+                  </ThemedText>
+                </View>
+              </View>
+            ) : (
+              <ThemedText style={{ color: theme.textSecondary }}>Seleccionar producto del menú</ThemedText>
+            )}
+            <Feather name="chevron-down" size={20} color={theme.textSecondary} />
+          </Pressable>
 
           <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs }}>
-            Descripción
+            Precio Promocional *
           </ThemedText>
           <TextInput
-            style={[styles.input, styles.textArea, { backgroundColor: theme.background, color: theme.text }]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Detalles de la promoción"
+            style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
+            value={discountedPrice}
+            onChangeText={setDiscountedPrice}
+            placeholder={selectedProduct ? `Menor a ${(selectedProduct.price / 100).toFixed(0)}` : "0"}
             placeholderTextColor={theme.textSecondary}
-            multiline
-            numberOfLines={3}
+            keyboardType="numeric"
           />
-
-          <View style={styles.row}>
-            <View style={{ flex: 1, marginRight: Spacing.sm }}>
-              <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs }}>
-                Precio Original
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
-                value={originalPrice}
-                onChangeText={setOriginalPrice}
-                placeholder="0"
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-              <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs }}>
-                Precio Promo *
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
-                value={discountedPrice}
-                onChangeText={setDiscountedPrice}
-                placeholder="0"
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
 
           <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs }}>
             Stock Disponible *
@@ -149,7 +226,7 @@ export default function CreateCommonPromotionScreen() {
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={startDate}
                 onChangeText={setStartDate}
-                placeholder="YYYY-MM-DD HH:MM"
+                placeholder="YYYY-MM-DDTHH:MM"
                 placeholderTextColor={theme.textSecondary}
               />
             </View>
@@ -161,7 +238,7 @@ export default function CreateCommonPromotionScreen() {
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={endDate}
                 onChangeText={setEndDate}
-                placeholder="YYYY-MM-DD HH:MM"
+                placeholder="YYYY-MM-DDTHH:MM"
                 placeholderTextColor={theme.textSecondary}
               />
             </View>
@@ -170,8 +247,8 @@ export default function CreateCommonPromotionScreen() {
 
         <Pressable
           onPress={handleCreate}
-          disabled={loading}
-          style={[styles.createButton, { backgroundColor: "#FFD700", opacity: loading ? 0.6 : 1 }]}
+          disabled={loading || !selectedProduct}
+          style={[styles.createButton, { backgroundColor: "#FFD700", opacity: (loading || !selectedProduct) ? 0.6 : 1 }]}
         >
           <Feather name="calendar" size={20} color="#000" style={{ marginRight: Spacing.sm }} />
           <ThemedText style={{ color: "#000", fontWeight: "600" }}>
@@ -179,6 +256,37 @@ export default function CreateCommonPromotionScreen() {
           </ThemedText>
         </Pressable>
       </ScrollView>
+
+      {/* Product Selector Modal */}
+      {showProductSelector && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="h3">Seleccionar Producto</ThemedText>
+              <Pressable onPress={() => setShowProductSelector(false)}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={products}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+              style={{ maxHeight: 400 }}
+              ListEmptyComponent={
+                <View style={styles.emptyProducts}>
+                  <Feather name="package" size={48} color={theme.textSecondary} />
+                  <ThemedText style={{ color: theme.textSecondary, marginTop: Spacing.md }}>
+                    No hay productos disponibles
+                  </ThemedText>
+                  <ThemedText style={{ color: theme.textSecondary, textAlign: "center", marginTop: Spacing.sm }}>
+                    Ve a la pestaña Menú para agregar productos
+                  </ThemedText>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      )}
     </LinearGradient>
   );
 }
@@ -197,9 +305,23 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     fontSize: 16,
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top",
+  productSelector: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  selectedProduct: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  selectedProductImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   row: {
     flexDirection: "row",
@@ -210,5 +332,47 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: 12,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  productCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
+  productImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  emptyProducts: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
   },
 });

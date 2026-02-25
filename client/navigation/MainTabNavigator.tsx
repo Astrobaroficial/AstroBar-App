@@ -1,36 +1,30 @@
 ﻿import React from "react";
 import { BottomTabBarButtonProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
-import { Platform, Pressable, View } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
-import MapScreen from "@/screens/MapScreen";
-import OrdersStackNavigator from "@/navigation/OrdersStackNavigator";
+import AllPromotionsScreen from "@/screens/AllPromotionsScreen";
+import MyQRsScreen from "@/screens/MyQRsScreen";
+import HistoryScreen from "@/screens/HistoryScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
-import AdminScreenNew from "@/screens/AdminScreenNew";
-import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
 import { useTheme } from "@/hooks/useTheme";
-import { useAuth } from "@/contexts/AuthContext";
 import { AstroBarColors, Spacing } from "@/constants/theme";
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  MapTab: undefined;
-  OrdersTab: undefined;
+  PromotionsTab: undefined;
+  MyQRsTab: undefined;
+  HistoryTab: undefined;
   ProfileTab: undefined;
-  AdminTab: undefined;
-  BusinessTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabNavigator() {
-  const { theme, isDark } = useTheme();
-  const { user } = useAuth();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
-  const isBusiness = user?.role === "business_owner";
 
   const TabBarOrdersButton = ({ children, onPress, ...rest }: BottomTabBarButtonProps) => {
     // Strip ref to avoid Pressable ref type mismatch
@@ -91,35 +85,34 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="MapTab"
-        component={MapScreen}
+        name="PromotionsTab"
+        component={AllPromotionsScreen}
         options={{
-          title: "Mapa",
+          title: "Promociones",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="map" size={size} color={color} />
+            <Feather name="zap" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="OrdersTab"
-        component={OrdersStackNavigator}
-        options={({ navigation }) => ({
-          title: "Pedidos",
+        name="MyQRsTab"
+        component={MyQRsScreen}
+        options={{
+          title: "Mis QRs",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="shopping-bag" size={size} color={color} />
+            <Feather name="grid" size={size} color={color} />
           ),
-          tabBarButton: ({ onPress, ...props }) => (
-            <TabBarOrdersButton
-              {...props}
-              accessibilityRole="button"
-              onPress={(event) => {
-                onPress?.(event);
-                // Siempre vuelve a la lista de pedidos para evitar estados atascados
-                navigation.navigate("OrdersTab");
-              }}
-            />
+        }}
+      />
+      <Tab.Screen
+        name="HistoryTab"
+        component={HistoryScreen}
+        options={{
+          title: "Historial",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="clock" size={size} color={color} />
           ),
-        })}
+        }}
       />
       <Tab.Screen
         name="ProfileTab"
@@ -131,30 +124,6 @@ export default function MainTabNavigator() {
           ),
         }}
       />
-      {isAdmin ? (
-        <Tab.Screen
-          name="AdminTab"
-          component={AdminScreenNew}
-          options={{
-            title: "Admin",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="settings" size={size} color={color} />
-            ),
-          }}
-        />
-      ) : null}
-      {isBusiness ? (
-        <Tab.Screen
-          name="BusinessTab"
-          component={BusinessDashboardScreen}
-          options={{
-            title: "Mi Negocio",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="briefcase" size={size} color={color} />
-            ),
-          }}
-        />
-      ) : null}
     </Tab.Navigator>
   );
 }

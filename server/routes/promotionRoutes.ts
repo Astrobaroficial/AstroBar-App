@@ -131,20 +131,21 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Promoción agotada" });
     }
 
-    // Check if user already has an active promotion
+    // Check if user already has a pending transaction for THIS promotion
     const [existingTransaction] = await db
       .select()
       .from(promotionTransactions)
       .where(
         and(
           eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.promotionId, promotionId),
           eq(promotionTransactions.status, "pending")
         )
       )
       .limit(1);
 
     if (existingTransaction) {
-      return res.status(400).json({ error: "Ya tienes una promoción activa" });
+      return res.status(400).json({ error: "Ya aceptaste esta promoción" });
     }
 
     // Calculate amounts (bar gets 100%, platform charges commission on top)
@@ -298,7 +299,7 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
   try {
     const { promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { eq, and, gte, lte } = await import("drizzle-orm");
 
     const {
       businessId,
@@ -313,14 +314,28 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
       image,
     } = req.body;
 
+    // Get business automatically if not provided
+    let targetBusinessId = businessId;
+    if (!targetBusinessId) {
+      const [business] = await db
+        .select()
+        .from(businesses)
+        .where(eq(businesses.ownerId, req.user!.id))
+        .limit(1);
+      
+      if (!business) {
+        return res.status(404).json({ error: "No tienes un bar registrado" });
+      }
+      targetBusinessId = business.id;
+    }
+
     // Verify business ownership
-    const { and } = await import("drizzle-orm");
     const [business] = await db
       .select()
       .from(businesses)
       .where(
         and(
-          eq(businesses.id, businessId),
+          eq(businesses.id, targetBusinessId),
           eq(businesses.ownerId, req.user!.id)
         )
       )
@@ -330,12 +345,37 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
       return res.status(403).json({ error: "No tienes acceso a este bar" });
     }
 
+    // Check promotion limits
+    const now = new Date();
+    const activePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.businessId, targetBusinessId),
+          eq(promotions.isActive, true),
+          lte(promotions.startTime, now),
+          gte(promotions.endTime, now)
+        )
+      );
+
+    const activeFlash = activePromotions.filter(p => p.type === 'flash').length;
+    const activeCommon = activePromotions.filter(p => p.type === 'common').length;
+
+    // Validate limits
+    if (type === 'flash' && activeFlash >= 3) {
+      return res.status(400).json({ error: "Máximo 3 promociones flash activas simultáneamente" });
+    }
+    if (type === 'common' && activeCommon >= 10) {
+      return res.status(400).json({ error: "Máximo 10 promociones comunes activas simultáneamente" });
+    }
+
     const discountPercentage = Math.round(((originalPrice - promoPrice) / originalPrice) * 100);
 
     const promotionId = uuidv4();
     await db.insert(promotions).values({
       id: promotionId,
-      businessId,
+      businessId: targetBusinessId,
       title,
       description,
       type,
@@ -349,6 +389,17 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
       isActive: true,
       image,
     });
+
+    // Enviar notificaciones push para promociones flash
+    if (type === 'flash') {
+      try {
+        const { sendFlashPromotionNotifications } = await import("../services/promotionNotificationService");
+        await sendFlashPromotionNotifications(promotionId);
+      } catch (error) {
+        console.error('Error sending flash promotion notifications:', error);
+        // No fallar la creación de la promoción por errores de notificación
+      }
+    }
 
     res.json({ success: true, promotionId });
   } catch (error: any) {

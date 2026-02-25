@@ -18,8 +18,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
         phone: users.phone,
         role: users.role,
         profileImage: users.profileImage,
-        birthDate: users.birthDate,
-        ageVerified: users.ageVerified,
         isActive: users.isActive,
         createdAt: users.createdAt,
       })
@@ -126,6 +124,34 @@ router.post("/push-token", authenticateToken, async (req, res) => {
     res.json({ success: true });
   } catch (error: any) {
     console.error("Error saving push token:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user profile
+router.put("/profile", authenticateToken, async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { name, phone } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+
+    await db
+      .update(users)
+      .set({ 
+        name: name.trim(),
+        phone: phone?.trim() || null
+      })
+      .where(eq(users.id, req.user!.id));
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating profile:", error);
     res.status(500).json({ error: error.message });
   }
 });

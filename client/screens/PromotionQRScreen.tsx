@@ -73,7 +73,7 @@ export default function PromotionQRScreen({
       if (data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         alert("Promoción cancelada exitosamente");
-        navigation.navigate("MainTabs");
+        navigation.goBack();
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -84,7 +84,7 @@ export default function PromotionQRScreen({
   };
 
   const handleDone = () => {
-    navigation.navigate("MainTabs");
+    navigation.goBack();
   };
 
   return (

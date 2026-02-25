@@ -232,12 +232,12 @@ export default function BusinessDashboardScreen() {
   };
 
   const getRevenueForPeriod = () => {
-    switch (selectedPeriod) {
-      case "today": return stats.revenue.today;
-      case "week": return stats.revenue.week;
-      case "month": return stats.revenue.month;
-      default: return 0;
-    }
+    const revenue = {
+      today: stats.revenue.today || 0,
+      week: stats.revenue.week || 0,
+      month: stats.revenue.month || 0
+    };
+    return revenue[selectedPeriod] || 0;
   };
 
   const completionRate = stats.orders.total > 0
@@ -387,7 +387,7 @@ export default function BusinessDashboardScreen() {
           <Feather name="trending-up" size={20} color={AstroBarColors.primary} />
           <View style={{ marginLeft: Spacing.md, flex: 1 }}>
             <ThemedText type="caption" style={{ color: theme.textSecondary }}>Ticket promedio</ThemedText>
-            <ThemedText type="h3">${(stats.orders.avgValue / 100).toFixed(2)}</ThemedText>
+            <ThemedText type="h3">${((stats.orders.avgValue || 0) / 100).toFixed(2)}</ThemedText>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <ThemedText type="caption" style={{ color: theme.textSecondary }}>Pedidos hoy</ThemedText>
@@ -447,7 +447,7 @@ export default function BusinessDashboardScreen() {
           <View style={styles.actionsRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: theme.card }]}
-              onPress={() => navigation.navigate("BusinessProducts" as any)}
+              onPress={() => navigation.navigate("BusinessPromotions" as any)}
             >
               <Feather name="zap" size={24} color={AstroBarColors.primary} />
               <ThemedText type="small" style={{ marginTop: Spacing.xs }}>Promociones</ThemedText>

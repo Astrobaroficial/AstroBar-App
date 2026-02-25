@@ -27,14 +27,14 @@ type BusinessListScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 
 const TABS = [
   { id: "all", label: "Todos", icon: "grid" },
-  { id: "restaurant", label: "Restaurantes", icon: "coffee" },
-  { id: "market", label: "Mercados", icon: "shopping-bag" },
+  { id: "bar", label: "Bares", icon: "coffee" },
+  { id: "nightclub", label: "Discotecas", icon: "music" },
 ];
 
 const FILTERS = [
   { id: "open", label: "Abiertos", icon: "clock" },
-  { id: "fast", label: "Rápido", icon: "zap" },
-  { id: "cheap", label: "Económico", icon: "dollar-sign" },
+  { id: "flash", label: "Con Flash", icon: "zap" },
+  { id: "promo", label: "Con Promos", icon: "percent" },
   { id: "rating", label: "Mejor valorados", icon: "star" },
 ];
 
@@ -54,29 +54,35 @@ export default function BusinessListScreen() {
     try {
       const response = await apiRequest("GET", "/api/businesses");
       const data = await response.json();
+      console.log('📊 Raw businesses data:', data);
       const rawBusinesses = data.businesses || [];
+      console.log('📊 Raw businesses count:', rawBusinesses.length);
+      if (rawBusinesses.length > 0) {
+        console.log('📊 First business:', rawBusinesses[0]);
+      }
 
       const businessList: Business[] = rawBusinesses.map((b: any) => ({
         id: b.id,
         name: b.name,
         description: b.description || "",
-        type: b.type || "restaurant",
-        profileImage: b.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-        bannerImage: b.cover_image || b.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+        type: b.type || "bar",
+        profileImage: b.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
+        bannerImage: b.coverImage || b.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
         rating: (b.rating || 0) / 100,
-        reviewCount: b.total_ratings || 0,
-        deliveryTime: b.delivery_time || "30-45 min",
-        deliveryFee: (b.delivery_fee || 2500) / 100,
-        minimumOrder: (b.min_order || 5000) / 100,
-        isOpen: b.isOpen ?? b.is_open ?? false,
+        reviewCount: b.totalRatings || 0,
+        deliveryTime: "Abierto hasta 3:00 AM",
+        deliveryFee: 0,
+        minimumOrder: 0,
+        isOpen: b.isActive ?? false,
         openingHours: [],
-        address: b.address || "Autlán, Argentina",
+        address: b.address || "Buenos Aires, Argentina",
         phone: b.phone || "",
-        categories: b.categories ? b.categories.split(",") : [],
+        categories: b.categories ? b.categories.split(",") : ["Bar", "Bebidas"],
         acceptsCash: true,
-        featured: b.is_featured || false,
+        featured: b.isFeatured || false,
       }));
 
+      console.log('📊 Mapped businesses:', businessList);
       setBusinesses(businessList);
     } catch (error) {
       console.error("Error loading businesses:", error);
@@ -133,14 +139,13 @@ export default function BusinessListScreen() {
     if (activeFilters.includes("open")) {
       filtered = filtered.filter((b) => b.isOpen);
     }
-    if (activeFilters.includes("fast")) {
-      filtered = filtered.filter((b) => {
-        const time = parseInt(b.deliveryTime.split("-")[0]);
-        return time <= 30;
-      });
+    if (activeFilters.includes("flash")) {
+      // Filter bars with flash promotions (placeholder logic)
+      filtered = filtered.filter((b) => b.featured);
     }
-    if (activeFilters.includes("cheap")) {
-      filtered = filtered.filter((b) => b.deliveryFee <= 30);
+    if (activeFilters.includes("promo")) {
+      // Filter bars with active promotions (placeholder logic)
+      filtered = filtered.filter((b) => b.featured);
     }
     if (activeFilters.includes("rating")) {
       filtered = filtered.sort((a, b) => b.rating - a.rating);
@@ -185,9 +190,9 @@ export default function BusinessListScreen() {
                 <Feather name="arrow-left" size={24} color={theme.text} />
               </Pressable>
               <View style={styles.headerTextContainer}>
-                <ThemedText type="h2">Explorar Negocios</ThemedText>
+                <ThemedText type="h2">Explorar Bares</ThemedText>
                 <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-                  {results.length} {results.length === 1 ? "negocio" : "negocios"}
+                  {results.length} {results.length === 1 ? "bar" : "bares"}
                 </ThemedText>
               </View>
             </View>
@@ -203,7 +208,7 @@ export default function BusinessListScreen() {
               <Feather name="search" size={20} color={theme.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Buscar negocios, platillos..."
+                placeholder="Buscar bares, bebidas..."
                 placeholderTextColor={theme.textSecondary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -317,10 +322,10 @@ export default function BusinessListScreen() {
               <View style={styles.resultsHeader}>
                 <ThemedText type="h4">
                   {activeTab === "all"
-                    ? "Todos los negocios"
-                    : activeTab === "restaurant"
-                    ? "Restaurantes"
-                    : "Mercados"}
+                    ? "Todos los bares"
+                    : activeTab === "bar"
+                    ? "Bares"
+                    : "Discotecas"}
                 </ThemedText>
               </View>
             ) : null}
@@ -350,7 +355,7 @@ export default function BusinessListScreen() {
                 type="body"
                 style={[styles.emptyText, { color: theme.textSecondary }]}
               >
-                No encontramos negocios con esos filtros.{"\n"}Intenta con otra
+                No encontramos bares con esos filtros.{"\n"}Intenta con otra
                 búsqueda.
               </ThemedText>
               {hasActiveFilters ? (

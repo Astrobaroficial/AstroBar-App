@@ -10,6 +10,7 @@ import {
   Switch,
   ActivityIndicator,
   Platform,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,11 +31,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApp, ThemeMode } from "@/contexts/AppContext";
 import { useToast } from "@/contexts/ToastContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
-import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 
 type ProfileScreenNavigationProp =
-  NativeStackNavigationProp<RootStackParamList>;
+  NativeStackNavigationProp<ProfileStackParamList>;
 
 interface SettingsItemProps {
   icon: keyof typeof Feather.glyphMap;
@@ -136,8 +137,14 @@ export default function ProfileScreen() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editProfile, setEditProfile] = useState({
+    name: user?.name || "",
+    phone: user?.phone || ""
+  });
   const [showAddressesModal, setShowAddressesModal] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<Notifications.PermissionStatus>("undetermined");
+  const [userStats, setUserStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   const approvalStatus =
     user?.role === "business_owner" ? user?.isActive
@@ -172,9 +179,26 @@ export default function ProfileScreen() {
         console.log("Error loading profile from server:", error);
       }
     };
+
+    const loadUserStats = async () => {
+      if (user?.role !== 'customer') return;
+      setLoadingStats(true);
+      try {
+        const response = await apiRequest("GET", "/api/user/stats");
+        const data = await response.json();
+        if (data.success) {
+          setUserStats(data.stats);
+        }
+      } catch (error) {
+        console.log("Error loading user stats:", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
     
     if (user) {
       loadProfileFromServer();
+      loadUserStats();
     }
   }, []);
 
@@ -480,19 +504,13 @@ export default function ProfileScreen() {
             label="Editar mi perfil"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate("EditProfile");
+              setEditProfile({
+                name: user?.name || "",
+                phone: user?.phone || ""
+              });
+              setShowEditProfileModal(true);
             }}
           />
-          {user?.role === "customer" && (
-            <SettingsItem
-              icon="bar-chart-2"
-              label="Mis Estadísticas"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("UserStats" as any);
-              }}
-            />
-          )}
           {user?.role === "business_owner" && (
             <>
               <SettingsItem
@@ -504,48 +522,50 @@ export default function ProfileScreen() {
                 }}
               />
               <SettingsItem
-                icon="clock"
-                label="Horarios de atención"
+                icon="dollar-sign"
+                label="Mi Billetera"
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate("BusinessHours");
+                  navigation.navigate("Wallet");
                 }}
               />
             </>
           )}
-          <SettingsItem
-            icon="map-pin"
-            label="Direcciones guardadas"
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate("SavedAddresses");
-            }}
-          />
-          <SettingsItem
-            icon="credit-card"
-            label="Métodos de pago"
-            onPress={() => navigation.navigate("PaymentMethods")}
-          />
-          {user?.role === "customer" && (
-            <SettingsItem
-              icon="briefcase"
-              label="Registrar mi bar"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                navigation.navigate("RegisterBusiness" as any);
-              }}
-            />
-          )}
-          {user?.role === "business_owner" && (
-            <SettingsItem
-              icon="dollar-sign"
-              label="Mi Billetera"
-              onPress={() => {
-                navigation.navigate("Wallet");
-              }}
-            />
-          )}
         </View>
+
+        {user?.role === 'customer' && userStats && (
+          <View style={[styles.statsCard, { backgroundColor: theme.card }, Shadows.md]}>
+            <View style={styles.statsHeader}>
+              <Feather name="award" size={24} color={AstroBarColors.primary} />
+              <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>Mis Estadísticas</ThemedText>
+            </View>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <ThemedText type="h2" style={{ color: AstroBarColors.primary }}>{userStats.totalPoints}</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Puntos</ThemedText>
+              </View>
+              <View style={styles.statItem}>
+                <ThemedText type="h2" style={{ color: AstroBarColors.success }}>{userStats.promotionsRedeemed}</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Canjeadas</ThemedText>
+              </View>
+              <View style={styles.statItem}>
+                <ThemedText type="h2" style={{ color: AstroBarColors.warning }}>{userStats.barsVisited}</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Bares</ThemedText>
+              </View>
+            </View>
+            <View style={[styles.levelBadge, { backgroundColor: AstroBarColors.primaryLight }]}>
+              <Feather name="star" size={16} color={AstroBarColors.primary} />
+              <ThemedText type="body" style={{ color: AstroBarColors.primary, fontWeight: '600', marginLeft: Spacing.xs }}>
+                Nivel: {userStats.currentLevel.charAt(0).toUpperCase() + userStats.currentLevel.slice(1)}
+              </ThemedText>
+            </View>
+            {userStats.pointsToNextLevel > 0 && (
+              <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: 'center', marginTop: Spacing.sm }}>
+                {userStats.pointsToNextLevel} puntos para el siguiente nivel
+              </ThemedText>
+            )}
+          </View>
+        )}
 
         <View
           style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
@@ -1194,26 +1214,92 @@ export default function ProfileScreen() {
             <ThemedText type="h3" style={styles.modalTitle}>
               Editar perfil
             </ThemedText>
-            <ThemedText
-              type="body"
-              style={[styles.modalMessage, { color: theme.textSecondary }]}
-            >
-              Esta función estará disponible próximamente. Podrás editar tu
-              nombre, foto y datos personales.
-            </ThemedText>
-            <Pressable
-              style={[
-                styles.modalButtonFull,
-                { backgroundColor: AstroBarColors.primary }]}
-              onPress={() => setShowEditProfileModal(false)}
-            >
-              <ThemedText
-                type="body"
-                style={{ color: "#FFFFFF", fontWeight: "600" }}
+            
+            <View style={{ width: '100%', gap: 16 }}>
+              <View>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Nombre</ThemedText>
+                <TextInput
+                  style={[
+                    styles.profileInput,
+                    { backgroundColor: theme.backgroundSecondary, color: theme.text, borderColor: theme.border }
+                  ]}
+                  value={editProfile.name}
+                  onChangeText={(text) => setEditProfile({...editProfile, name: text})}
+                  placeholder="Tu nombre"
+                  placeholderTextColor={theme.textSecondary}
+                />
+              </View>
+              
+              <View>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Teléfono</ThemedText>
+                <TextInput
+                  style={[
+                    styles.profileInput,
+                    { backgroundColor: theme.backgroundSecondary, color: theme.text, borderColor: theme.border }
+                  ]}
+                  value={editProfile.phone}
+                  onChangeText={(text) => setEditProfile({...editProfile, phone: text})}
+                  placeholder="Tu teléfono"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  { borderColor: theme.border }]}
+                onPress={() => setShowEditProfileModal(false)}
               >
-                Entendido
-              </ThemedText>
-            </Pressable>
+                <ThemedText type="body" style={{ color: theme.text }}>
+                  Cancelar
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, { backgroundColor: AstroBarColors.primary }]}
+                onPress={async () => {
+                  if (!editProfile.name.trim()) {
+                    showToast("El nombre es obligatorio", "error");
+                    return;
+                  }
+                  
+                  try {
+                    const response = await apiRequest("PUT", "/api/user/profile", {
+                      name: editProfile.name.trim(),
+                      phone: editProfile.phone.trim()
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                      await updateUser({ 
+                        name: editProfile.name.trim(),
+                        phone: editProfile.phone.trim()
+                      });
+                      setShowEditProfileModal(false);
+                      showToast("Perfil actualizado", "success");
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    } else {
+                      throw new Error(data.error || "Error al actualizar");
+                    }
+                  } catch (error: any) {
+                    console.error("Error updating profile:", error);
+                    showToast("Error al actualizar perfil", "error");
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                  }
+                }}
+              >
+                <ThemedText
+                  type="body"
+                  style={{ color: "#FFFFFF", fontWeight: "600" }}
+                >
+                  Guardar
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
         </Pressable>
       </Modal>
@@ -1504,5 +1590,36 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
+  },
+  statsCard: {
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Spacing.lg,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.full,
+  },
+  profileInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    fontSize: 16,
   },
 });

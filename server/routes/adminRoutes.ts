@@ -7,53 +7,26 @@ const router = express.Router();
 // Dashboard metrics
 router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
-    const { users, businesses, orders } = await import("@shared/schema-mysql");
+    const { users, businesses, promotions, promotionTransactions } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
 
     const allUsers = await db.select().from(users);
     const allBusinesses = await db.select().from(businesses);
-    const allOrders = await db.select().from(orders);
+    const allPromotions = await db.select().from(promotions);
+    const allTransactions = await db.select().from(promotionTransactions);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todayOrders = allOrders.filter(o => {
-      const orderDate = new Date(o.createdAt);
-      return orderDate >= today;
-    });
-
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const recentOrders = allOrders.filter(o => {
-      const orderDate = new Date(o.createdAt);
-      return orderDate >= sevenDaysAgo;
-    });
-
-    const ordersToShow = todayOrders.length > 0 ? todayOrders : recentOrders;
-    const timeframe = todayOrders.length > 0 ? "hoy" : "últimos 7 días";
-    
-    const cancelledToday = ordersToShow.filter(o => o.status === "cancelled").length;
+    const activePromotions = allPromotions.filter(p => p.isActive).length;
     const pausedBusinesses = allBusinesses.filter(b => !b.isActive).length;
-    const totalBusinesses = allBusinesses.length;
-
-    const activeOrdersCount = allOrders.filter(o => 
-      ["pending", "confirmed", "preparing", "on_the_way"].includes(o.status)
-    ).length;
-
-    const todayRevenue = ordersToShow
-      .filter(o => o.status === "delivered")
-      .reduce((sum, o) => sum + o.total, 0);
+    const totalBars = allBusinesses.length;
+    const totalUsers = allUsers.filter(u => u.role === 'customer').length;
 
     res.json({
-      activeOrders: activeOrdersCount,
-      ordersToday: ordersToShow.length,
-      todayRevenue: todayRevenue,
-      cancelledToday,
-      cancellationRate: ordersToShow.length > 0 ? ((cancelledToday / ordersToShow.length) * 100).toFixed(1) + "%" : "0%",
+      totalBars,
+      activePromotions,
+      totalUsers,
       pausedBusinesses,
-      totalBusinesses,
-      timeframe,
+      totalBusinesses: totalBars,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -61,76 +34,6 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
   }
 });
 
-// Get active orders for dashboard
-router.get("/dashboard/active-orders", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
-  try {
-    const { orders, users, businesses } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-    const { eq, inArray } = await import("drizzle-orm");
-
-    const activeOrders = await db
-      .select()
-      .from(orders)
-      .where(inArray(orders.status, ["pending", "confirmed", "preparing", "on_the_way"]));
-
-    const ordersWithDetails = [];
-    
-    for (const order of activeOrders) {
-      const customer = await db
-        .select({ id: users.id, name: users.name })
-        .from(users)
-        .where(eq(users.id, order.userId))
-        .limit(1);
-
-      const business = await db
-        .select({ id: businesses.id, name: businesses.name, latitude: businesses.latitude, longitude: businesses.longitude })
-        .from(businesses)
-        .where(eq(businesses.id, order.businessId))
-        .limit(1);
-
-      let driver = null;
-      if (order.deliveryPersonId) {
-        const driverData = await db
-          .select({ id: users.id, name: users.name, isOnline: users.isActive })
-          .from(users)
-          .where(eq(users.id, order.deliveryPersonId))
-          .limit(1);
-        driver = driverData[0] || null;
-      }
-
-      ordersWithDetails.push({
-        id: order.id,
-        status: order.status,
-        total: order.total || 0,
-        createdAt: order.createdAt,
-        customer: customer[0] || { id: "", name: "Cliente" },
-        business: business[0] || { id: "", name: "Negocio", latitude: null, longitude: null },
-        deliveryAddress: {
-          latitude: order.deliveryLatitude,
-          longitude: order.deliveryLongitude,
-          address: order.deliveryAddress || "Dirección no disponible",
-        },
-        driver,
-      });
-    }
-
-    res.json({ orders: ordersWithDetails });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get online drivers for dashboard
-router.get("/dashboard/online-drivers", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
-  try {
-    const { users } = await import("@shared/schema-mysql");
-    const { db } = await import("../db");
-
-    res.json({ drivers: [] });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // Get all transactions (promotions)
 router.get("/transactions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
@@ -300,11 +203,11 @@ router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"
       SELECT 
         b.id as businessId,
         b.name as businessName,
-        COALESCE(bc.platform_commission, 0.30) as commission,
-        bc.updated_at as lastUpdated
+        COALESCE(bc.platformCommission, 0.30) as commission,
+        bc.updatedAt as lastUpdated
       FROM businesses b
-      LEFT JOIN business_commissions bc ON b.id = bc.business_id
-      WHERE b.is_active = 1
+      LEFT JOIN business_commissions bc ON b.id = bc.businessId
+      WHERE b.isActive = 1
       ORDER BY b.name
     `);
 
@@ -330,12 +233,12 @@ router.post("/commissions", authenticateToken, requireRole("admin", "super_admin
     }
 
     await db.execute(sql`
-      INSERT INTO business_commissions (id, business_id, platform_commission, notes, created_by)
+      INSERT INTO business_commissions (id, businessId, platformCommission, notes, createdBy)
       VALUES (${uuidv4()}, ${businessId}, ${commission}, ${notes || ''}, ${req.user!.id})
       ON DUPLICATE KEY UPDATE 
-        platform_commission = ${commission},
+        platformCommission = ${commission},
         notes = ${notes || ''},
-        updated_at = CURRENT_TIMESTAMP
+        updatedAt = CURRENT_TIMESTAMP
     `);
 
     res.json({ success: true, message: 'Comisión actualizada' });
@@ -446,15 +349,24 @@ router.get("/businesses", authenticateToken, requireRole("admin", "super_admin")
   try {
     const { businesses, users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { eq, desc } = await import("drizzle-orm");
 
     const allBusinesses = await db
       .select()
       .from(businesses)
-      .orderBy(businesses.createdAt);
+      .orderBy(desc(businesses.createdAt));
+
+    console.log('📊 Found businesses:', allBusinesses.length);
 
     const enriched = await Promise.all(
       allBusinesses.map(async (business) => {
+        if (!business.ownerId) {
+          return {
+            ...business,
+            ownerName: 'Sin propietario',
+          };
+        }
+
         const [owner] = await db
           .select({ name: users.name })
           .from(users)
@@ -467,9 +379,12 @@ router.get("/businesses", authenticateToken, requireRole("admin", "super_admin")
         };
       })
     );
+
+    console.log('📊 Enriched businesses:', enriched);
       
     res.json({ success: true, businesses: enriched });
   } catch (error: any) {
+    console.error('Get businesses error:', error);
     res.status(500).json({ error: error.message });
   }
 });

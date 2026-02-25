@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../lib/api';
+import { apiRequest } from '../lib/query-client';
+import { useCustomAlert } from '../components/CustomAlert';
 
 interface BusinessCommission {
   businessId: string;
@@ -17,13 +18,15 @@ export default function AdminCommissionsManager() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessCommission | null>(null);
   const [newCommission, setNewCommission] = useState('');
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const loadBusinesses = async () => {
     try {
-      const response = await api.get('/admin/commissions');
-      setBusinesses(response.data.businesses || []);
+      const response = await apiRequest('GET', '/api/admin/commissions');
+      const data = await response.json();
+      setBusinesses(data.businesses || []);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al cargar comisiones');
+      showAlert('Error', 'Error al cargar comisiones');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -45,22 +48,22 @@ export default function AdminCommissionsManager() {
 
     const commissionValue = parseFloat(newCommission);
     if (isNaN(commissionValue) || commissionValue < 5 || commissionValue > 30) {
-      Alert.alert('Error', 'La comisión debe estar entre 5% y 30%');
+      showAlert('Error', 'La comisión debe estar entre 5% y 30%');
       return;
     }
 
     try {
-      await api.post('/admin/commissions', {
+      await apiRequest('POST', '/api/admin/commissions', {
         businessId: selectedBusiness.businessId,
         commission: commissionValue / 100,
         notes: `Actualizado a ${commissionValue}%`,
       });
       
-      Alert.alert('Éxito', 'Comisión actualizada correctamente');
+      showAlert('Éxito', 'Comisión actualizada correctamente');
       setModalVisible(false);
       loadBusinesses();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al actualizar comisión');
+      showAlert('Error', 'Error al actualizar comisión');
     }
   };
 
@@ -113,6 +116,7 @@ export default function AdminCommissionsManager() {
 
   return (
     <View style={styles.container}>
+      {AlertComponent}
       <View style={styles.header}>
         <Text style={styles.title}>Gestión de Comisiones</Text>
         <Text style={styles.subtitle}>Rango: 5% - 30% (Por defecto: 30%)</Text>

@@ -3,8 +3,10 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 
 import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
+import BusinessMenuScreen from "@/screens/BusinessMenuScreen";
+import QRScannerScreen from "@/screens/QRScannerScreen";
 import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
-import ProfileScreen from "@/screens/ProfileScreen";
+import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
 
@@ -41,10 +43,30 @@ export default function BusinessTabNavigator() {
         }}
       />
       <Tab.Screen
+        name="BusinessMenu"
+        component={BusinessMenuScreen}
+        options={{
+          title: "Menú",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="book" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="QRScanner"
+        component={QRScannerScreen}
+        options={{
+          title: "Escanear",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="camera" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="BusinessPromotions"
         component={BusinessPromotionsPanel}
         options={{
-          title: "Promociones Activas",
+          title: "Promos",
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
           ),
@@ -52,9 +74,10 @@ export default function BusinessTabNavigator() {
       />
       <Tab.Screen
         name="BusinessProfile"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           title: "Perfil",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="user" size={size} color={color} />
           ),

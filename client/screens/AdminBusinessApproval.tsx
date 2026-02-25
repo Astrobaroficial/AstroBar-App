@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../lib/api';
+import { apiRequest } from '../lib/query-client';
+import { useCustomAlert } from '../components/CustomAlert';
 
 interface Business {
   id: string;
@@ -18,13 +19,15 @@ export default function AdminBusinessApproval() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'all'>('pending');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const loadBusinesses = async () => {
     try {
-      const response = await api.get('/admin/businesses');
-      setBusinesses(response.data.businesses || []);
+      const response = await apiRequest('GET', '/api/admin/businesses');
+      const data = await response.json();
+      setBusinesses(data.businesses || []);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al cargar bares');
+      showAlert('Error', 'Error al cargar bares');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -36,7 +39,7 @@ export default function AdminBusinessApproval() {
   }, []);
 
   const handleApprove = async (businessId: string) => {
-    Alert.alert(
+    showAlert(
       'Aprobar Bar',
       '¿Confirmas que quieres aprobar este bar?',
       [
@@ -45,11 +48,11 @@ export default function AdminBusinessApproval() {
           text: 'Aprobar',
           onPress: async () => {
             try {
-              await api.patch(`/admin/businesses/${businessId}/verification`, { isActive: true });
-              Alert.alert('Éxito', 'Bar aprobado correctamente');
+              await apiRequest('PATCH', `/api/admin/businesses/${businessId}/verification`, { isActive: true });
+              showAlert('Éxito', 'Bar aprobado correctamente');
               loadBusinesses();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.error || 'Error al aprobar');
+              showAlert('Error', 'Error al aprobar');
             }
           },
         },
@@ -58,7 +61,7 @@ export default function AdminBusinessApproval() {
   };
 
   const handleReject = async (businessId: string) => {
-    Alert.alert(
+    showAlert(
       'Rechazar Bar',
       '¿Confirmas que quieres rechazar este bar?',
       [
@@ -68,11 +71,11 @@ export default function AdminBusinessApproval() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.patch(`/admin/businesses/${businessId}/verification`, { isActive: false });
-              Alert.alert('Éxito', 'Bar rechazado');
+              await apiRequest('PATCH', `/api/admin/businesses/${businessId}/verification`, { isActive: false });
+              showAlert('Éxito', 'Bar rechazado');
               loadBusinesses();
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.error || 'Error al rechazar');
+              showAlert('Error', 'Error al rechazar');
             }
           },
         },
@@ -163,6 +166,7 @@ export default function AdminBusinessApproval() {
 
   return (
     <View style={styles.container}>
+      {AlertComponent}
       <View style={styles.stats}>
         <View style={styles.stat}>
           <Text style={styles.statValue}>{stats.total}</Text>

@@ -67,7 +67,7 @@ export const orders = mysqlTable("orders", {
   status: text("status").notNull().default("pending"),
   subtotal: int("subtotal").notNull(),
   productosBase: int("productos_base").default(0), // Precio base sin markup AstroBar
-  AstroBarCommission: int("AstroBar_commission").default(0), // 15% markup AstroBar
+  astroBarCommission: int("astrobar_commission").default(0), // 15% markup AstroBar
   deliveryFee: int("delivery_fee").notNull(),
   total: int("total").notNull(),
   paymentMethod: text("payment_method").notNull(),

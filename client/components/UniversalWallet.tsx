@@ -11,8 +11,8 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../contexts/AuthContext';
-import { API_CONFIG } from '../constants/config';
+import { useAuth } from '@/contexts/AuthContext';
+import { API_CONFIG } from '@/constants/config';
 
 interface WalletData {
   balance: number;

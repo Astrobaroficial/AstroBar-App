@@ -4,6 +4,8 @@ import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 
 import HomeScreen from "@/screens/HomeScreen";
+import BusinessListScreen from "@/screens/BusinessListScreen";
+import MapScreen from "@/screens/MapScreen";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
@@ -11,6 +13,8 @@ import { Spacing, AstroBarColors } from "@/constants/theme";
 
 export type HomeStackParamList = {
   Home: undefined;
+  BusinessList: undefined;
+  Map: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -42,6 +46,16 @@ export default function HomeStackNavigator() {
           headerTitle: () => <HeaderTitle />,
           headerRight: () => <ThemeToggleButton />,
         }}
+      />
+      <Stack.Screen
+        name="BusinessList"
+        component={BusinessListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

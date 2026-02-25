@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../lib/api';
+import { useNavigation } from '@react-navigation/native';
+import { apiRequest } from '../lib/query-client';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Promotion {
@@ -19,16 +20,21 @@ interface Promotion {
 
 export default function BusinessPromotionsPanel() {
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadPromotions = async () => {
     try {
-      const response = await api.get(`/promotions?businessId=${user?.businessId}`);
-      setPromotions(response.data.promotions || []);
+      const response = await apiRequest('GET', '/api/business/promotions');
+      const data = await response.json();
+      if (data.success) {
+        setPromotions(data.promotions || []);
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al cargar promociones');
+      console.error('Error loading promotions:', error);
+      Alert.alert('Error', 'Error al cargar promociones');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -56,24 +62,22 @@ export default function BusinessPromotionsPanel() {
   };
 
   const togglePromotion = async (id: string, currentStatus: boolean) => {
-    Alert.alert(
-      currentStatus ? 'Pausar Promoción' : 'Activar Promoción',
-      `¿Estás seguro de ${currentStatus ? 'pausar' : 'activar'} esta promoción?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            try {
-              await api.patch(`/promotions/${id}`, { isActive: !currentStatus });
-              loadPromotions();
-            } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.error || 'Error al actualizar');
-            }
-          },
-        },
-      ]
-    );
+    console.log('Button pressed! ID:', id, 'Status:', currentStatus);
+    try {
+      console.log('Toggling promotion:', id, 'to:', !currentStatus);
+      const response = await apiRequest('PATCH', `/api/promotions/${id}`, { isActive: !currentStatus });
+      const result = await response.json();
+      console.log('Toggle result:', result);
+      if (result.success) {
+        loadPromotions();
+        Alert.alert('Éxito', `Promoción ${!currentStatus ? 'activada' : 'pausada'}`);
+      } else {
+        Alert.alert('Error', result.error || 'Error al actualizar');
+      }
+    } catch (error: any) {
+      console.log('Toggle error:', error);
+      Alert.alert('Error', 'Error al actualizar promoción');
+    }
   };
 
   const renderPromotion = ({ item }: { item: Promotion }) => {
@@ -147,18 +151,18 @@ export default function BusinessPromotionsPanel() {
     <View style={styles.container}>
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>{promotions.length}</Text>
+          <Text style={styles.summaryValue}>{promotions.filter(p => p.isActive).length || 0}</Text>
           <Text style={styles.summaryLabel}>Activas</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
-            {promotions.filter(p => p.type === 'flash').length}
+            {promotions.filter(p => p.type === 'flash' && p.isActive).length || 0}
           </Text>
           <Text style={styles.summaryLabel}>Flash</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
-            {promotions.reduce((sum, p) => sum + p.stockRemaining, 0)}
+            {promotions.reduce((sum, p) => sum + (p.stockRemaining || p.stock || 0), 0)}
           </Text>
           <Text style={styles.summaryLabel}>Stock Total</Text>
         </View>
@@ -179,9 +183,29 @@ export default function BusinessPromotionsPanel() {
           <View style={styles.empty}>
             <Ionicons name="megaphone-outline" size={64} color="#666" />
             <Text style={styles.emptyText}>No hay promociones activas</Text>
+            <Text style={styles.emptySubtext}>Crea tu primera promoción usando los botones de abajo</Text>
           </View>
         }
       />
+
+      {/* Floating Action Buttons */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={[styles.fab, styles.flashFab]}
+          onPress={() => navigation.navigate('CreateFlashPromotion')}
+        >
+          <Ionicons name="flash" size={24} color="#000" />
+          <Text style={styles.fabText}>Flash</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.fab, styles.commonFab]}
+          onPress={() => navigation.navigate('CreateCommonPromotion')}
+        >
+          <Ionicons name="calendar" size={24} color="#000" />
+          <Text style={styles.fabText}>Común</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -247,4 +271,36 @@ const styles = StyleSheet.create({
   lowStockBar: { backgroundColor: '#FF5252' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { color: '#666', fontSize: 16, marginTop: 16 },
+  emptySubtext: { color: '#666', fontSize: 14, marginTop: 8, textAlign: 'center' },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  fab: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  flashFab: {
+    backgroundColor: '#8B5CF6',
+  },
+  commonFab: {
+    backgroundColor: '#FFD700',
+  },
+  fabText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000',
+    marginTop: 4,
+  },
 });
