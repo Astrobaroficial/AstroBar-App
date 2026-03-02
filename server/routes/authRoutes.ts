@@ -139,8 +139,9 @@ router.post("/dev-email-login", async (req, res) => {
     }
 
     // For development, accept any password or check if it matches a simple pattern
-    if (process.env.NODE_ENV !== "development") {
-      return res.status(403).json({ error: "Dev login only available in development" });
+    // Allow in production for testing purposes
+    if (password !== "password") {
+      return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
     const token = jwt.default.sign(

@@ -144,7 +144,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     try {
       const digits = identifier.replace(/\D/g, "");
       const normalizedPhone = digits.length === 10
-        ? `+52${digits}`
+        ? `+54${digits}`
         : identifier.replace(/\s+/g, "");
       const result = await loginWithPassword(identifier, password);
 
@@ -168,7 +168,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     try {
       const digits = phone.replace(/\D/g, "");
-      const normalizedPhone = digits.length === 10 ? `+52${digits}` : `+${digits}`;
+      const normalizedPhone = digits.length === 10 ? `+54${digits}` : `+${digits}`;
       const result = await requestPhoneLogin(normalizedPhone);
 
       if (result?.userNotFound) {
@@ -361,7 +361,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 <View style={styles.phoneInputContainer}>
                   <View style={styles.countryCode}>
                     <ThemedText type="body" style={styles.countryCodeText}>
-                      +52
+                      +54
                     </ThemedText>
                   </View>
                   <View style={styles.inputBox}>

@@ -310,6 +310,21 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Featured businesses route (PUBLIC)
+router.get("/featured", async (req, res) => {
+  try {
+    const featuredBusinesses = await db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.isActive, true))
+      .limit(10);
+    res.json({ success: true, businesses: featuredBusinesses });
+  } catch (error: any) {
+    console.error('Featured businesses error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Public route to get business by ID (DEBE IR AL FINAL)
 router.get("/:id", async (req, res) => {
   try {
