@@ -203,11 +203,11 @@ router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"
       SELECT 
         b.id as businessId,
         b.name as businessName,
-        COALESCE(bc.platformCommission, 0.30) as commission,
-        bc.updatedAt as lastUpdated
+        COALESCE(bc.platform_commission, 0.30) as commission,
+        bc.updated_at as lastUpdated
       FROM businesses b
-      LEFT JOIN business_commissions bc ON b.id = bc.businessId
-      WHERE b.isActive = 1
+      LEFT JOIN business_commissions bc ON b.id = bc.business_id
+      WHERE b.is_active = 1
       ORDER BY b.name
     `);
 
@@ -233,12 +233,12 @@ router.post("/commissions", authenticateToken, requireRole("admin", "super_admin
     }
 
     await db.execute(sql`
-      INSERT INTO business_commissions (id, businessId, platformCommission, notes, createdBy)
+      INSERT INTO business_commissions (id, business_id, platform_commission, notes, created_by)
       VALUES (${uuidv4()}, ${businessId}, ${commission}, ${notes || ''}, ${req.user!.id})
       ON DUPLICATE KEY UPDATE 
-        platformCommission = ${commission},
+        platform_commission = ${commission},
         notes = ${notes || ''},
-        updatedAt = CURRENT_TIMESTAMP
+        updated_at = CURRENT_TIMESTAMP
     `);
 
     res.json({ success: true, message: 'Comisión actualizada' });
