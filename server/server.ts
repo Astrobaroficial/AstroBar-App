@@ -84,6 +84,11 @@ import adminPanelRoutes from './routes/adminPanelRoutes';
 console.log('🔧 Registering Admin Panel routes at /api/admin');
 app.use('/api/admin', adminPanelRoutes);
 
+// FASE 2 routes
+import phase2Routes from './routes/phase2Routes';
+console.log('🚀 Registering FASE 2 routes at /api/phase2');
+app.use('/api/phase2', phase2Routes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed
