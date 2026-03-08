@@ -6,37 +6,42 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from './ThemedText';
 import { AstroBarColors, Spacing, BorderRadius } from '@/constants/theme';
 
-export type PinStatus = 'closed' | 'opening_soon' | 'open';
+export type PinStatus = 'closed' | 'opening_soon' | 'open' | 'hot_promo';
 
 interface Props {
   status: PinStatus;
   businessName: string;
   onPress: () => void;
-  timeUntilOpen?: string; // "Abre en 2h 30m"
-  hasFlashPromo?: boolean; // Indica si tiene promoción FLASH activa
-  flashPromoCount?: number; // Cantidad de promos FLASH
+  timeUntilOpen?: string;
+  hotPromoCount?: number;
 }
 
-export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, hasFlashPromo = false, flashPromoCount = 0 }: Props) {
+export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, hotPromoCount = 0 }: Props) {
   const getStatusConfig = () => {
     switch (status) {
       case 'closed':
         return {
-          color: '#EF4444', // Rojo
-          icon: 'moon' as const,
+          color: '#EF4444',
+          icon: 'x-circle' as const,
           label: 'Cerrado',
         };
       case 'opening_soon':
         return {
-          color: '#F59E0B', // Amarillo/Naranja
+          color: '#F59E0B',
           icon: 'clock' as const,
-          label: timeUntilOpen || 'Próximo a abrir',
+          label: timeUntilOpen || 'Próximo',
+        };
+      case 'hot_promo':
+        return {
+          color: '#10B981',
+          icon: 'home' as const,
+          label: `⚡ ${hotPromoCount} FLASH`,
         };
       case 'open':
         return {
-          color: '#10B981', // Verde
+          color: '#10B981',
           icon: 'home' as const,
-          label: hasFlashPromo ? `${flashPromoCount} FLASH` : 'Abierto',
+          label: 'Abierto',
         };
       default:
         return {
@@ -61,18 +66,18 @@ export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, has
         styles.pin,
         { 
           backgroundColor: config.color,
-          borderColor: hasFlashPromo ? '#FFD700' : config.color,
-          borderWidth: hasFlashPromo ? 3 : 2
+          borderColor: status === 'hot_promo' ? '#FFD700' : config.color,
+          borderWidth: status === 'hot_promo' ? 3 : 2
         }
       ]}>
         <Feather 
           name={config.icon} 
-          size={hasFlashPromo ? 18 : 16} 
+          size={status === 'hot_promo' ? 18 : 16} 
           color="#FFFFFF" 
         />
         
-        {/* Fire indicator for flash promos - Only when open AND has flash promo */}
-        {status === 'open' && hasFlashPromo && (
+        {/* Fire indicator for HOT PROMO */}
+        {status === 'hot_promo' && (
           <View style={styles.fireIndicator}>
             <Feather name="zap" size={12} color="#FFD700" />
           </View>
@@ -87,8 +92,8 @@ export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, has
         styles.statusLabel,
         { 
           backgroundColor: config.color,
-          borderColor: hasFlashPromo ? '#FFD700' : 'transparent',
-          borderWidth: hasFlashPromo ? 1 : 0
+          borderColor: status === 'hot_promo' ? '#FFD700' : 'transparent',
+          borderWidth: status === 'hot_promo' ? 1 : 0
         }
       ]}>
         <ThemedText type="caption" style={styles.statusText}>
@@ -103,8 +108,8 @@ export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, has
         </ThemedText>
       </View>
 
-      {/* Pulsing animation for flash promos - Only when open AND has flash promo */}
-      {status === 'open' && hasFlashPromo && (
+      {/* Pulsing animation for HOT PROMO */}
+      {status === 'hot_promo' && (
         <View style={[styles.pulseRing, { borderColor: config.color }]} />
       )}
     </Pressable>

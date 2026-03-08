@@ -103,7 +103,8 @@ export default function MapScreen() {
   };
 
   const getBarStatus = (bar: any): PinStatus => {
-    if (bar.hasFlashPromo) return 'hot_promo';
+    // Priority: hot_promo > open > opening_soon > closed
+    if (bar.hasFlashPromo && bar.isOpen) return 'hot_promo';
     if (bar.isOpen) return 'open';
     if (bar.openingSoon) return 'opening_soon';
     return 'closed';

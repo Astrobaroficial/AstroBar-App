@@ -514,8 +514,75 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
 // Public route to list all businesses
 router.get("/", async (req, res) => {
   try {
+    const { lat, lng, radius } = req.query;
+    
     const allBusinesses = await db.select().from(businesses).where(eq(businesses.isActive, true));
-    res.json({ success: true, businesses: allBusinesses });
+    
+    // Get current time
+    const now = new Date();
+    const { and, gte, lte, sql: drizzleSql } = await import("drizzle-orm");
+    
+    // Enrich businesses with real-time data
+    const enrichedBusinesses = await Promise.all(
+      allBusinesses.map(async (business) => {
+        // Count active flash promotions
+        const flashPromos = await db
+          .select()
+          .from(promotions)
+          .where(
+            and(
+              eq(promotions.businessId, business.id),
+              eq(promotions.type, 'flash'),
+              eq(promotions.isActive, true),
+              lte(promotions.startTime, now),
+              gte(promotions.endTime, now)
+            )
+          );
+        
+        const hasFlashPromo = flashPromos.length > 0;
+        const flashPromoCount = flashPromos.length;
+        
+        // Calculate distance if coordinates provided
+        let distance = null;
+        if (lat && lng) {
+          const R = 6371; // Earth's radius in km
+          const dLat = (business.latitude - Number(lat)) * Math.PI / 180;
+          const dLon = (business.longitude - Number(lng)) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(Number(lat) * Math.PI / 180) * Math.cos(business.latitude * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          distance = R * c;
+        }
+        
+        // Filter by radius if provided
+        if (radius && distance && distance > Number(radius)) {
+          return null;
+        }
+        
+        // Determine if opening soon (within 2 hours)
+        let openingSoon = false;
+        let timeUntilOpen = null;
+        
+        // TODO: Implement opening hours logic
+        // For now, assume isActive means open
+        
+        return {
+          ...business,
+          hasFlashPromo,
+          flashPromoCount,
+          distance,
+          openingSoon,
+          timeUntilOpen,
+          isOpen: business.isActive, // Simplified for MVP
+        };
+      })
+    );
+    
+    // Filter out nulls (businesses outside radius)
+    const filteredBusinesses = enrichedBusinesses.filter(b => b !== null);
+    
+    res.json({ success: true, businesses: filteredBusinesses });
   } catch (error: any) {
     console.error('List businesses error:', error);
     res.status(500).json({ error: error.message });
