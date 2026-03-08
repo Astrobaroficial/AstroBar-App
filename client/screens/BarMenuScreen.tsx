@@ -11,11 +11,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Alert } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
+import { useOrderCart } from "@/contexts/OrderCartContext";
 
 interface Product {
   id: string;
@@ -48,6 +50,7 @@ export default function BarMenuScreen() {
   const [loading, setLoading] = useState(true);
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const { addItem, getItemCount, currentBusinessId } = useOrderCart();
 
   useEffect(() => {
     loadMenu();
@@ -76,6 +79,51 @@ export default function BarMenuScreen() {
       return Object.values(menuData.menu).flat();
     }
     return menuData.menu[selectedCategory] || [];
+  };
+
+  const handleAddToCart = (product: Product) => {
+    if (!product.isAvailable) {
+      Alert.alert("No disponible", "Este producto no está disponible en este momento");
+      return;
+    }
+
+    // Verificar si hay productos de otro bar
+    if (currentBusinessId && currentBusinessId !== businessId) {
+      Alert.alert(
+        "Carrito de otro bar",
+        "Ya tienes productos de otro bar. ¿Deseas vaciar el carrito y agregar este producto?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Vaciar y agregar",
+            style: "destructive",
+            onPress: () => {
+              // TODO: clearCart() y luego addItem
+              addItemToCart(product);
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    addItemToCart(product);
+  };
+
+  const addItemToCart = (product: Product) => {
+    try {
+      addItem({
+        productId: product.id,
+        productName: product.name,
+        productPrice: product.price,
+        businessId: businessId,
+        businessName: menuData?.business.name || '',
+        image: product.image,
+      });
+      Alert.alert("✓ Agregado", `${product.name} agregado al carrito`);
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
   };
 
   if (loading) {
@@ -111,6 +159,19 @@ export default function BarMenuScreen() {
             {menuData.totalProducts} productos
           </ThemedText>
         </View>
+        {getItemCount() > 0 && (
+          <Pressable
+            onPress={() => navigation.navigate('OrderCart' as never)}
+            style={[styles.cartButton, { backgroundColor: AstroBarColors.primary }]}
+          >
+            <Feather name="shopping-cart" size={20} color="#FFFFFF" />
+            <View style={styles.cartBadge}>
+              <ThemedText type="small" style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "700" }}>
+                {getItemCount()}
+              </ThemedText>
+            </View>
+          </Pressable>
+        )}
       </View>
 
       <ScrollView
@@ -175,6 +236,18 @@ export default function BarMenuScreen() {
                     No disponible
                   </ThemedText>
                 )}
+                <Pressable
+                  onPress={() => handleAddToCart(product)}
+                  disabled={!product.isAvailable}
+                  style={[
+                    styles.addButton,
+                    {
+                      backgroundColor: product.isAvailable ? AstroBarColors.primary : theme.border,
+                    },
+                  ]}
+                >
+                  <Feather name="plus" size={20} color="#FFFFFF" />
+                </Pressable>
               </View>
             </View>
           </View>
@@ -215,6 +288,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  cartButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: AstroBarColors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
   categoriesScroll: {
     maxHeight: 50,
     marginBottom: Spacing.md,
@@ -246,6 +339,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "center",
     marginLeft: Spacing.md,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: Spacing.sm,
   },
   emptyState: {
     alignItems: "center",

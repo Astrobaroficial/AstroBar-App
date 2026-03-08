@@ -97,6 +97,11 @@ import adminCompleteRoutes from './routes/adminCompleteRoutes';
 console.log('🔧 Registering Admin Complete routes at /api/admin-complete');
 app.use('/api/admin-complete', adminCompleteRoutes);
 
+// Order routes
+import orderRoutes from './routes/orderRoutes';
+console.log('🛒 Registering Order routes at /api/orders');
+app.use('/api/orders', orderRoutes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed
