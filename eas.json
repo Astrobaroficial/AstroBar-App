@@ -18,10 +18,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://AstroBar-app.replit.app",
-        "EXPO_PUBLIC_BACKEND_URL": "https://AstroBar-app.replit.app",
-        "EXPO_PUBLIC_FRONTEND_URL": "https://AstroBar-app.replit.app",
-        "EXPO_PUBLIC_NODE_ENV": "production"
+        "EXPO_PUBLIC_BACKEND_URL": "https://astrobar-backend.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
       }
     }
   },
