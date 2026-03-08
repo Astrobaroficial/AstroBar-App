@@ -30,6 +30,7 @@ export function OrderCartProvider({ children }: { children: ReactNode }) {
   const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(null);
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
+    // Solo permitir productos del mismo bar
     if (currentBusinessId && currentBusinessId !== item.businessId) {
       throw new Error('Solo puedes agregar productos del mismo bar');
     }

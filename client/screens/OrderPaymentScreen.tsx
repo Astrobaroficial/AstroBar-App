@@ -41,7 +41,7 @@ export default function OrderPaymentScreen() {
     setLoading(true);
 
     try {
-      // Create order and get payment intent
+      // Crear pedido en backend
       const response = await apiRequest('POST', '/api/orders', {
         items,
         businessId: items[0].businessId,
@@ -53,45 +53,22 @@ export default function OrderPaymentScreen() {
         throw new Error(data.error || 'Error al crear el pedido');
       }
 
-      // Confirm payment with Stripe
-      const { error } = await stripe.confirmPayment(data.clientSecret, {
-        paymentMethodType: 'Card',
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Confirm payment on backend and award points
-      const confirmResponse = await apiRequest('POST', '/api/orders/confirm', {
-        orderId: data.orderId,
-      });
-
-      const confirmData = await confirmResponse.json();
-
-      if (!confirmData.success) {
-        throw new Error(confirmData.error);
-      }
-
+      // Limpiar carrito
       clearCart();
 
+      // Navegar a pantalla de QR
       navigation.reset({
         index: 0,
         routes: [
           { name: 'Main' as never },
           {
             name: 'OrderQR' as never,
-            params: { 
-              order: {
-                id: data.orderId,
-                qrCode: confirmData.qrCode,
-                totalAmount: total,
-                pointsAwarded: confirmData.pointsAwarded,
-              }
-            } as never,
+            params: { order: data.order } as never,
           },
         ],
       });
+
+      Alert.alert('¡Éxito!', `Ganaste ${Math.floor(total / 100)} puntos`);
     } catch (error: any) {
       console.error('Payment error:', error);
       Alert.alert('Error', error.message || 'Error al procesar el pago');
@@ -151,19 +128,21 @@ export default function OrderPaymentScreen() {
           </ThemedText>
 
           {Platform.OS !== 'web' && CardField ? (
-            <CardField
-              postalCodeEnabled={false}
-              placeholders={{ number: '4242 4242 4242 4242' }}
-              cardStyle={{
-                backgroundColor: theme.background,
-                textColor: theme.text,
-                placeholderColor: theme.textSecondary,
-              }}
-              style={styles.cardField}
-              onCardChange={(cardDetails: any) => {
-                setCardComplete(cardDetails.complete);
-              }}
-            />
+            <>
+              <CardField
+                postalCodeEnabled={false}
+                placeholders={{ number: '4242 4242 4242 4242' }}
+                cardStyle={{
+                  backgroundColor: theme.background,
+                  textColor: theme.text,
+                  placeholderColor: theme.textSecondary,
+                }}
+                style={styles.cardField}
+                onCardChange={(cardDetails: any) => {
+                  setCardComplete(cardDetails.complete);
+                }}
+              />
+            </>
           ) : (
             <View style={[styles.webPaymentBox, { backgroundColor: theme.background }]}>
               <ThemedText type="body" style={{ color: theme.textSecondary, textAlign: 'center' }}>
@@ -206,7 +185,9 @@ export default function OrderPaymentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

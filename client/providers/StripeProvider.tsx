@@ -18,11 +18,18 @@ export function StripeProvider({ children }: StripeProviderProps) {
   useEffect(() => {
     if (Platform.OS !== "web" && !isExpoGo) {
       loadStripe();
+    } else {
+      setStripeAvailable(false);
     }
   }, []);
 
   const loadStripe = async () => {
     try {
+      if (Platform.OS === "web") {
+        setStripeAvailable(false);
+        return;
+      }
+
       const { StripeProvider: NativeStripeProvider } = await import(
         "@stripe/stripe-react-native"
       );

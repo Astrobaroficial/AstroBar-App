@@ -1,11 +1,11 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
-import { authenticateToken } from '../authMiddleware';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
-// Create payment intent and order
+// Crear pedido y procesar pago
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.userId;
@@ -15,15 +15,15 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'No hay items en el pedido' });
     }
 
-    // Get commission
+    // Obtener comisión del bar
     const [commissionResult]: any = await db.execute(
       'SELECT platform_commission FROM business_commissions WHERE business_id = ?',
       [businessId]
     );
 
-    const platformCommission = commissionResult[0]?.[0]?.platform_commission || 0.15;
+    const platformCommission = commissionResult[0]?.platform_commission || 0.30;
 
-    // Calculate totals
+    // Calcular totales
     let totalAmount = 0;
     const orderItems = [];
 
@@ -46,34 +46,20 @@ router.post('/', authenticateToken, async (req, res) => {
     const businessRevenue = totalAmount;
     const totalWithCommission = totalAmount + commissionAmount;
 
-    // Create Stripe payment intent
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalWithCommission,
-      currency: 'usd',
-      metadata: {
-        userId,
-        businessId,
-        type: 'order',
-      },
-    });
-
-    // Create order
+    // Crear pedido
     const orderId = uuidv4();
-    const qrCode = `ORDER-${orderId.substring(0, 8).toUpperCase()}`;
-    const canCancelUntil = new Date(Date.now() + 60000);
+    const qrCode = `ORDER-${orderId}-${Date.now()}`;
+    const canCancelUntil = new Date(Date.now() + 60000); // 60 segundos
 
     await db.execute(
       `INSERT INTO orders (
         id, user_id, business_id, total_amount, platform_commission_amount,
-        business_revenue, platform_commission_rate, status, qr_code, 
-        payment_intent_id, can_cancel_until
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
-      [orderId, userId, businessId, totalAmount, commissionAmount, businessRevenue, 
-       platformCommission, qrCode, paymentIntent.id, canCancelUntil]
+        business_revenue, platform_commission_rate, status, qr_code, can_cancel_until
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'paid', ?, ?)`,
+      [orderId, userId, businessId, totalAmount, commissionAmount, businessRevenue, platformCommission, qrCode, canCancelUntil]
     );
 
-    // Insert items
+    // Insertar items
     for (const item of orderItems) {
       await db.execute(
         `INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
@@ -82,48 +68,15 @@ router.post('/', authenticateToken, async (req, res) => {
       );
     }
 
-    res.json({
-      success: true,
-      clientSecret: paymentIntent.client_secret,
-      orderId,
-      qrCode,
-      totalAmount,
-      commissionAmount,
-      total: totalWithCommission,
-      canCancelUntil,
-    });
-  } catch (error: any) {
-    console.error('Error creating order:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Confirm payment and award points
-router.post('/confirm', authenticateToken, async (req, res) => {
-  try {
-    const { orderId } = req.body;
-    const userId = req.user!.userId;
-
-    const [orders]: any = await db.execute(
-      'SELECT * FROM orders WHERE id = ? AND user_id = ?',
-      [orderId, userId]
-    );
-
-    if (orders.length === 0) {
-      return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
-    }
-
-    const order = orders[0];
-
-    // Update order status and award points
-    const pointsAwarded = Math.floor(order.total_amount / 100);
+    // Actualizar paid_at y otorgar puntos inmediatamente
+    const pointsAwarded = Math.floor(totalAmount / 100); // 1 punto por cada $1 USD
     
     await db.execute(
-      'UPDATE orders SET status = ?, paid_at = NOW(), points_awarded = ? WHERE id = ?',
-      ['paid', pointsAwarded, orderId]
+      'UPDATE orders SET paid_at = NOW(), points_awarded = ? WHERE id = ?',
+      [pointsAwarded, orderId]
     );
 
-    // Award points
+    // Otorgar puntos al usuario inmediatamente
     await db.execute(
       `UPDATE user_points 
        SET total_points = total_points + ?,
@@ -136,16 +89,22 @@ router.post('/confirm', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      pointsAwarded,
-      qrCode: order.qr_code,
+      order: {
+        id: orderId,
+        qrCode,
+        totalAmount,
+        commissionAmount,
+        total: totalWithCommission,
+        canCancelUntil,
+      },
     });
   } catch (error: any) {
-    console.error('Error confirming payment:', error);
+    console.error('Error creating order:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Get my orders
+// Obtener mis pedidos
 router.get('/my', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.userId;
@@ -159,6 +118,7 @@ router.get('/my', authenticateToken, async (req, res) => {
       [userId]
     );
 
+    // Obtener items de cada pedido
     for (const order of orders) {
       const [items]: any = await db.execute(
         'SELECT * FROM order_items WHERE order_id = ?',
@@ -174,7 +134,44 @@ router.get('/my', authenticateToken, async (req, res) => {
   }
 });
 
-// Deliver order (business scans QR)
+// Cancelar pedido
+router.post('/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+
+    const [orders]: any = await db.execute(
+      'SELECT * FROM orders WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
+    }
+
+    const order = orders[0];
+
+    if (order.status !== 'paid') {
+      return res.status(400).json({ success: false, error: 'El pedido no se puede cancelar' });
+    }
+
+    if (new Date() > new Date(order.can_cancel_until)) {
+      return res.status(400).json({ success: false, error: 'Tiempo de cancelación expirado' });
+    }
+
+    await db.execute(
+      'UPDATE orders SET status = ?, cancelled_at = NOW(), cancellation_reason = ? WHERE id = ?',
+      ['cancelled', 'Cancelado por el usuario', id]
+    );
+
+    res.json({ success: true, message: 'Pedido cancelado' });
+  } catch (error: any) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Escanear QR y entregar pedido (business_owner)
 router.post('/deliver', authenticateToken, async (req, res) => {
   try {
     const { qrCode } = req.body;
@@ -201,10 +198,11 @@ router.post('/deliver', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Pedido ya entregado' });
     }
 
-    if (order.status !== 'paid') {
-      return res.status(400).json({ success: false, error: 'Pedido no pagado' });
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ success: false, error: 'Pedido cancelado' });
     }
 
+    // Actualizar pedido a entregado (puntos ya fueron otorgados al pagar)
     await db.execute(
       'UPDATE orders SET status = ?, delivered_at = NOW() WHERE id = ?',
       ['delivered', order.id]
@@ -217,6 +215,36 @@ router.post('/deliver', authenticateToken, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error delivering order:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Obtener pedidos del bar (business_owner)
+router.get('/business', authenticateToken, async (req, res) => {
+  try {
+    const businessOwnerId = req.user!.userId;
+
+    const [orders]: any = await db.execute(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone
+       FROM orders o
+       JOIN businesses b ON o.business_id = b.id
+       JOIN users u ON o.user_id = u.id
+       WHERE b.owner_id = ?
+       ORDER BY o.created_at DESC`,
+      [businessOwnerId]
+    );
+
+    for (const order of orders) {
+      const [items]: any = await db.execute(
+        'SELECT * FROM order_items WHERE order_id = ?',
+        [order.id]
+      );
+      order.items = items;
+    }
+
+    res.json({ success: true, orders });
+  } catch (error: any) {
+    console.error('Error fetching business orders:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
