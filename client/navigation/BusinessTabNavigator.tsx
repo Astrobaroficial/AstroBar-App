@@ -6,6 +6,8 @@ import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
 import BusinessMenuScreen from "@/screens/BusinessMenuScreen";
 import QRScannerScreen from "@/screens/QRScannerScreen";
 import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
+import ScheduledPromotionsScreen from "@/screens/ScheduledPromotionsScreen";
+import HeatmapScreen from "@/screens/HeatmapScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -69,6 +71,26 @@ export default function BusinessTabNavigator() {
           title: "Promos",
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ScheduledPromotions"
+        component={ScheduledPromotionsScreen}
+        options={{
+          title: "Programadas",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="BusinessHeatmap"
+        component={HeatmapScreen}
+        options={{
+          title: "Demanda",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map" size={size} color={color} />
           ),
         }}
       />

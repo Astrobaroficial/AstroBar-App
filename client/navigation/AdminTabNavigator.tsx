@@ -6,6 +6,8 @@ import AdminDashboard from "@/screens/AdminDashboard";
 import AdminManagement from "@/screens/AdminManagement";
 import AdminOperations from "@/screens/AdminOperations";
 import AdminSettings from "@/screens/AdminSettings";
+import HeatmapScreen from "@/screens/HeatmapScreen";
+import RankingScreen from "@/screens/RankingScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -69,6 +71,26 @@ export default function AdminTabNavigator() {
           title: "Configuración",
           tabBarIcon: ({ color, size }) => (
             <Feather name="settings" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Heatmap"
+        component={HeatmapScreen}
+        options={{
+          title: "Mapa Calor",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Ranking"
+        component={RankingScreen}
+        options={{
+          title: "Ranking",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="award" size={size} color={color} />
           ),
         }}
       />

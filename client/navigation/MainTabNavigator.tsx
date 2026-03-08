@@ -9,6 +9,9 @@ import AllPromotionsScreen from "@/screens/AllPromotionsScreen";
 import MyQRsScreen from "@/screens/MyQRsScreen";
 import HistoryScreen from "@/screens/HistoryScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+import ReferralScreen from "@/screens/ReferralScreen";
+import HeatmapScreen from "@/screens/HeatmapScreen";
+import RankingScreen from "@/screens/RankingScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors, Spacing } from "@/constants/theme";
 
@@ -17,6 +20,9 @@ export type MainTabParamList = {
   PromotionsTab: undefined;
   MyQRsTab: undefined;
   HistoryTab: undefined;
+  HeatmapTab: undefined;
+  RankingTab: undefined;
+  ReferralTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -111,6 +117,36 @@ export default function MainTabNavigator() {
           title: "Historial",
           tabBarIcon: ({ color, size }) => (
             <Feather name="clock" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="HeatmapTab"
+        component={HeatmapScreen}
+        options={{
+          title: "Mapa",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="RankingTab"
+        component={RankingScreen}
+        options={{
+          title: "Ranking",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="award" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ReferralTab"
+        component={ReferralScreen}
+        options={{
+          title: "Referidos",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="gift" size={size} color={color} />
           ),
         }}
       />
