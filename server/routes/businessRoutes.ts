@@ -89,7 +89,10 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     const pendingTransactions = transactions.filter(t => t.status === "pending");
     const today = new Date();
     const todayTransactions = transactions.filter(t => new Date(t.createdAt).toDateString() === today.toDateString());
-    const todayRevenue = todayTransactions.filter(t => t.status === "redeemed").reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // INGRESOS = Todas las transacciones pagadas (pending + redeemed), NO canceladas
+    const paidTransactions = todayTransactions.filter(t => t.status === "pending" || t.status === "redeemed");
+    const todayRevenue = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     // Promociones activas
     const now = new Date();
@@ -185,7 +188,10 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     }
     const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id)).orderBy(desc(promotionTransactions.createdAt));
     const redeemedTransactions = transactions.filter(t => t.status === 'redeemed');
-    const totalRevenue = redeemedTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // INGRESOS TOTALES = Todas las transacciones pagadas (pending + redeemed), NO canceladas
+    const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
+    const totalRevenue = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     // Calcular ingresos por período
     const today = new Date();
@@ -193,15 +199,15 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    const todayRevenue = redeemedTransactions
+    const todayRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= todayStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
-    const weekRevenue = redeemedTransactions
+    const weekRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= weekStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
-    const monthRevenue = redeemedTransactions
+    const monthRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= monthStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
