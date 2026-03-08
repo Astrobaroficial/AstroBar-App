@@ -1,44 +1,91 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
-import MapView, { Marker, Circle } from 'react-native-maps';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import api from '../lib/api';
 
 const { width } = Dimensions.get('window');
+
+// Datos de ejemplo de zonas de Buenos Aires
+const SAMPLE_ZONES = [
+  { latitude: -34.5889, longitude: -58.3974, heat_score: 85, total_purchases: 45, name: 'Palermo' },
+  { latitude: -34.6037, longitude: -58.3816, heat_score: 72, total_purchases: 38, name: 'Recoleta' },
+  { latitude: -34.6158, longitude: -58.4333, heat_score: 68, total_purchases: 32, name: 'Caballito' },
+  { latitude: -34.6345, longitude: -58.3678, heat_score: 55, total_purchases: 28, name: 'San Telmo' },
+  { latitude: -34.6092, longitude: -58.4370, heat_score: 48, total_purchases: 22, name: 'Almagro' },
+];
 
 export default function HeatmapScreen() {
   const [loading, setLoading] = useState(true);
   const [heatmap, setHeatmap] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [bars, setBars] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
   const [region, setRegion] = useState({
     latitude: -34.6037,
     longitude: -58.3816,
-    latitudeDelta: 0.1,
-    longitudeDelta: 0.1,
+    latitudeDelta: 0.15,
+    longitudeDelta: 0.15,
   });
+  const mapRef = React.useRef(null);
 
   useEffect(() => {
     loadData();
+    getUserLocation();
   }, []);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.log('Error getting location:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
-      const [heatmapRes, recsRes] = await Promise.all([
+      const [heatmapRes, recsRes, barsRes] = await Promise.all([
         api.get('/phase2/demand/heatmap'),
         api.get('/phase2/demand/recommendations'),
+        api.get('/business/all'),
       ]);
 
-      if (heatmapRes.data.success) {
-        setHeatmap(heatmapRes.data.heatmap || []);
+      if (heatmapRes.data.success && heatmapRes.data.heatmap?.length > 0) {
+        setHeatmap(heatmapRes.data.heatmap);
+      } else {
+        setHeatmap(SAMPLE_ZONES);
       }
 
       if (recsRes.data.success) {
         setRecommendations(recsRes.data.recommendations || []);
       }
+
+      if (barsRes.data.success) {
+        setBars(barsRes.data.businesses || []);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      setHeatmap(SAMPLE_ZONES);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const centerOnUser = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion({
+        ...userLocation,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }, 1000);
     }
   };
 
@@ -69,7 +116,7 @@ export default function HeatmapScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>📊 Mapa de Demanda</Text>
         <Text style={styles.subtitle}>Zonas de alto consumo en tiempo real</Text>
@@ -77,9 +124,15 @@ export default function HeatmapScreen() {
 
       <View style={styles.mapContainer}>
         <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
           style={styles.map}
           initialRegion={region}
-          customMapStyle={darkMapStyle}
+          showsUserLocation={true}
+          showsMyLocationButton={false}
+          showsCompass={true}
+          showsScale={true}
+          mapType="standard"
         >
           {heatmap.map((zone: any, index: number) => (
             <React.Fragment key={index}>
@@ -90,15 +143,16 @@ export default function HeatmapScreen() {
                 }}
                 radius={getHeatRadius(zone.heat_score)}
                 fillColor={getHeatColor(zone.heat_score)}
-                strokeColor="transparent"
+                strokeColor={getHeatColor(zone.heat_score).replace('0.4', '0.8')}
+                strokeWidth={2}
               />
               <Marker
                 coordinate={{
                   latitude: parseFloat(zone.latitude),
                   longitude: parseFloat(zone.longitude),
                 }}
-                title={`Score: ${zone.heat_score}`}
-                description={`Compras: ${zone.total_purchases}`}
+                title={zone.name || `Score: ${zone.heat_score}`}
+                description={`Compras: ${zone.total_purchases} | Demanda: ${zone.heat_score}/100`}
               >
                 <View style={styles.markerContainer}>
                   <Text style={styles.markerText}>{zone.heat_score}</Text>
@@ -106,8 +160,32 @@ export default function HeatmapScreen() {
               </Marker>
             </React.Fragment>
           ))}
+          
+          {bars.map((bar: any) => (
+            <Marker
+              key={`bar-${bar.id}`}
+              coordinate={{
+                latitude: parseFloat(bar.latitude),
+                longitude: parseFloat(bar.longitude),
+              }}
+              title={bar.name}
+              description={bar.address}
+            >
+              <View style={styles.barMarker}>
+                <Ionicons name="beer" size={20} color="#FFF" />
+              </View>
+            </Marker>
+          ))}
         </MapView>
+        
+        {userLocation && (
+          <TouchableOpacity style={styles.centerButton} onPress={centerOnUser}>
+            <Ionicons name="locate" size={24} color="#FFF" />
+          </TouchableOpacity>
+        )}
       </View>
+
+      <ScrollView style={styles.scrollContent}>
 
       <View style={styles.legend}>
         <Text style={styles.legendTitle}>Leyenda</Text>
@@ -174,15 +252,12 @@ export default function HeatmapScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-];
+
 
 const styles = StyleSheet.create({
   container: {
@@ -205,10 +280,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   mapContainer: {
-    height: 300,
-    margin: 20,
+    height: 400,
+    margin: 16,
     borderRadius: 16,
     overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  centerButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#FF6B35',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   map: {
     width: '100%',
@@ -216,18 +315,34 @@ const styles = StyleSheet.create({
   },
   markerContainer: {
     backgroundColor: '#FF6B35',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFF',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+  markerText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  barMarker: {
+    backgroundColor: '#9C27B0',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
-  },
-  markerText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
+    elevation: 3,
   },
   legend: {
     margin: 20,
