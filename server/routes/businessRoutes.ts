@@ -466,6 +466,51 @@ router.get("/debug-commission", authenticateToken, async (req, res) => {
   }
 });
 
+// Get wallet stats for business owner
+router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id));
+    const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
+    
+    const totalEarnings = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const pendingBalance = transactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const availableBalance = transactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // Get commission info
+    const { sql } = await import("drizzle-orm");
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${business.id}
+      LIMIT 1
+    `);
+    
+    let platformCommission = 30;
+    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
+      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
+    }
+
+    res.json({
+      success: true,
+      stats: {
+        totalEarnings: totalEarnings / 100,
+        pendingBalance: pendingBalance / 100,
+        availableBalance: availableBalance / 100,
+        platformCommission,
+        totalTransactions: paidTransactions.length
+      }
+    });
+  } catch (error: any) {
+    console.error('Wallet stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Public route to list all businesses
 router.get("/", async (req, res) => {
   try {
@@ -619,6 +664,83 @@ router.delete("/products/:id", authenticateToken, requireRole("business_owner"),
     res.json({ success: true, message: "Producto eliminado" });
   } catch (error: any) {
     console.error('Delete product error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get full menu of a business (PUBLIC)
+router.get("/:id/menu", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    // Get all products grouped by category
+    const allProducts = await db.select().from(products).where(eq(products.businessId, id));
+    
+    // Group by category
+    const menuByCategory: Record<string, any[]> = {};
+    allProducts.forEach(product => {
+      const category = product.category || 'Otros';
+      if (!menuByCategory[category]) {
+        menuByCategory[category] = [];
+      }
+      menuByCategory[category].push(product);
+    });
+
+    res.json({ 
+      success: true, 
+      business: {
+        id: business.id,
+        name: business.name,
+        address: business.address,
+        phone: business.phone
+      },
+      menu: menuByCategory,
+      totalProducts: allProducts.length
+    });
+  } catch (error: any) {
+    console.error('Get menu error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get future promotions for a business (PUBLIC)
+router.get("/:id/future-promotions", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const now = new Date();
+    const { and, gte } = await import("drizzle-orm");
+    
+    // Get promotions that start in the future
+    const futurePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.businessId, id),
+          eq(promotions.isActive, true),
+          gte(promotions.startTime, now)
+        )
+      )
+      .orderBy(promotions.startTime);
+
+    res.json({ 
+      success: true, 
+      promotions: futurePromotions,
+      total: futurePromotions.length
+    });
+  } catch (error: any) {
+    console.error('Get future promotions error:', error);
     res.status(500).json({ error: error.message });
   }
 });

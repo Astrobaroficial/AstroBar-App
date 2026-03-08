@@ -47,6 +47,7 @@ export default function BusinessDetailScreen() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<any[]>([]);
+  const [futurePromotions, setFuturePromotions] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,6 +109,18 @@ export default function BusinessDetailScreen() {
         } catch (error) {
           console.error('Error loading promotions:', error);
           setPromotions([]);
+        }
+
+        // Load future promotions
+        try {
+          const futurePromosResponse = await apiRequest('GET', `/api/business/${businessId}/future-promotions`);
+          const futurePromosData = await futurePromosResponse.json();
+          if (futurePromosData.success) {
+            setFuturePromotions(futurePromosData.promotions || []);
+          }
+        } catch (error) {
+          console.error('Error loading future promotions:', error);
+          setFuturePromotions([]);
         }
       } catch (error) {
         console.error('Error loading business:', error);
@@ -282,6 +295,25 @@ export default function BusinessDetailScreen() {
               </View>
             </View>
 
+            {/* Menu Button */}
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                navigation.navigate('BarMenu' as any, { businessId: business.id });
+              }}
+              style={[
+                styles.menuButton,
+                { backgroundColor: AstroBarColors.primary },
+                Shadows.md,
+              ]}
+            >
+              <Feather name="book-open" size={20} color="#FFFFFF" />
+              <ThemedText type="body" style={styles.menuButtonText}>
+                Ver Menú Completo
+              </ThemedText>
+              <Feather name="chevron-right" size={20} color="#FFFFFF" />
+            </Pressable>
+
             {/* Promotions Section */}
             {promotions.length > 0 && (
               <View style={styles.promotionsSection}>
@@ -355,6 +387,69 @@ export default function BusinessDetailScreen() {
                           </ThemedText>
                         </View>
                       </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Future Promotions Section (when bar is closed or no active promos) */}
+            {futurePromotions.length > 0 && (
+              <View style={styles.promotionsSection}>
+                <ThemedText type="h3" style={styles.sectionTitle}>
+                  Próximas Promociones 📅
+                </ThemedText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.promotionsScroll}
+                >
+                  {futurePromotions.map((promo) => {
+                    const startDate = new Date(promo.startTime);
+                    const promoPrice = (promo.promoPrice / 100).toFixed(2);
+                    const originalPrice = (promo.originalPrice / 100).toFixed(2);
+                    const discount = promo.discountPercentage || 0;
+
+                    return (
+                      <View
+                        key={promo.id}
+                        style={[
+                          styles.promoCard,
+                          { backgroundColor: theme.card, opacity: 0.9 },
+                        ]}
+                      >
+                        <View style={styles.futureBadge}>
+                          <Feather name="clock" size={12} color="#FFFFFF" />
+                          <ThemedText type="caption" style={styles.futureBadgeText}>
+                            PRÓXIMAMENTE
+                          </ThemedText>
+                        </View>
+                        <View style={styles.discountBadge}>
+                          <ThemedText type="h3" style={styles.discountText}>
+                            {discount}%
+                          </ThemedText>
+                          <ThemedText type="caption" style={styles.discountLabel}>
+                            OFF
+                          </ThemedText>
+                        </View>
+                        <ThemedText type="body" style={styles.promoTitle} numberOfLines={2}>
+                          {promo.title}
+                        </ThemedText>
+                        <View style={styles.promoPriceRow}>
+                          <ThemedText type="small" style={styles.originalPrice}>
+                            ${originalPrice}
+                          </ThemedText>
+                          <ThemedText type="h3" style={styles.promoPrice}>
+                            ${promoPrice}
+                          </ThemedText>
+                        </View>
+                        <View style={styles.futureDate}>
+                          <Feather name="calendar" size={12} color={theme.textSecondary} />
+                          <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 4 }}>
+                            {startDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </ThemedText>
+                        </View>
+                      </View>
                     );
                   })}
                 </ScrollView>
@@ -579,6 +674,22 @@ const styles = StyleSheet.create({
   productsSectionTitle: {
     marginBottom: Spacing.md,
   },
+  menuButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    gap: Spacing.sm,
+  },
+  menuButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    flex: 1,
+    textAlign: 'center',
+  },
   promotionsSection: {
     marginBottom: Spacing.xl,
   },
@@ -662,5 +773,27 @@ const styles = StyleSheet.create({
   promoButtonText: {
     color: '#FFFFFF',
     fontWeight: '800',
+  },
+  futureBadge: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#9C27B0',
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    gap: 2,
+  },
+  futureBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 9,
+  },
+  futureDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
   },
 });
