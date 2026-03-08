@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CardField, useStripe } from '@stripe/stripe-react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
@@ -11,22 +12,13 @@ import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/them
 import { apiRequest } from '@/lib/query-client';
 import { useOrderCart } from '@/contexts/OrderCartContext';
 
-let CardField: any = null;
-let useStripe: any = null;
-
-if (Platform.OS !== 'web') {
-  const stripe = require('@stripe/stripe-react-native');
-  CardField = stripe.CardField;
-  useStripe = stripe.useStripe;
-}
-
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { total, items } = route.params as { total: number; items: any[] };
-  const stripe = useStripe ? useStripe() : null;
+  const stripe = useStripe();
   const { clearCart } = useOrderCart();
 
   const [loading, setLoading] = useState(false);
@@ -41,7 +33,6 @@ export default function OrderPaymentScreen() {
     setLoading(true);
 
     try {
-      // Crear pedido en backend
       const response = await apiRequest('POST', '/api/orders', {
         items,
         businessId: items[0].businessId,
@@ -53,10 +44,8 @@ export default function OrderPaymentScreen() {
         throw new Error(data.error || 'Error al crear el pedido');
       }
 
-      // Limpiar carrito
       clearCart();
 
-      // Navegar a pantalla de QR
       navigation.reset({
         index: 0,
         routes: [
@@ -127,29 +116,19 @@ export default function OrderPaymentScreen() {
             Método de Pago
           </ThemedText>
 
-          {Platform.OS !== 'web' && CardField ? (
-            <>
-              <CardField
-                postalCodeEnabled={false}
-                placeholders={{ number: '4242 4242 4242 4242' }}
-                cardStyle={{
-                  backgroundColor: theme.background,
-                  textColor: theme.text,
-                  placeholderColor: theme.textSecondary,
-                }}
-                style={styles.cardField}
-                onCardChange={(cardDetails: any) => {
-                  setCardComplete(cardDetails.complete);
-                }}
-              />
-            </>
-          ) : (
-            <View style={[styles.webPaymentBox, { backgroundColor: theme.background }]}>
-              <ThemedText type="body" style={{ color: theme.textSecondary, textAlign: 'center' }}>
-                Pago con tarjeta solo disponible en la app móvil
-              </ThemedText>
-            </View>
-          )}
+          <CardField
+            postalCodeEnabled={false}
+            placeholders={{ number: '4242 4242 4242 4242' }}
+            cardStyle={{
+              backgroundColor: theme.background,
+              textColor: theme.text,
+              placeholderColor: theme.textSecondary,
+            }}
+            style={styles.cardField}
+            onCardChange={(cardDetails) => {
+              setCardComplete(cardDetails.complete);
+            }}
+          />
 
           <View style={[styles.infoBox, { backgroundColor: theme.background }]}>
             <Feather name="info" size={16} color={theme.textSecondary} />
@@ -228,11 +207,6 @@ const styles = StyleSheet.create({
   cardField: {
     width: '100%',
     height: 50,
-    marginVertical: Spacing.md,
-  },
-  webPaymentBox: {
-    padding: Spacing.xl,
-    borderRadius: BorderRadius.md,
     marginVertical: Spacing.md,
   },
   infoBox: {

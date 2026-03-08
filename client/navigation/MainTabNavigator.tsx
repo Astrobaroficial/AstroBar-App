@@ -17,12 +17,9 @@ import { AstroBarColors, Spacing } from "@/constants/theme";
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  PromotionsTab: undefined;
-  MyQRsTab: undefined;
-  HistoryTab: undefined;
-  HeatmapTab: undefined;
-  RankingTab: undefined;
-  ReferralTab: undefined;
+  ActivityTab: undefined;
+  SocialTab: undefined;
+  ExploreTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -91,62 +88,32 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="PromotionsTab"
-        component={AllPromotionsScreen}
-        options={{
-          title: "Promociones",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="zap" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="MyQRsTab"
+        name="ActivityTab"
         component={MyQRsScreen}
         options={{
-          title: "Mis QRs",
+          title: "Actividad",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" size={size} color={color} />
+            <Feather name="activity" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="HistoryTab"
-        component={HistoryScreen}
-        options={{
-          title: "Historial",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="clock" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="HeatmapTab"
-        component={HeatmapScreen}
-        options={{
-          title: "Mapa",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="map" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="RankingTab"
-        component={RankingScreen}
-        options={{
-          title: "Ranking",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="award" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ReferralTab"
+        name="SocialTab"
         component={ReferralScreen}
         options={{
           title: "Referidos",
           tabBarIcon: ({ color, size }) => (
             <Feather name="gift" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ExploreTab"
+        component={HeatmapScreen}
+        options={{
+          title: "Explorar",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="compass" size={size} color={color} />
           ),
         }}
       />

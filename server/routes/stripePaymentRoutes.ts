@@ -77,8 +77,8 @@ router.get("/payment-method/:userId", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Drivers don't need payment methods (they receive money)
-    if (user.role === ) {
+    // Business owners don't need payment methods (they receive money)
+    if (user.role === 'business_owner') {
       return res.json({ hasCard: false });
     }
 

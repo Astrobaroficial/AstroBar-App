@@ -45,12 +45,12 @@ export default function BusinessTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="BusinessMenu"
+        name="BusinessManagement"
         component={BusinessMenuScreen}
         options={{
-          title: "Menú",
+          title: "Gestión",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="book" size={size} color={color} />
+            <Feather name="briefcase" size={size} color={color} />
           ),
         }}
       />
@@ -65,32 +65,12 @@ export default function BusinessTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="BusinessPromotions"
-        component={BusinessPromotionsPanel}
-        options={{
-          title: "Promos",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="zap" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ScheduledPromotions"
-        component={ScheduledPromotionsScreen}
-        options={{
-          title: "Programadas",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="BusinessHeatmap"
+        name="BusinessAnalytics"
         component={HeatmapScreen}
         options={{
-          title: "Demanda",
+          title: "Análisis",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="map" size={size} color={color} />
+            <Feather name="bar-chart-2" size={size} color={color} />
           ),
         }}
       />

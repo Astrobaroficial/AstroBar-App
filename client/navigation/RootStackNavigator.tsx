@@ -26,10 +26,7 @@ import CreateCommonPromotionScreen from "@/screens/CreateCommonPromotionScreen";
 import BarMenuScreen from "@/screens/BarMenuScreen";
 import OrderCartScreen from "@/screens/OrderCartScreen";
 
-let OrderPaymentScreen: any = null;
-if (Platform.OS !== 'web') {
-  OrderPaymentScreen = require("@/screens/OrderPaymentScreen").default;
-}
+import OrderPaymentScreen from "@/screens/OrderPaymentScreen";
 
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
@@ -188,13 +185,11 @@ export default function RootStackNavigator() {
             component={OrderCartScreen}
             options={{ headerShown: false }}
           />
-          {Platform.OS !== 'web' && OrderPaymentScreen && (
-            <Stack.Screen
-              name="OrderPayment"
-              component={OrderPaymentScreen}
-              options={{ headerShown: false }}
-            />
-          )}
+          <Stack.Screen
+            name="OrderPayment"
+            component={OrderPaymentScreen}
+            options={{ headerShown: false }}
+          />
         </>
       ) : (
         <>

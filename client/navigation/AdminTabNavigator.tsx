@@ -65,32 +65,12 @@ export default function AdminTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Settings"
-        component={AdminSettings}
-        options={{
-          title: "Configuración",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="settings" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Heatmap"
+        name="Analytics"
         component={HeatmapScreen}
         options={{
-          title: "Mapa Calor",
+          title: "Análisis",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="map" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Ranking"
-        component={RankingScreen}
-        options={{
-          title: "Ranking",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="award" size={size} color={color} />
+            <Feather name="bar-chart-2" size={size} color={color} />
           ),
         }}
       />

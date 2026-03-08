@@ -45,6 +45,14 @@ router.get("/referrals/my", authenticateToken, async (req, res) => {
   }
 
   try {
+    console.log('📊 Fetching referrals for user:', req.user!.id);
+    
+    // Primero verificar si el usuario tiene código de referido
+    const [codes] = await db.execute(sql`
+      SELECT * FROM referral_codes WHERE user_id = ${req.user!.id}
+    `);
+    console.log('Codes found:', codes);
+
     const [referrals] = await db.execute(sql`
       SELECT r.*, u.name as referred_name, u.email as referred_email
       FROM referrals r
@@ -52,15 +60,18 @@ router.get("/referrals/my", authenticateToken, async (req, res) => {
       WHERE r.referrer_id = ${req.user!.id}
       ORDER BY r.created_at DESC
     `);
+    console.log('Referrals found:', referrals);
 
-    const [stats] = await db.execute(sql`
-      SELECT total_referrals, successful_referrals, total_earned
-      FROM referral_codes
-      WHERE user_id = ${req.user!.id}
-    `);
+    const stats = codes && Array.isArray(codes) && codes.length > 0 ? codes[0] : {
+      total_referrals: 0,
+      successful_referrals: 0,
+      total_earned: 0
+    };
 
-    res.json({ success: true, referrals, stats: stats?.[0] || {} });
+    console.log('✅ Returning:', { referrals: referrals?.length, stats });
+    res.json({ success: true, referrals, stats });
   } catch (error: any) {
+    console.error('❌ Error fetching referrals:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -201,19 +212,31 @@ router.get("/bar-rankings", async (req, res) => {
   }
 
   try {
+    console.log('📊 Fetching bar rankings...');
+    // Si no hay rankings, mostrar bares activos con stats básicas
     const [rankings] = await db.execute(sql`
-      SELECT br.*, b.name as business_name, bp.current_level
-      FROM bar_rankings br
-      LEFT JOIN businesses b ON br.business_id = b.id
-      LEFT JOIN bar_progress bp ON br.business_id = bp.business_id
-      WHERE br.ranking_type = 'monthly_sales'
-      AND br.period = DATE_FORMAT(NOW(), '%Y-%m')
-      ORDER BY br.rank_position ASC
+      SELECT 
+        b.id as business_id,
+        b.name as business_name,
+        'bronze' as current_level,
+        999 as rank_position,
+        0 as score,
+        COUNT(DISTINCT pt.id) as total_transactions,
+        COALESCE(SUM(pt.amount_paid), 0) as total_revenue
+      FROM businesses b
+      LEFT JOIN promotion_transactions pt ON b.id = pt.business_id
+        AND pt.status IN ('paid', 'redeemed')
+        AND DATE_FORMAT(pt.created_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')
+      WHERE b.is_active = 1
+      GROUP BY b.id, b.name
+      ORDER BY total_revenue DESC, total_transactions DESC
       LIMIT 10
     `);
 
+    console.log('✅ Rankings fetched:', rankings);
     res.json({ success: true, rankings });
   } catch (error: any) {
+    console.error('❌ Error fetching rankings:', error);
     res.status(500).json({ error: error.message });
   }
 });

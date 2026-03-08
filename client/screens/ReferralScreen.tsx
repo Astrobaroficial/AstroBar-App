@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Share, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../lib/api';
+import { apiRequest } from '../lib/query-client';
 
 export default function ReferralScreen() {
   const [loading, setLoading] = useState(true);
@@ -16,14 +16,15 @@ export default function ReferralScreen() {
 
   const loadReferralData = async () => {
     try {
-      const response = await api.get('/phase2/referrals/my');
-      if (response.data.success) {
-        setReferrals(response.data.referrals || []);
-        setStats(response.data.stats || {});
+      const response = await apiRequest('GET', '/api/phase2/referrals/my');
+      const data = await response.json();
+      if (data.success) {
+        setReferrals(data.referrals || []);
+        setStats(data.stats || {});
         
-        if (response.data.stats?.code) {
-          setReferralCode(response.data.stats.code);
-          setReferralLink(response.data.stats.link);
+        if (data.stats?.code) {
+          setReferralCode(data.stats.code);
+          setReferralLink(data.stats.link);
         }
       }
     } catch (error) {
@@ -36,10 +37,11 @@ export default function ReferralScreen() {
   const generateCode = async () => {
     try {
       setLoading(true);
-      const response = await api.post('/phase2/referrals/generate');
-      if (response.data.success) {
-        setReferralCode(response.data.code);
-        setReferralLink(response.data.link);
+      const response = await apiRequest('POST', '/api/phase2/referrals/generate');
+      const data = await response.json();
+      if (data.success) {
+        setReferralCode(data.code);
+        setReferralLink(data.link);
       }
     } catch (error) {
       console.error('Error generating code:', error);

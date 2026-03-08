@@ -84,6 +84,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
   const [businessType, setBusinessType] = useState("bar");
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showUserExistsModal, setShowUserExistsModal] = useState(false);
@@ -623,6 +624,17 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                 </View>
               </>
             ) : null}
+
+            <Input
+              label="Código de referido (opcional)"
+              placeholder="Ej: ABC123"
+              leftIcon="gift"
+              value={referralCode}
+              onChangeText={(text) => setReferralCode(text.toUpperCase())}
+              autoCapitalize="characters"
+              maxLength={10}
+              testID="input-referral"
+            />
 
             <ThemedText type="small" style={styles.roleLabel}>
               ¿Cómo quieres usar AstroBar?

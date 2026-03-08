@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import api from '../lib/api';
+import { apiRequest } from '../lib/query-client';
 
 export default function RankingScreen() {
   const [loading, setLoading] = useState(true);
@@ -13,9 +13,10 @@ export default function RankingScreen() {
 
   const loadRankings = async () => {
     try {
-      const response = await api.get('/phase2/bar-rankings');
-      if (response.data.success) {
-        setRankings(response.data.rankings || []);
+      const response = await apiRequest('GET', '/api/phase2/bar-rankings');
+      const data = await response.json();
+      if (data.success) {
+        setRankings(data.rankings || []);
       }
     } catch (error) {
       console.error('Error loading rankings:', error);
@@ -36,6 +37,7 @@ export default function RankingScreen() {
   };
 
   const getMedalEmoji = (position: number) => {
+    if (position === 999) return '🆕'; // Sin ranking aún
     if (position === 1) return '🥇';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
@@ -84,8 +86,8 @@ export default function RankingScreen() {
               </View>
 
               <View style={styles.scoreContainer}>
-                <Text style={styles.scoreLabel}>Score</Text>
-                <Text style={styles.scoreValue}>{Math.round(bar.score)}</Text>
+                <Text style={styles.scoreLabel}>Ventas</Text>
+                <Text style={styles.scoreValue}>${Math.round((bar.total_revenue || 0) / 100)}</Text>
               </View>
             </LinearGradient>
           ))}
