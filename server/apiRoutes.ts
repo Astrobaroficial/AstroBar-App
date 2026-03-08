@@ -10,6 +10,7 @@ import adminPanelRoutes from "./routes/adminPanelRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import auditRoutes from "./routes/auditRoutes";
+import stripePaymentRoutes from "./routes/stripePaymentRoutes";
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use("/admin/panel", adminPanelRoutes);
 router.use("/admin", adminRoutes);
 router.use("/", notificationRoutes);
 router.use("/admin", auditRoutes);
+router.use("/stripe", stripePaymentRoutes);
 
 export default router;
