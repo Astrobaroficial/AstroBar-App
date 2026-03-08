@@ -11,11 +11,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Platform } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
+import { useOrderCart } from "@/contexts/OrderCartContext";
 
 interface Product {
   id: string;
@@ -48,6 +50,8 @@ export default function BarMenuScreen() {
   const [loading, setLoading] = useState(true);
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [toast, setToast] = useState<string | null>(null);
+  const { addItem, getItemCount, currentBusinessId, clearCart } = useOrderCart();
 
   useEffect(() => {
     loadMenu();
@@ -76,6 +80,46 @@ export default function BarMenuScreen() {
       return Object.values(menuData.menu).flat();
     }
     return menuData.menu[selectedCategory] || [];
+  };
+
+  const handleAddToCart = (product: Product) => {
+    if (!product.isAvailable) {
+      showToast("Producto no disponible");
+      return;
+    }
+
+    if (currentBusinessId && currentBusinessId !== businessId) {
+      if (Platform.OS === 'web') {
+        if (confirm('Ya tienes productos de otro bar. ¿Vaciar carrito y agregar este producto?')) {
+          clearCart();
+          addItemToCart(product);
+        }
+      }
+      return;
+    }
+
+    addItemToCart(product);
+  };
+
+  const addItemToCart = (product: Product) => {
+    try {
+      addItem({
+        productId: product.id,
+        productName: product.name,
+        productPrice: product.price,
+        businessId: businessId,
+        businessName: menuData?.business.name || '',
+        image: product.image,
+      });
+      showToast(`✓ ${product.name} agregado`);
+    } catch (error: any) {
+      showToast(error.message);
+    }
+  };
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
   };
 
   if (loading) {
@@ -111,6 +155,19 @@ export default function BarMenuScreen() {
             {menuData.totalProducts} productos
           </ThemedText>
         </View>
+        {getItemCount() > 0 && (
+          <Pressable
+            onPress={() => navigation.navigate('OrderCart' as never)}
+            style={[styles.cartButton, { backgroundColor: AstroBarColors.primary }]}
+          >
+            <Feather name="shopping-cart" size={20} color="#FFFFFF" />
+            <View style={styles.cartBadge}>
+              <ThemedText type="small" style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "700" }}>
+                {getItemCount()}
+              </ThemedText>
+            </View>
+          </Pressable>
+        )}
       </View>
 
       <ScrollView
@@ -175,6 +232,18 @@ export default function BarMenuScreen() {
                     No disponible
                   </ThemedText>
                 )}
+                <Pressable
+                  onPress={() => handleAddToCart(product)}
+                  disabled={!product.isAvailable}
+                  style={[
+                    styles.addButton,
+                    {
+                      backgroundColor: product.isAvailable ? AstroBarColors.primary : theme.border,
+                    },
+                  ]}
+                >
+                  <Feather name="plus" size={20} color="#FFFFFF" />
+                </Pressable>
               </View>
             </View>
           </View>
@@ -189,6 +258,14 @@ export default function BarMenuScreen() {
           </View>
         )}
       </ScrollView>
+
+      {toast && (
+        <View style={[styles.toast, { backgroundColor: AstroBarColors.primary }]}>
+          <ThemedText style={{ color: '#FFFFFF', fontWeight: '600' }}>
+            {toast}
+          </ThemedText>
+        </View>
+      )}
     </LinearGradient>
   );
 }
@@ -214,6 +291,26 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  cartButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: AstroBarColors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
   },
   categoriesScroll: {
     maxHeight: 50,
@@ -247,9 +344,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: Spacing.md,
   },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: Spacing.sm,
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.xl * 2,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 100,
+    left: 20,
+    right: 20,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    ...Shadows.lg,
   },
 });

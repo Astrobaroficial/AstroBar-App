@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BusinessProvider } from "@/contexts/BusinessContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { OrderCartProvider } from "@/contexts/OrderCartContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { StripeProvider } from "@/providers/StripeProvider";
@@ -140,21 +141,23 @@ export default function App() {
                   <AuthProvider>
                     <BusinessProvider>
                       <CartProvider>
-                        <ToastProvider>
-                          <AppThemedShell>
-                            <RootStackNavigator />
-                          </AppThemedShell>
-                          {showOnboarding && (
-                            <OnboardingOverlay
-                              onComplete={() => setShowOnboarding(false)}
+                        <OrderCartProvider>
+                          <ToastProvider>
+                            <AppThemedShell>
+                              <RootStackNavigator />
+                            </AppThemedShell>
+                            {showOnboarding && (
+                              <OnboardingOverlay
+                                onComplete={() => setShowOnboarding(false)}
+                              />
+                            )}
+                            <NotificationPermissionModal
+                              visible={showNotificationModal}
+                              onAccept={handleAcceptNotifications}
+                              onDecline={handleDeclineNotifications}
                             />
-                          )}
-                          <NotificationPermissionModal
-                            visible={showNotificationModal}
-                            onAccept={handleAcceptNotifications}
-                            onDecline={handleDeclineNotifications}
-                          />
-                        </ToastProvider>
+                          </ToastProvider>
+                        </OrderCartProvider>
                       </CartProvider>
                     </BusinessProvider>
                   </AuthProvider>
