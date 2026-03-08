@@ -65,7 +65,6 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
-    // Si no tiene negocio, crear uno automáticamente
     if (!business) {
       const businessId = uuidv4();
       const newBusiness = {
@@ -90,8 +89,41 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     const pendingTransactions = transactions.filter(t => t.status === "pending");
     const today = new Date();
     const todayTransactions = transactions.filter(t => new Date(t.createdAt).toDateString() === today.toDateString());
-    const todayRevenue = todayTransactions.filter(t => t.status === "redeemed").reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
+    // INGRESOS = Todas las transacciones pagadas (pending + redeemed), NO canceladas
+    const paidTransactions = todayTransactions.filter(t => t.status === "pending" || t.status === "redeemed");
+    const todayRevenue = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // Promociones activas
+    const now = new Date();
+    const { and, gte, lte, sql } = await import("drizzle-orm");
+    const activePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.businessId, business.id),
+          eq(promotions.isActive, true),
+          lte(promotions.startTime, now),
+          gte(promotions.endTime, now)
+        )
+      );
+    const activeFlash = activePromotions.filter(p => p.type === 'flash');
+    const activeCommon = activePromotions.filter(p => p.type === 'common');
+
+    // Obtener comisión actual desde DB
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${business.id}
+      LIMIT 1
+    `);
+    
+    let platformCommission = 30;
+    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
+      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
+    }
+
     // Solo mostrar transacciones reales (redeemed o pending)
     const recentTransactions = transactions
       .filter(t => t.status === "redeemed" || t.status === "pending")
@@ -112,7 +144,15 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
         todayOrders: todayTransactions.length, 
         todayRevenue, 
         totalOrders: transactions.length, 
-        recentOrders: recentTransactions 
+        recentOrders: recentTransactions,
+        activePromotions: {
+          total: activePromotions.length,
+          flash: activeFlash.length,
+          common: activeCommon.length,
+          flashList: activeFlash.map(p => ({ id: p.id, title: p.title, stock: p.stock - p.stockConsumed })),
+          commonList: activeCommon.map(p => ({ id: p.id, title: p.title, stock: p.stock - p.stockConsumed }))
+        },
+        platformCommission
       } 
     });
   } catch (error: any) {
@@ -126,7 +166,6 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
-    // Si no tiene negocio, crear uno automáticamente
     if (!business) {
       const businessId = uuidv4();
       const newBusiness = {
@@ -149,7 +188,10 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     }
     const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id)).orderBy(desc(promotionTransactions.createdAt));
     const redeemedTransactions = transactions.filter(t => t.status === 'redeemed');
-    const totalRevenue = redeemedTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // INGRESOS TOTALES = Todas las transacciones pagadas (pending + redeemed), NO canceladas
+    const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
+    const totalRevenue = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     // Calcular ingresos por período
     const today = new Date();
@@ -157,21 +199,70 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    const todayRevenue = redeemedTransactions
+    const todayRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= todayStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
-    const weekRevenue = redeemedTransactions
+    const weekRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= weekStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
-    const monthRevenue = redeemedTransactions
+    const monthRevenue = paidTransactions
       .filter(t => new Date(t.createdAt) >= monthStart)
       .reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     const avgValue = redeemedTransactions.length > 0 
       ? Math.round(totalRevenue / redeemedTransactions.length)
       : 0;
+    
+    // Top productos
+    const { sql } = await import("drizzle-orm");
+    const topProductsResult = await db.execute(sql`
+      SELECT p.title as name, COUNT(*) as quantity, SUM(pt.business_revenue) as revenue
+      FROM promotion_transactions pt
+      JOIN promotions p ON pt.promotion_id = p.id
+      WHERE pt.business_id = ${business.id} AND pt.status = 'redeemed'
+      GROUP BY p.id
+      ORDER BY quantity DESC
+      LIMIT 5
+    `);
+    const topProducts = (Array.isArray(topProductsResult[0]) ? topProductsResult[0] : topProductsResult).map((p: any) => ({
+      name: p.name,
+      quantity: Number(p.quantity),
+      revenue: Number(p.revenue) / 100
+    }));
+
+    // Tasa de cancelación
+    const cancelledCount = transactions.filter(t => t.status === 'cancelled').length;
+    const cancellationRate = transactions.length > 0 ? Math.round((cancelledCount / transactions.length) * 100) : 0;
+
+    // Horarios pico (horas con más canjes)
+    const hourlyStats = new Map<number, number>();
+    redeemedTransactions.forEach(t => {
+      const hour = new Date(t.redeemedAt || t.createdAt).getHours();
+      hourlyStats.set(hour, (hourlyStats.get(hour) || 0) + 1);
+    });
+    const peakHours = Array.from(hourlyStats.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([hour, count]) => ({ hour, count }));
+
+    // Top usuarios
+    const topUsersResult = await db.execute(sql`
+      SELECT u.name, u.phone, COUNT(*) as redemptions, SUM(pt.amount_paid) as totalSpent
+      FROM promotion_transactions pt
+      JOIN users u ON pt.user_id = u.id
+      WHERE pt.business_id = ${business.id} AND pt.status = 'redeemed'
+      GROUP BY u.id
+      ORDER BY redemptions DESC
+      LIMIT 5
+    `);
+    const topUsers = (Array.isArray(topUsersResult[0]) ? topUsersResult[0] : topUsersResult).map((u: any) => ({
+      name: u.name,
+      phone: u.phone,
+      redemptions: Number(u.redemptions),
+      totalSpent: Number(u.totalSpent) / 100
+    }));
     
     res.json({ 
       success: true, 
@@ -186,9 +277,13 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
       orders: { 
         total: transactions.length, 
         completed: redeemedTransactions.length,
-        cancelled: transactions.filter(t => t.status === 'cancelled').length,
+        cancelled: cancelledCount,
         avgValue: avgValue
-      } 
+      },
+      topProducts,
+      cancellationRate,
+      peakHours,
+      topUsers
     });
   } catch (error: any) {
     console.error('Stats error:', error);
@@ -299,11 +394,195 @@ router.get("/limits", authenticateToken, requireRole("business_owner"), async (r
   }
 });
 
+// Debug commission (NO AUTH for testing)
+router.get("/debug-commission-test", async (req, res) => {
+  try {
+    const { sql } = await import("drizzle-orm");
+    
+    // Query commission for test bar
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = 'bar_test_001'
+      LIMIT 1
+    `);
+
+    const rawResult = commissionResult;
+    const firstElement = commissionResult[0];
+    const platformCommissionValue = commissionResult[0]?.platform_commission;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+
+    res.json({ 
+      success: true,
+      businessId: 'bar_test_001',
+      rawResult,
+      firstElement,
+      platformCommissionValue,
+      calculated,
+      type: typeof platformCommissionValue
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug commission
+router.get("/debug-commission", authenticateToken, async (req, res) => {
+  try {
+    const { sql } = await import("drizzle-orm");
+    
+    // Get user's business
+    const [userBusiness] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+
+    if (!userBusiness) {
+      return res.json({ error: 'No business found' });
+    }
+
+    // Query commission
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${userBusiness.id}
+      LIMIT 1
+    `);
+
+    const rawResult = commissionResult;
+    const firstElement = commissionResult[0];
+    const platformCommissionValue = commissionResult[0]?.platform_commission;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+
+    res.json({ 
+      success: true,
+      businessId: userBusiness.id,
+      businessName: userBusiness.name,
+      rawResult,
+      firstElement,
+      platformCommissionValue,
+      calculated,
+      type: typeof platformCommissionValue
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get wallet stats for business owner
+router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id));
+    const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
+    
+    const totalEarnings = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const pendingBalance = transactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const availableBalance = transactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    // Get commission info
+    const { sql } = await import("drizzle-orm");
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${business.id}
+      LIMIT 1
+    `);
+    
+    let platformCommission = 30;
+    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
+      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
+    }
+
+    res.json({
+      success: true,
+      stats: {
+        totalEarnings: totalEarnings / 100,
+        pendingBalance: pendingBalance / 100,
+        availableBalance: availableBalance / 100,
+        platformCommission,
+        totalTransactions: paidTransactions.length
+      }
+    });
+  } catch (error: any) {
+    console.error('Wallet stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Public route to list all businesses
 router.get("/", async (req, res) => {
   try {
+    const { lat, lng, radius } = req.query;
+    
     const allBusinesses = await db.select().from(businesses).where(eq(businesses.isActive, true));
-    res.json({ success: true, businesses: allBusinesses });
+    
+    // Get current time
+    const now = new Date();
+    const { and, gte, lte, sql: drizzleSql } = await import("drizzle-orm");
+    
+    // Enrich businesses with real-time data
+    const enrichedBusinesses = await Promise.all(
+      allBusinesses.map(async (business) => {
+        // Count active flash promotions
+        const flashPromos = await db
+          .select()
+          .from(promotions)
+          .where(
+            and(
+              eq(promotions.businessId, business.id),
+              eq(promotions.type, 'flash'),
+              eq(promotions.isActive, true),
+              lte(promotions.startTime, now),
+              gte(promotions.endTime, now)
+            )
+          );
+        
+        const hasFlashPromo = flashPromos.length > 0;
+        const flashPromoCount = flashPromos.length;
+        
+        // Calculate distance if coordinates provided
+        let distance = null;
+        if (lat && lng) {
+          const R = 6371; // Earth's radius in km
+          const dLat = (business.latitude - Number(lat)) * Math.PI / 180;
+          const dLon = (business.longitude - Number(lng)) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(Number(lat) * Math.PI / 180) * Math.cos(business.latitude * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          distance = R * c;
+        }
+        
+        // Filter by radius if provided
+        if (radius && distance && distance > Number(radius)) {
+          return null;
+        }
+        
+        // Determine if opening soon (within 2 hours)
+        let openingSoon = false;
+        let timeUntilOpen = null;
+        
+        // TODO: Implement opening hours logic
+        // For now, assume isActive means open
+        
+        return {
+          ...business,
+          hasFlashPromo,
+          flashPromoCount,
+          distance,
+          openingSoon,
+          timeUntilOpen,
+          isOpen: business.isActive, // Simplified for MVP
+        };
+      })
+    );
+    
+    // Filter out nulls (businesses outside radius)
+    const filteredBusinesses = enrichedBusinesses.filter(b => b !== null);
+    
+    res.json({ success: true, businesses: filteredBusinesses });
   } catch (error: any) {
     console.error('List businesses error:', error);
     res.status(500).json({ error: error.message });
@@ -452,6 +731,83 @@ router.delete("/products/:id", authenticateToken, requireRole("business_owner"),
     res.json({ success: true, message: "Producto eliminado" });
   } catch (error: any) {
     console.error('Delete product error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get full menu of a business (PUBLIC)
+router.get("/:id/menu", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    // Get all products grouped by category
+    const allProducts = await db.select().from(products).where(eq(products.businessId, id));
+    
+    // Group by category
+    const menuByCategory: Record<string, any[]> = {};
+    allProducts.forEach(product => {
+      const category = product.category || 'Otros';
+      if (!menuByCategory[category]) {
+        menuByCategory[category] = [];
+      }
+      menuByCategory[category].push(product);
+    });
+
+    res.json({ 
+      success: true, 
+      business: {
+        id: business.id,
+        name: business.name,
+        address: business.address,
+        phone: business.phone
+      },
+      menu: menuByCategory,
+      totalProducts: allProducts.length
+    });
+  } catch (error: any) {
+    console.error('Get menu error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get future promotions for a business (PUBLIC)
+router.get("/:id/future-promotions", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const now = new Date();
+    const { and, gte } = await import("drizzle-orm");
+    
+    // Get promotions that start in the future
+    const futurePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.businessId, id),
+          eq(promotions.isActive, true),
+          gte(promotions.startTime, now)
+        )
+      )
+      .orderBy(promotions.startTime);
+
+    res.json({ 
+      success: true, 
+      promotions: futurePromotions,
+      total: futurePromotions.length
+    });
+  } catch (error: any) {
+    console.error('Get future promotions error:', error);
     res.status(500).json({ error: error.message });
   }
 });

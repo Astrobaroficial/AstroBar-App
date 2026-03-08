@@ -11,19 +11,25 @@ router.get("/", async (req, res) => {
   try {
     const { promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, and, gte, lte, sql } = await import("drizzle-orm");
+    const { eq, and, gte, lte, sql, desc } = await import("drizzle-orm");
 
     const businessId = req.query.businessId as string | undefined;
-    const type = req.query.type as string | undefined; // flash or common
+    const type = req.query.type as string | undefined;
+    const includeInactive = req.query.includeInactive === 'true';
 
     const now = new Date();
     
-    let conditions = [
-      eq(promotions.isActive, true),
-      lte(promotions.startTime, now),
-      gte(promotions.endTime, now),
-      sql`${promotions.stock} > ${promotions.stockConsumed}`,
-    ];
+    let conditions = [];
+
+    // Si no se pide incluir inactivas, filtrar solo activas
+    if (!includeInactive) {
+      conditions.push(
+        eq(promotions.isActive, true),
+        lte(promotions.startTime, now),
+        gte(promotions.endTime, now),
+        sql`${promotions.stock} > ${promotions.stockConsumed}`
+      );
+    }
 
     if (businessId) {
       conditions.push(eq(promotions.businessId, businessId));
@@ -33,14 +39,15 @@ router.get("/", async (req, res) => {
       conditions.push(eq(promotions.type, type));
     }
 
-    const activePromotions = await db
-      .select()
-      .from(promotions)
-      .where(and(...conditions));
+    const query = conditions.length > 0
+      ? db.select().from(promotions).where(and(...conditions)).orderBy(desc(promotions.createdAt))
+      : db.select().from(promotions).orderBy(desc(promotions.createdAt));
+
+    const allPromotions = await query;
 
     // Enrich with business data
     const enriched = await Promise.all(
-      activePromotions.map(async (promo) => {
+      allPromotions.map(async (promo) => {
         const [business] = await db
           .select()
           .from(businesses)
@@ -50,6 +57,7 @@ router.get("/", async (req, res) => {
         return {
           ...promo,
           business: business || null,
+          businessName: business?.name || 'Bar',
           stockRemaining: promo.stock - promo.stockConsumed,
         };
       })
@@ -104,7 +112,7 @@ router.get("/:id", async (req, res) => {
 // Accept promotion (create transaction)
 router.post("/:id/accept", authenticateToken, async (req, res) => {
   try {
-    const { promotions, promotionTransactions, userPoints } = await import("@shared/schema-mysql");
+    const { promotions, promotionTransactions, userPoints, businesses, users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq, and, sql } = await import("drizzle-orm");
 
@@ -148,9 +156,20 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Ya aceptaste esta promoción" });
     }
 
-    // Calculate amounts (bar gets 100%, platform charges commission on top)
+    // Calculate amounts - Get commission from business_commissions table
+    const { sql: sqlImport } = await import("drizzle-orm");
+    const commissionResult = await db.execute(sqlImport`
+      SELECT COALESCE(bc.platform_commission, 0.30) as commission
+      FROM businesses b
+      LEFT JOIN business_commissions bc ON b.id = bc.business_id
+      WHERE b.id = ${promotion.businessId}
+      LIMIT 1
+    `);
+    const commissionRate = Array.isArray(commissionResult[0]) ? commissionResult[0][0]?.commission : commissionResult[0]?.commission;
+    const platformCommissionRate = Number(commissionRate || 0.30);
+    
     const promoPrice = promotion.promoPrice; // Bar receives this
-    const platformCommission = Math.round(promoPrice * 0.30); // 30% additional
+    const platformCommission = Math.round(promoPrice * platformCommissionRate); // Commission based on bar config
     const totalAmount = promoPrice + platformCommission; // User pays this
 
     // Generate unique QR code
@@ -178,6 +197,25 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
       .update(promotions)
       .set({ stockConsumed: sql`${promotions.stockConsumed} + 1` })
       .where(eq(promotions.id, promotionId));
+
+    // Notify business owner
+    try {
+      const [business] = await db.select().from(businesses).where(eq(businesses.id, promotion.businessId)).limit(1);
+      if (business?.ownerId) {
+        const [owner] = await db.select().from(users).where(eq(users.id, business.ownerId)).limit(1);
+        if (owner?.pushToken) {
+          const { sendPushNotification } = await import("../services/pushNotifications");
+          await sendPushNotification(
+            owner.pushToken,
+            "¡Nueva promoción aceptada!",
+            `${promotion.title} - $${(promoPrice / 100).toFixed(2)}`,
+            { type: 'promotion_accepted', promotionId, transactionId }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error sending notification to business:', error);
+    }
 
     res.json({
       success: true,
@@ -409,7 +447,7 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
 });
 
 // Update promotion (pause/activate)
-router.patch("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+router.patch("/:id", authenticateToken, async (req, res) => {
   try {
     const { promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
@@ -417,6 +455,7 @@ router.patch("/:id", authenticateToken, requireRole("business_owner"), async (re
 
     const promotionId = req.params.id;
     const { isActive } = req.body;
+    const userRole = req.user!.role;
 
     // Verify ownership
     const [promotion] = await db
@@ -429,6 +468,16 @@ router.patch("/:id", authenticateToken, requireRole("business_owner"), async (re
       return res.status(404).json({ error: "Promoción no encontrada" });
     }
 
+    // Admin can modify any promotion
+    if (userRole === 'admin' || userRole === 'super_admin') {
+      await db
+        .update(promotions)
+        .set({ isActive })
+        .where(eq(promotions.id, promotionId));
+      return res.json({ success: true });
+    }
+
+    // Business owner can only modify their own
     const [business] = await db
       .select()
       .from(businesses)
@@ -452,6 +501,36 @@ router.patch("/:id", authenticateToken, requireRole("business_owner"), async (re
     res.json({ success: true });
   } catch (error: any) {
     console.error("Error updating promotion:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete promotion (admin only)
+router.delete("/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { promotions } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const promotionId = req.params.id;
+
+    const [promotion] = await db
+      .select()
+      .from(promotions)
+      .where(eq(promotions.id, promotionId))
+      .limit(1);
+
+    if (!promotion) {
+      return res.status(404).json({ error: "Promoción no encontrada" });
+    }
+
+    await db
+      .delete(promotions)
+      .where(eq(promotions.id, promotionId));
+
+    res.json({ success: true, message: "Promoción eliminada" });
+  } catch (error: any) {
+    console.error("Error deleting promotion:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -527,6 +606,61 @@ router.post("/redeem", authenticateToken, requireRole("business_owner"), async (
     res.json({ success: true, message: "Promoción canjeada exitosamente" });
   } catch (error: any) {
     console.error("Error redeeming promotion:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get business transactions
+router.get("/business/transactions", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { promotionTransactions, promotions, businesses, users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, desc } = await import("drizzle-orm");
+
+    // Get business
+    const [business] = await db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.ownerId, req.user!.id))
+      .limit(1);
+
+    if (!business) {
+      return res.status(404).json({ error: "No tienes un bar registrado" });
+    }
+
+    const transactions = await db
+      .select()
+      .from(promotionTransactions)
+      .where(eq(promotionTransactions.businessId, business.id))
+      .orderBy(desc(promotionTransactions.createdAt));
+
+    // Enrich with promotion and user data
+    const enriched = await Promise.all(
+      transactions.map(async (transaction) => {
+        const [promotion] = await db
+          .select()
+          .from(promotions)
+          .where(eq(promotions.id, transaction.promotionId))
+          .limit(1);
+
+        const [user] = await db
+          .select({ name: users.name, phone: users.phone })
+          .from(users)
+          .where(eq(users.id, transaction.userId))
+          .limit(1);
+
+        return {
+          ...transaction,
+          promotionTitle: promotion?.title || 'Promoción',
+          userName: user?.name || 'Cliente',
+          userPhone: user?.phone || '',
+        };
+      })
+    );
+
+    res.json({ success: true, transactions: enriched });
+  } catch (error: any) {
+    console.error("Error loading business transactions:", error);
     res.status(500).json({ error: error.message });
   }
 });

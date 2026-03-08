@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TextInput, Pressable } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { apiRequest } from "@/lib/query-client";
 import { AstroBarColors, Spacing } from "@/constants/theme";
@@ -8,6 +8,8 @@ interface Transaction {
   id: string;
   promotionId: string;
   userId: string;
+  userName?: string;
+  promotionTitle?: string;
   status: string;
   amountPaid: number;
   businessRevenue: number;
@@ -20,14 +22,18 @@ interface Transaction {
 export default function BusinessTransactionsScreen() {
   const { theme } = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadTransactions = async () => {
     try {
-      const response = await apiRequest("/api/business/transactions");
+      const response = await apiRequest("GET", "/api/business/transactions");
       if (response.success) {
         setTransactions(response.transactions || []);
+        setFilteredTransactions(response.transactions || []);
       }
     } catch (error) {
       console.error("Error loading transactions:", error);
@@ -35,6 +41,28 @@ export default function BusinessTransactionsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, [transactions, filterStatus, searchQuery]);
+
+  const applyFilters = () => {
+    let filtered = [...transactions];
+    
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(t => t.status === filterStatus);
+    }
+    
+    if (searchQuery) {
+      filtered = filtered.filter(t => 
+        t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.promotionTitle?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    setFilteredTransactions(filtered);
   };
 
   useEffect(() => {
@@ -75,19 +103,27 @@ export default function BusinessTransactionsScreen() {
         </View>
       </View>
       
+      {item.promotionTitle && (
+        <Text style={[styles.promoTitle, { color: theme.text }]}>{item.promotionTitle}</Text>
+      )}
+      
+      {item.userName && (
+        <Text style={[styles.userName, { color: theme.textSecondary }]}>Cliente: {item.userName}</Text>
+      )}
+      
       <View style={styles.row}>
         <Text style={[styles.label, { color: theme.textSecondary }]}>Total pagado:</Text>
-        <Text style={[styles.value, { color: theme.text }]}>${item.amountPaid}</Text>
+        <Text style={[styles.value, { color: theme.text }]}>${(item.amountPaid / 100).toFixed(2)}</Text>
       </View>
       
       <View style={styles.row}>
         <Text style={[styles.label, { color: theme.textSecondary }]}>Tu ingreso:</Text>
-        <Text style={[styles.revenue, { color: AstroBarColors.primary }]}>${item.businessRevenue}</Text>
+        <Text style={[styles.revenue, { color: AstroBarColors.primary }]}>${(item.businessRevenue / 100).toFixed(2)}</Text>
       </View>
       
       <View style={styles.row}>
         <Text style={[styles.label, { color: theme.textSecondary }]}>Comisión plataforma:</Text>
-        <Text style={[styles.value, { color: theme.textSecondary }]}>${item.platformCommission}</Text>
+        <Text style={[styles.value, { color: theme.textSecondary }]}>${(item.platformCommission / 100).toFixed(2)}</Text>
       </View>
       
       <Text style={[styles.date, { color: theme.textSecondary }]}>
@@ -106,8 +142,30 @@ export default function BusinessTransactionsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.filters}>
+        <TextInput
+          style={[styles.searchInput, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border }]}
+          placeholder="Buscar por ID, usuario o promoción..."
+          placeholderTextColor={theme.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <View style={styles.filterButtons}>
+          {['all', 'pending', 'redeemed', 'cancelled'].map(status => (
+            <Pressable
+              key={status}
+              style={[styles.filterButton, filterStatus === status && styles.filterButtonActive]}
+              onPress={() => setFilterStatus(status)}
+            >
+              <Text style={[styles.filterText, filterStatus === status && styles.filterTextActive]}>
+                {status === 'all' ? 'Todas' : status === 'pending' ? 'Pendientes' : status === 'redeemed' ? 'Canjeadas' : 'Canceladas'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         renderItem={renderTransaction}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
@@ -117,7 +175,7 @@ export default function BusinessTransactionsScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-              No hay transacciones aún
+              {searchQuery || filterStatus !== 'all' ? 'No se encontraron transacciones' : 'No hay transacciones aún'}
             </Text>
           </View>
         }
@@ -186,5 +244,47 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+  },
+  filters: {
+    padding: Spacing.md,
+    backgroundColor: 'transparent',
+  },
+  searchInput: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+    fontSize: 14,
+  },
+  filterButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  filterButtonActive: {
+    backgroundColor: AstroBarColors.primary,
+  },
+  filterText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  filterTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  promoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 12,
+    marginBottom: 8,
   },
 });

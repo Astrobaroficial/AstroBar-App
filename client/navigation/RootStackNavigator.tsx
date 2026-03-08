@@ -23,6 +23,7 @@ import PromotionQRScreen from "@/screens/PromotionQRScreen";
 import ScanQRScreen from "@/screens/ScanQRScreen";
 import CreateFlashPromotionScreen from "@/screens/CreateFlashPromotionScreen";
 import CreateCommonPromotionScreen from "@/screens/CreateCommonPromotionScreen";
+import BarMenuScreen from "@/screens/BarMenuScreen";
 
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
@@ -70,6 +71,7 @@ export type RootStackParamList = {
   ScanQR: undefined;
   CreateFlashPromotion: undefined;
   CreateCommonPromotion: undefined;
+  BarMenu: { businessId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -167,6 +169,11 @@ export default function RootStackNavigator() {
             name="CreateCommonPromotion"
             component={CreateCommonPromotionScreen}
             options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="BarMenu"
+            component={BarMenuScreen}
+            options={{ headerShown: false }}
           />
         </>
       ) : (

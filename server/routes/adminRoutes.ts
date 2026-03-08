@@ -275,6 +275,142 @@ router.put("/users/:id", authenticateToken, requireRole("admin", "super_admin"),
   }
 });
 
+// Update user status
+router.patch("/users/:id/status", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { isActive } = req.body;
+
+    await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, req.params.id));
+
+    res.json({ success: true, message: isActive ? 'Usuario activado' : 'Usuario desactivado' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete user
+router.delete("/users/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    await db.delete(users).where(eq(users.id, req.params.id));
+    res.json({ success: true, message: "Usuario eliminado" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update business
+router.put("/businesses/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { name, address, phone, email } = req.body;
+
+    await db
+      .update(businesses)
+      .set({ name, address, phone, email, updatedAt: new Date() })
+      .where(eq(businesses.id, req.params.id));
+      
+    res.json({ success: true, message: "Bar actualizado" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user points stats
+router.get("/points/stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const result = await db.execute(sql`
+      SELECT 
+        COUNT(*) as totalUsers,
+        SUM(CASE WHEN current_level = 'copper' THEN 1 ELSE 0 END) as copper,
+        SUM(CASE WHEN current_level = 'bronze' THEN 1 ELSE 0 END) as bronze,
+        SUM(CASE WHEN current_level = 'silver' THEN 1 ELSE 0 END) as silver,
+        SUM(CASE WHEN current_level = 'gold' THEN 1 ELSE 0 END) as gold,
+        SUM(CASE WHEN current_level = 'platinum' THEN 1 ELSE 0 END) as platinum,
+        SUM(total_points) as totalPoints,
+        AVG(total_points) as avgPoints
+      FROM user_points
+    `);
+    const stats = Array.isArray(result[0]) ? result[0][0] : result[0];
+    res.json({ success: true, stats });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Adjust user points
+router.post("/points/adjust", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const { userId, points, reason } = req.body;
+
+    await db.execute(sql`
+      UPDATE user_points 
+      SET total_points = total_points + ${points}
+      WHERE user_id = ${userId}
+    `);
+
+    res.json({ success: true, message: "Puntos ajustados" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get revenue stats
+router.get("/revenue/stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const result = await db.execute(sql`
+      SELECT 
+        COUNT(*) as totalTransactions,
+        SUM(amount_paid) as totalRevenue,
+        SUM(platform_commission) as platformRevenue,
+        SUM(business_revenue) as businessRevenue,
+        AVG(amount_paid) as avgTransaction
+      FROM promotion_transactions
+      WHERE status = 'redeemed'
+    `);
+    const stats = Array.isArray(result[0]) ? result[0][0] : result[0];
+    res.json({ success: true, stats });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get top users by redemptions
+router.get("/users/top", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const result = await db.execute(sql`
+      SELECT u.id, u.name, u.phone, COUNT(pt.id) as redemptions, SUM(pt.amount_paid) as totalSpent
+      FROM users u
+      JOIN promotion_transactions pt ON u.id = pt.user_id
+      WHERE pt.status = 'redeemed'
+      GROUP BY u.id
+      ORDER BY redemptions DESC
+      LIMIT 10
+    `);
+    const users = Array.isArray(result[0]) ? result[0] : result;
+    res.json({ success: true, users });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all orders
 router.get("/orders", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
@@ -639,12 +775,37 @@ router.get("/logs", authenticateToken, requireRole("admin", "super_admin"), asyn
 // System settings
 router.get("/settings", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
-    const { systemSettings } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
 
-    const settings = await db.select().from(systemSettings);
+    const result = await db.execute(sql`SELECT * FROM system_settings`);
+    const settings = Array.isArray(result[0]) ? result[0] : result;
     res.json({ success: true, settings });
   } catch (error: any) {
+    console.error('Settings error:', error);
+    // Si la tabla no existe, devolver array vacío
+    res.json({ success: true, settings: [] });
+  }
+});
+
+// Update system setting
+router.post("/settings/update", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const { clearSettingsCache } = await import("../utils/systemSettings");
+    const { v4: uuidv4 } = await import("uuid");
+    const { key, value } = req.body;
+
+    await db.execute(sql`
+      INSERT INTO system_settings (id, setting_key, value)
+      VALUES (${uuidv4()}, ${key}, ${value})
+      ON DUPLICATE KEY UPDATE value = ${value}
+    `);
+
+    clearSettingsCache();
+
+    res.json({ success: true, message: 'Configuración actualizada' });
+  } catch (error: any) {
+    console.error('Update setting error:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -49,12 +49,12 @@ router.post("/phone-login", async (req, res) => {
       if (process.env.NODE_ENV === "development" && code === "1234" && isTestPhone) {
         console.log("? Using 1234 fallback for test phone");
       } else {
-        return res.status(400).json({ error: "Código inválido" });
+        return res.status(400).json({ error: "Cï¿½digo invï¿½lido" });
       }
     }
 
     if (user[0].verificationExpires && new Date() > new Date(user[0].verificationExpires)) {
-      return res.status(400).json({ error: "Código expirado" });
+      return res.status(400).json({ error: "Cï¿½digo expirado" });
     }
 
     await db
@@ -93,11 +93,78 @@ router.post("/login", async (req, res) => {
   try {
     const { identifier, password, phone, code } = req.body;
     
-    // If phone and code provided, use phone login
+    // If phone and code provided, use phone login logic
     if (phone && code) {
-      req.body = { phone, code };
-      req.url = '/phone-login';
-      return router.handle(req, res);
+      const { users } = await import("@shared/schema-mysql");
+      const { db } = await import("../db");
+      const { eq, or, like } = await import("drizzle-orm");
+      const jwt = await import("jsonwebtoken");
+
+      const phoneDigits = phone.replace(/[^\d]/g, '');
+      const normalizedPhone = phoneDigits.startsWith('54') ? `+${phoneDigits}` : 
+                             phoneDigits.length === 10 ? `+54${phoneDigits}` :
+                             phone.startsWith('+') ? phone : `+54${phoneDigits}`;
+
+      let user = await db
+        .select()
+        .from(users)
+        .where(
+          or(
+            eq(users.phone, normalizedPhone),
+            eq(users.phone, phone),
+            like(users.phone, `%${phoneDigits.slice(-10)}`)
+          )
+        )
+        .limit(1);
+
+      if (user.length === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      if (!user[0].verificationCode || user[0].verificationCode !== code) {
+        const testPhones = ["+54 341 234 5678", "+54 341 456 7892", "+543414567892"];
+        const isTestPhone = testPhones.some(testPhone => {
+          const testDigits = testPhone.replace(/[^\d]/g, '');
+          return phoneDigits.slice(-10) === testDigits.slice(-10);
+        });
+        
+        if (process.env.NODE_ENV === "development" && code === "1234" && isTestPhone) {
+          console.log("âš¡ Using 1234 fallback for test phone");
+        } else {
+          return res.status(400).json({ error: "CÃ³digo invÃ¡lido" });
+        }
+      }
+
+      if (user[0].verificationExpires && new Date() > new Date(user[0].verificationExpires)) {
+        return res.status(400).json({ error: "CÃ³digo expirado" });
+      }
+
+      await db
+        .update(users)
+        .set({ 
+          verificationCode: null, 
+          verificationExpires: null,
+          phoneVerified: true 
+        })
+        .where(eq(users.id, user[0].id));
+
+      const token = jwt.default.sign(
+        { id: user[0].id, phone: user[0].phone, role: user[0].role },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({
+        success: true,
+        token,
+        user: {
+          id: user[0].id,
+          name: user[0].name,
+          phone: user[0].phone,
+          role: user[0].role,
+          phoneVerified: user[0].phoneVerified,
+        },
+      });
     }
     
     // If identifier and password provided, handle as password login
@@ -105,10 +172,9 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Password login not implemented. Use phone verification." });
     }
     
-    // Default to phone login
-    req.url = '/phone-login';
-    return router.handle(req, res);
+    return res.status(400).json({ error: "Phone and code required" });
   } catch (error: any) {
+    console.error('Login error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -141,7 +207,7 @@ router.post("/dev-email-login", async (req, res) => {
     // For development, accept any password or check if it matches a simple pattern
     // Allow in production for testing purposes
     if (password !== "password") {
-      return res.status(401).json({ error: "Contraseña incorrecta" });
+      return res.status(401).json({ error: "Contraseï¿½a incorrecta" });
     }
 
     const token = jwt.default.sign(
@@ -219,7 +285,7 @@ router.post("/send-code", async (req, res) => {
         const twilio = await import("twilio");
         const client = twilio.default(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
         await client.messages.create({
-          body: `Tu código AstroBar: ${code}`,
+          body: `Tu cï¿½digo AstroBar: ${code}`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: normalizedPhone
         });
@@ -227,12 +293,12 @@ router.post("/send-code", async (req, res) => {
         console.error("Twilio error:", twilioError);
       }
     } else {
-      console.log(`[DEV] Código para ${normalizedPhone}: ${code}`);
+      console.log(`[DEV] Cï¿½digo para ${normalizedPhone}: ${code}`);
     }
 
     res.json({ 
       success: true, 
-      message: "Código enviado",
+      message: "Cï¿½digo enviado",
       ...(process.env.NODE_ENV === "development" && { devCode: code })
     });
   } catch (error: any) {
@@ -253,7 +319,7 @@ router.post("/phone-signup", async (req, res) => {
     const { phone, name, role } = req.body;
     
     if (!phone || !name) {
-      return res.status(400).json({ error: "Teléfono y nombre requeridos" });
+      return res.status(400).json({ error: "Telï¿½fono y nombre requeridos" });
     }
 
     const { users } = await import("@shared/schema-mysql");
@@ -277,7 +343,7 @@ router.post("/phone-signup", async (req, res) => {
 
     if (existingUser.length > 0) {
       return res.status(400).json({ 
-        error: "Número ya registrado",
+        error: "Nï¿½mero ya registrado",
         userExists: true
       });
     }
