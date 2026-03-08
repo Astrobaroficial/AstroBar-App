@@ -6,6 +6,9 @@ import path from 'path';
 import apiRoutes from './apiRoutes';
 import { validateEnv } from './env';
 
+// Clear module cache to force fresh DB connection
+delete require.cache[require.resolve('./db')];
+
 // Validate environment variables at startup so we never run with bad Stripe/Twilio keys
 validateEnv();
 

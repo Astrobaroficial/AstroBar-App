@@ -41,7 +41,7 @@ function createConnectionConfig() {
       if (fs.existsSync(caPath)) {
         config.ssl = {
           ca: fs.readFileSync(caPath),
-          rejectUnauthorized: true,
+          rejectUnauthorized: false,
         };
         console.log('📜 Using SSL certificate for MySQL connection');
       } else if (url.searchParams.get('ssl-mode') === 'REQUIRED') {
@@ -51,9 +51,9 @@ function createConnectionConfig() {
         };
         console.log('🔒 Using SSL without custom CA');
       } else {
-        // For remote connections, disable SSL verification for self-signed certificates
+        // For remote connections, accept self-signed certificates
         config.ssl = {
-          rejectUnauthorized: false,
+          rejectUnauthorized: false
         };
         console.log('🔒 Using SSL with disabled certificate verification');
       }
@@ -81,7 +81,7 @@ function createConnectionConfig() {
   // Handle SSL for non-local connections
   if (host !== 'localhost' && host !== '127.0.0.1') {
     config.ssl = {
-      rejectUnauthorized: false,
+      rejectUnauthorized: false
     };
     console.log('🔒 Using SSL with disabled certificate verification for', host);
   }

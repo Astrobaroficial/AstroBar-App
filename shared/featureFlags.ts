@@ -9,15 +9,15 @@ export const FEATURE_FLAGS = {
   MVP_QR: true,
   MVP_POINTS: true,
 
-  // FASE 2 - Desactivados por defecto
-  REFERRAL_SYSTEM: false,
-  DEMAND_HEATMAP: false,
-  ADMIN_ADVANCED: false,
-  MULTIMEDIA_CONTENT: false,
-  INVITATION_LINKS: false,
-  DYNAMIC_MESSAGES: false,
-  BAR_RANKING: false,
-  SCHEDULED_PROMOS: false,
+  // FASE 2 - Activados
+  REFERRAL_SYSTEM: true,
+  DEMAND_HEATMAP: true,
+  ADMIN_ADVANCED: true,
+  MULTIMEDIA_CONTENT: true,
+  INVITATION_LINKS: true,
+  DYNAMIC_MESSAGES: true,
+  BAR_RANKING: true,
+  SCHEDULED_PROMOS: true,
 };
 
 export type FeatureFlag = keyof typeof FEATURE_FLAGS;
