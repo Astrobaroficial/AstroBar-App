@@ -65,7 +65,6 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
-    // Si no tiene negocio, crear uno automáticamente
     if (!business) {
       const businessId = uuidv4();
       const newBusiness = {
@@ -92,6 +91,36 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     const todayTransactions = transactions.filter(t => new Date(t.createdAt).toDateString() === today.toDateString());
     const todayRevenue = todayTransactions.filter(t => t.status === "redeemed").reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
+    // Promociones activas
+    const now = new Date();
+    const { and, gte, lte, sql } = await import("drizzle-orm");
+    const activePromotions = await db
+      .select()
+      .from(promotions)
+      .where(
+        and(
+          eq(promotions.businessId, business.id),
+          eq(promotions.isActive, true),
+          lte(promotions.startTime, now),
+          gte(promotions.endTime, now)
+        )
+      );
+    const activeFlash = activePromotions.filter(p => p.type === 'flash');
+    const activeCommon = activePromotions.filter(p => p.type === 'common');
+
+    // Obtener comisión actual desde DB
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${business.id}
+      LIMIT 1
+    `);
+    
+    let platformCommission = 30;
+    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
+      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
+    }
+
     // Solo mostrar transacciones reales (redeemed o pending)
     const recentTransactions = transactions
       .filter(t => t.status === "redeemed" || t.status === "pending")
@@ -112,7 +141,15 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
         todayOrders: todayTransactions.length, 
         todayRevenue, 
         totalOrders: transactions.length, 
-        recentOrders: recentTransactions 
+        recentOrders: recentTransactions,
+        activePromotions: {
+          total: activePromotions.length,
+          flash: activeFlash.length,
+          common: activeCommon.length,
+          flashList: activeFlash.map(p => ({ id: p.id, title: p.title, stock: p.stock - p.stockConsumed })),
+          commonList: activeCommon.map(p => ({ id: p.id, title: p.title, stock: p.stock - p.stockConsumed }))
+        },
+        platformCommission
       } 
     });
   } catch (error: any) {
@@ -126,7 +163,6 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
-    // Si no tiene negocio, crear uno automáticamente
     if (!business) {
       const businessId = uuidv4();
       const newBusiness = {
@@ -173,6 +209,55 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
       ? Math.round(totalRevenue / redeemedTransactions.length)
       : 0;
     
+    // Top productos
+    const { sql } = await import("drizzle-orm");
+    const topProductsResult = await db.execute(sql`
+      SELECT p.title as name, COUNT(*) as quantity, SUM(pt.business_revenue) as revenue
+      FROM promotion_transactions pt
+      JOIN promotions p ON pt.promotion_id = p.id
+      WHERE pt.business_id = ${business.id} AND pt.status = 'redeemed'
+      GROUP BY p.id
+      ORDER BY quantity DESC
+      LIMIT 5
+    `);
+    const topProducts = (Array.isArray(topProductsResult[0]) ? topProductsResult[0] : topProductsResult).map((p: any) => ({
+      name: p.name,
+      quantity: Number(p.quantity),
+      revenue: Number(p.revenue) / 100
+    }));
+
+    // Tasa de cancelación
+    const cancelledCount = transactions.filter(t => t.status === 'cancelled').length;
+    const cancellationRate = transactions.length > 0 ? Math.round((cancelledCount / transactions.length) * 100) : 0;
+
+    // Horarios pico (horas con más canjes)
+    const hourlyStats = new Map<number, number>();
+    redeemedTransactions.forEach(t => {
+      const hour = new Date(t.redeemedAt || t.createdAt).getHours();
+      hourlyStats.set(hour, (hourlyStats.get(hour) || 0) + 1);
+    });
+    const peakHours = Array.from(hourlyStats.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([hour, count]) => ({ hour, count }));
+
+    // Top usuarios
+    const topUsersResult = await db.execute(sql`
+      SELECT u.name, u.phone, COUNT(*) as redemptions, SUM(pt.amount_paid) as totalSpent
+      FROM promotion_transactions pt
+      JOIN users u ON pt.user_id = u.id
+      WHERE pt.business_id = ${business.id} AND pt.status = 'redeemed'
+      GROUP BY u.id
+      ORDER BY redemptions DESC
+      LIMIT 5
+    `);
+    const topUsers = (Array.isArray(topUsersResult[0]) ? topUsersResult[0] : topUsersResult).map((u: any) => ({
+      name: u.name,
+      phone: u.phone,
+      redemptions: Number(u.redemptions),
+      totalSpent: Number(u.totalSpent) / 100
+    }));
+    
     res.json({ 
       success: true, 
       businessId: business.id, 
@@ -186,9 +271,13 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
       orders: { 
         total: transactions.length, 
         completed: redeemedTransactions.length,
-        cancelled: transactions.filter(t => t.status === 'cancelled').length,
+        cancelled: cancelledCount,
         avgValue: avgValue
-      } 
+      },
+      topProducts,
+      cancellationRate,
+      peakHours,
+      topUsers
     });
   } catch (error: any) {
     console.error('Stats error:', error);
@@ -295,6 +384,78 @@ router.get("/limits", authenticateToken, requireRole("business_owner"), async (r
     res.json({ success: true, limits });
   } catch (error: any) {
     console.error('Limits error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug commission (NO AUTH for testing)
+router.get("/debug-commission-test", async (req, res) => {
+  try {
+    const { sql } = await import("drizzle-orm");
+    
+    // Query commission for test bar
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = 'bar_test_001'
+      LIMIT 1
+    `);
+
+    const rawResult = commissionResult;
+    const firstElement = commissionResult[0];
+    const platformCommissionValue = commissionResult[0]?.platform_commission;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+
+    res.json({ 
+      success: true,
+      businessId: 'bar_test_001',
+      rawResult,
+      firstElement,
+      platformCommissionValue,
+      calculated,
+      type: typeof platformCommissionValue
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug commission
+router.get("/debug-commission", authenticateToken, async (req, res) => {
+  try {
+    const { sql } = await import("drizzle-orm");
+    
+    // Get user's business
+    const [userBusiness] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+
+    if (!userBusiness) {
+      return res.json({ error: 'No business found' });
+    }
+
+    // Query commission
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${userBusiness.id}
+      LIMIT 1
+    `);
+
+    const rawResult = commissionResult;
+    const firstElement = commissionResult[0];
+    const platformCommissionValue = commissionResult[0]?.platform_commission;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+
+    res.json({ 
+      success: true,
+      businessId: userBusiness.id,
+      businessName: userBusiness.name,
+      rawResult,
+      firstElement,
+      platformCommissionValue,
+      calculated,
+      type: typeof platformCommissionValue
+    });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });

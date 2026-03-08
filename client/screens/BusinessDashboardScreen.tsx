@@ -52,6 +52,19 @@ interface DashboardData {
   todayOrders: number;
   todayRevenue: number;
   recentOrders: any[];
+  activePromotions?: {
+    total: number;
+    flash: number;
+    common: number;
+    flashList: any[];
+    commonList: any[];
+  };
+  platformCommission?: number;
+  limits?: {
+    products: { current: number; max: number; percentage: number; canAdd: boolean };
+    flashPromotions: { current: number; max: number; percentage: number; canAdd: boolean };
+    commonPromotions: { current: number; max: number; percentage: number; canAdd: boolean };
+  };
 }
 
 function StatCard({
@@ -145,6 +158,8 @@ export default function BusinessDashboardScreen() {
     todayOrders: 0,
     todayRevenue: 0,
     recentOrders: [],
+    activePromotions: { total: 0, flash: 0, common: 0, flashList: [], commonList: [] },
+    platformCommission: 30
   });
   
   const [stats, setStats] = useState<StatsData>({
@@ -158,13 +173,15 @@ export default function BusinessDashboardScreen() {
       const businessId = selectedBusiness?.id;
       const statsUrl = businessId ? `/api/business/stats?businessId=${businessId}` : "/api/business/stats";
       
-      const [dashboardRes, statsRes] = await Promise.all([
+      const [dashboardRes, statsRes, limitsRes] = await Promise.all([
         apiRequest("GET", "/api/business/dashboard"),
         apiRequest("GET", statsUrl),
+        apiRequest("GET", "/api/business/limits"),
       ]);
       
       const dashboardData = await dashboardRes.json();
       const statsData = await statsRes.json();
+      const limitsData = await limitsRes.json();
       
       if (dashboardData.success) {
         setDashboard({
@@ -172,6 +189,9 @@ export default function BusinessDashboardScreen() {
           todayOrders: dashboardData.dashboard.todayOrders || 0,
           todayRevenue: dashboardData.dashboard.todayRevenue || 0,
           recentOrders: dashboardData.dashboard.recentOrders || [],
+          activePromotions: dashboardData.dashboard.activePromotions || { total: 0, flash: 0, common: 0, flashList: [], commonList: [] },
+          platformCommission: dashboardData.dashboard.platformCommission || 30,
+          limits: limitsData.limits || null
         });
         setIsOpen(dashboardData.dashboard.isOpen ?? true);
       }
@@ -383,7 +403,7 @@ export default function BusinessDashboardScreen() {
           />
         </View>
 
-        <View style={[styles.avgCard, { backgroundColor: theme.card }, Shadows.sm]}>
+        <View style={styles.avgCard}>
           <Feather name="trending-up" size={20} color={AstroBarColors.primary} />
           <View style={{ marginLeft: Spacing.md, flex: 1 }}>
             <ThemedText type="caption" style={{ color: theme.textSecondary }}>Ticket promedio</ThemedText>
@@ -394,6 +414,96 @@ export default function BusinessDashboardScreen() {
             <ThemedText type="h3">{dashboard.todayOrders}</ThemedText>
           </View>
         </View>
+
+        <View style={[styles.commissionCard, { backgroundColor: theme.card }, Shadows.sm]}>
+          <Feather name="percent" size={20} color="#FF9800" />
+          <View style={{ marginLeft: Spacing.md, flex: 1 }}>
+            <ThemedText type="caption" style={{ color: theme.textSecondary }}>Comisión de plataforma</ThemedText>
+            <ThemedText type="h3" style={{ color: "#FF9800" }}>{dashboard.platformCommission?.toFixed(1)}%</ThemedText>
+          </View>
+          <ThemedText type="small" style={{ color: theme.textSecondary }}>adicional al precio</ThemedText>
+        </View>
+
+        {dashboard.activePromotions && dashboard.activePromotions.total > 0 && (
+          <View style={[styles.promotionsCard, { backgroundColor: theme.card }, Shadows.sm]}>
+            <View style={styles.promotionsHeader}>
+              <ThemedText type="h3">Promociones Activas</ThemedText>
+              <Badge label={`${dashboard.activePromotions.total}`} color={AstroBarColors.primary} />
+            </View>
+            <View style={styles.promotionsRow}>
+              <View style={styles.promoType}>
+                <Feather name="zap" size={16} color="#FFD700" />
+                <ThemedText type="small" style={{ marginLeft: 4 }}>Flash: {dashboard.activePromotions.flash}/3</ThemedText>
+              </View>
+              <View style={styles.promoType}>
+                <Feather name="tag" size={16} color={AstroBarColors.primary} />
+                <ThemedText type="small" style={{ marginLeft: 4 }}>Comunes: {dashboard.activePromotions.common}/10</ThemedText>
+              </View>
+            </View>
+            {dashboard.activePromotions.flashList.length > 0 && (
+              <View style={{ marginTop: Spacing.sm }}>
+                {dashboard.activePromotions.flashList.map((promo: any) => (
+                  <View key={promo.id} style={styles.promoItem}>
+                    <Feather name="zap" size={14} color="#FFD700" />
+                    <ThemedText type="small" style={{ marginLeft: 6, flex: 1 }} numberOfLines={1}>{promo.title}</ThemedText>
+                    <ThemedText type="small" style={{ color: promo.stock < 5 ? AstroBarColors.error : theme.textSecondary }}>Stock: {promo.stock}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {dashboard.limits && (
+          <View style={[styles.limitsCard, { backgroundColor: theme.card }, Shadows.sm]}>
+            <View style={styles.limitsHeader}>
+              <Feather name="alert-circle" size={20} color={AstroBarColors.warning} />
+              <ThemedText type="h4" style={{ marginLeft: 8 }}>Límites del Sistema</ThemedText>
+            </View>
+            
+            <View style={styles.limitItem}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Productos</ThemedText>
+                <ThemedText type="body">{dashboard.limits.products.current}/{dashboard.limits.products.max}</ThemedText>
+              </View>
+              <View style={[styles.progressBar, { backgroundColor: theme.backgroundSecondary }]}>
+                <View style={[styles.progressFill, { 
+                  width: `${dashboard.limits.products.percentage}%`,
+                  backgroundColor: dashboard.limits.products.percentage >= 90 ? AstroBarColors.error : dashboard.limits.products.percentage >= 70 ? AstroBarColors.warning : AstroBarColors.primary
+                }]} />
+              </View>
+              {dashboard.limits.products.percentage >= 90 && (
+                <ThemedText type="small" style={{ color: AstroBarColors.error, marginTop: 4 }}>¡Casi al límite!</ThemedText>
+              )}
+            </View>
+
+            <View style={styles.limitItem}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Promociones Flash</ThemedText>
+                <ThemedText type="body">{dashboard.limits.flashPromotions.current}/{dashboard.limits.flashPromotions.max}</ThemedText>
+              </View>
+              <View style={[styles.progressBar, { backgroundColor: theme.backgroundSecondary }]}>
+                <View style={[styles.progressFill, { 
+                  width: `${dashboard.limits.flashPromotions.percentage}%`,
+                  backgroundColor: dashboard.limits.flashPromotions.percentage >= 90 ? AstroBarColors.error : AstroBarColors.primary
+                }]} />
+              </View>
+            </View>
+
+            <View style={styles.limitItem}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Promociones Comunes</ThemedText>
+                <ThemedText type="body">{dashboard.limits.commonPromotions.current}/{dashboard.limits.commonPromotions.max}</ThemedText>
+              </View>
+              <View style={[styles.progressBar, { backgroundColor: theme.backgroundSecondary }]}>
+                <View style={[styles.progressFill, { 
+                  width: `${dashboard.limits.commonPromotions.percentage}%`,
+                  backgroundColor: dashboard.limits.commonPromotions.percentage >= 90 ? AstroBarColors.error : AstroBarColors.primary
+                }]} />
+              </View>
+            </View>
+          </View>
+        )}
 
         {stats.topProducts.length > 0 ? (
           <>
@@ -596,5 +706,59 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     alignItems: "center",
     ...Shadows.sm,
+  },
+  commissionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.md,
+  },
+  promotionsCard: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.md,
+  },
+  promotionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  promotionsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  promoType: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  promoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  limitsCard: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.md,
+  },
+  limitsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  limitItem: {
+    marginBottom: Spacing.md,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    marginTop: 4,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 4,
   },
 });

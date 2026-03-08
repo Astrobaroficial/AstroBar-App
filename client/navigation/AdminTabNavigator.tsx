@@ -2,11 +2,10 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 
-import AdminScreenNew from "@/screens/AdminScreenNew";
-import AdminTransactionsMonitor from "@/screens/AdminTransactionsMonitor";
-import AdminPromotionsDashboard from "@/screens/AdminPromotionsDashboard";
-import AdminCommissionsManager from "@/screens/AdminCommissionsManager";
-import AdminBusinessApproval from "@/screens/AdminBusinessApproval";
+import AdminDashboard from "@/screens/AdminDashboard";
+import AdminManagement from "@/screens/AdminManagement";
+import AdminOperations from "@/screens/AdminOperations";
+import AdminSettings from "@/screens/AdminSettings";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -34,8 +33,8 @@ export default function AdminTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="AdminDashboard"
-        component={AdminScreenNew}
+        name="Dashboard"
+        component={AdminDashboard}
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
@@ -44,47 +43,37 @@ export default function AdminTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="AdminPromotions"
-        component={AdminPromotionsDashboard}
+        name="Management"
+        component={AdminManagement}
         options={{
-          title: "Promociones",
+          title: "Gestión",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="zap" size={size} color={color} />
+            <Feather name="users" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="AdminTransactions"
-        component={AdminTransactionsMonitor}
+        name="Operations"
+        component={AdminOperations}
         options={{
-          title: "Transacciones",
+          title: "Operaciones",
           tabBarIcon: ({ color, size }) => (
             <Feather name="activity" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="AdminCommissions"
-        component={AdminCommissionsManager}
+        name="Settings"
+        component={AdminSettings}
         options={{
-          title: "Comisiones",
+          title: "Configuración",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="dollar-sign" size={size} color={color} />
+            <Feather name="settings" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="AdminBusinesses"
-        component={AdminBusinessApproval}
-        options={{
-          title: "Bares",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="briefcase" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="AdminProfile"
+        name="Profile"
         component={ProfileScreen}
         options={{
           title: "Perfil",

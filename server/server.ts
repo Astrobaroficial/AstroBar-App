@@ -92,6 +92,11 @@ import phase2Routes from './routes/phase2Routes';
 console.log('🚀 Registering FASE 2 routes at /api/phase2');
 app.use('/api/phase2', phase2Routes);
 
+// Admin Complete routes
+import adminCompleteRoutes from './routes/adminCompleteRoutes';
+console.log('🔧 Registering Admin Complete routes at /api/admin-complete');
+app.use('/api/admin-complete', adminCompleteRoutes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed

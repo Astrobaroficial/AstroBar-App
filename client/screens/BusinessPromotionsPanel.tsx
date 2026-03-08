@@ -84,9 +84,10 @@ export default function BusinessPromotionsPanel() {
     const stockPercentage = (item.stockRemaining / item.stock) * 100;
     const isLowStock = stockPercentage < 20;
     const timeRemaining = getTimeRemaining(item.endTime);
+    const isExpired = timeRemaining === 'Expirada';
 
     return (
-      <View style={[styles.card, item.type === 'flash' && styles.flashCard]}>
+      <View style={[styles.card, item.type === 'flash' && styles.flashCard, !item.isActive && styles.inactiveCard]}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{item.title}</Text>
@@ -96,10 +97,16 @@ export default function BusinessPromotionsPanel() {
                 <Text style={styles.flashText}>FLASH</Text>
               </View>
             )}
+            {!item.isActive && (
+              <View style={[styles.flashBadge, { backgroundColor: '#666' }]}>
+                <Text style={styles.flashText}>PAUSADA</Text>
+              </View>
+            )}
           </View>
           <TouchableOpacity
             onPress={() => togglePromotion(item.id, item.isActive)}
             style={[styles.statusBtn, !item.isActive && styles.inactiveBtn]}
+            disabled={isExpired}
           >
             <Ionicons
               name={item.isActive ? 'pause' : 'play'}
@@ -115,14 +122,20 @@ export default function BusinessPromotionsPanel() {
             <Text style={[styles.statValue, isLowStock && styles.lowStock]}>
               {item.stockRemaining}/{item.stock}
             </Text>
+            {isLowStock && item.stockRemaining > 0 && (
+              <Text style={styles.alertText}>¡Bajo!</Text>
+            )}
+            {item.stockRemaining === 0 && (
+              <Text style={styles.alertText}>Agotado</Text>
+            )}
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Tiempo</Text>
-            <Text style={styles.statValue}>{timeRemaining}</Text>
+            <Text style={[styles.statValue, isExpired && styles.lowStock]}>{timeRemaining}</Text>
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Precio</Text>
-            <Text style={styles.statValue}>${item.promoPrice}</Text>
+            <Text style={styles.statValue}>${(item.promoPrice / 100).toFixed(2)}</Text>
           </View>
         </View>
 
@@ -134,6 +147,11 @@ export default function BusinessPromotionsPanel() {
               isLowStock && styles.lowStockBar,
             ]}
           />
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Vendidos: {item.stockConsumed}</Text>
+          <Text style={styles.footerText}>Inicio: {new Date(item.startTime).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</Text>
         </View>
       </View>
     );
@@ -269,6 +287,10 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 3 },
   lowStockBar: { backgroundColor: '#FF5252' },
+  alertText: { fontSize: 10, color: '#FF5252', fontWeight: 'bold', marginTop: 2 },
+  inactiveCard: { opacity: 0.6 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#2A2F4A' },
+  footerText: { fontSize: 11, color: '#999' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { color: '#666', fontSize: 16, marginTop: 16 },
   emptySubtext: { color: '#666', fontSize: 14, marginTop: 8, textAlign: 'center' },

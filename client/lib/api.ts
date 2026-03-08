@@ -12,10 +12,20 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('@astrobar_user');
-    if (token) {
-      const user = JSON.parse(token);
-      config.headers.Authorization = `Bearer ${user.token}`;
+    try {
+      const userStr = await AsyncStorage.getItem('@AstroBar_user');
+      console.log('Token check:', userStr ? 'Found' : 'Not found');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+          console.log('Token added to request');
+        } else {
+          console.log('No token in user object');
+        }
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
     }
     return config;
   },

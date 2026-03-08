@@ -18,8 +18,13 @@ function createConnectionConfig() {
       password: url.password,
       database: url.pathname.slice(1), // Remove leading /
       waitForConnections: true,
-      connectionLimit: 10,
+      connectionLimit: 5,
+      maxIdle: 5,
+      idleTimeout: 60000,
       queueLimit: 0,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 10000,
+      connectTimeout: 20000,
     };
 
     const urlCharset = url.searchParams.get('charset') || undefined;
@@ -71,8 +76,13 @@ function createConnectionConfig() {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5,
+    maxIdle: 5,
+    idleTimeout: 60000,
     queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+    connectTimeout: 20000,
   };
 
   const fallbackCharset = process.env.DB_CHARSET || 'utf8mb4';
