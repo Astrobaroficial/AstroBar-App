@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Platform } from "react-native";
 import { Alert } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -18,6 +19,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 import { useOrderCart } from "@/contexts/OrderCartContext";
+import { Platform } from "react-native";
 
 interface Product {
   id: string;
@@ -50,7 +52,8 @@ export default function BarMenuScreen() {
   const [loading, setLoading] = useState(true);
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const { addItem, getItemCount, currentBusinessId } = useOrderCart();
+  const [toast, setToast] = useState<string | null>(null);
+  const { addItem, getItemCount, currentBusinessId, clearCart } = useOrderCart();
 
   useEffect(() => {
     loadMenu();
@@ -83,27 +86,33 @@ export default function BarMenuScreen() {
 
   const handleAddToCart = (product: Product) => {
     if (!product.isAvailable) {
-      Alert.alert("No disponible", "Este producto no está disponible en este momento");
+      showToast("Producto no disponible");
       return;
     }
 
-    // Verificar si hay productos de otro bar
     if (currentBusinessId && currentBusinessId !== businessId) {
-      Alert.alert(
-        "Carrito de otro bar",
-        "Ya tienes productos de otro bar. ¿Deseas vaciar el carrito y agregar este producto?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Vaciar y agregar",
-            style: "destructive",
-            onPress: () => {
-              // TODO: clearCart() y luego addItem
-              addItemToCart(product);
+      if (Platform.OS === 'web') {
+        if (confirm('Ya tienes productos de otro bar. ¿Vaciar carrito y agregar este producto?')) {
+          clearCart();
+          addItemToCart(product);
+        }
+      } else {
+        Alert.alert(
+          "Carrito de otro bar",
+          "Ya tienes productos de otro bar. ¿Deseas vaciar el carrito y agregar este producto?",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Vaciar y agregar",
+              style: "destructive",
+              onPress: () => {
+                clearCart();
+                addItemToCart(product);
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      }
       return;
     }
 
@@ -120,10 +129,15 @@ export default function BarMenuScreen() {
         businessName: menuData?.business.name || '',
         image: product.image,
       });
-      Alert.alert("✓ Agregado", `${product.name} agregado al carrito`);
+      showToast(`✓ ${product.name} agregado`);
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      showToast(error.message);
     }
+  };
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
   };
 
   if (loading) {
@@ -262,6 +276,14 @@ export default function BarMenuScreen() {
           </View>
         )}
       </ScrollView>
+
+      {toast && (
+        <View style={[styles.toast, { backgroundColor: AstroBarColors.primary }]}>
+          <ThemedText style={{ color: '#FFFFFF', fontWeight: '600' }}>
+            {toast}
+          </ThemedText>
+        </View>
+      )}
     </LinearGradient>
   );
 }
@@ -352,5 +374,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.xl * 2,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 100,
+    left: 20,
+    right: 20,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    ...Shadows.lg,
   },
 });
