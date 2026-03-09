@@ -6,6 +6,9 @@ import { Image } from "expo-image";
 import HomeScreen from "@/screens/HomeScreen";
 import BusinessListScreen from "@/screens/BusinessListScreen";
 import MapScreen from "@/screens/MapScreen";
+import ActivePromotionsScreen from "@/screens/ActivePromotionsScreen";
+import PromotionsListScreen from "@/screens/PromotionsListScreen";
+import PromotionDetailScreen from "@/screens/PromotionDetailScreen";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
@@ -15,6 +18,9 @@ export type HomeStackParamList = {
   Home: undefined;
   BusinessList: undefined;
   Map: undefined;
+  ActivePromotions: undefined;
+  PromotionsList: undefined;
+  PromotionDetail: { promotionId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -55,6 +61,21 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="Map"
         component={MapScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ActivePromotions"
+        component={ActivePromotionsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PromotionsList"
+        component={PromotionsListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PromotionDetail"
+        component={PromotionDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

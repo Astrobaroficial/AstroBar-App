@@ -655,7 +655,16 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Business not found" });
     }
     
-    res.json({ success: true, business });
+    // Get products for this business ONLY
+    const businessProducts = await db.select().from(products).where(eq(products.businessId, id));
+    
+    res.json({ 
+      success: true, 
+      business: {
+        ...business,
+        products: businessProducts
+      }
+    });
   } catch (error: any) {
     console.error('Get business error:', error);
     res.status(500).json({ error: error.message });

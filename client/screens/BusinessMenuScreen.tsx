@@ -244,14 +244,14 @@ export default function BusinessMenuScreen() {
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessPromotions')}
         >
-          <Feather name="megaphone" size={20} color="#999" />
+          <Feather name="volume-2" size={20} color="#999" />
           <Text style={[styles.navButtonText, { color: '#999' }]}>Promociones</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.navButton, styles.navButtonActive]}
           onPress={() => {}}
         >
-          <Feather name="restaurant" size={20} color="#FFD700" />
+          <Feather name="coffee" size={20} color="#FFD700" />
           <Text style={styles.navButtonText}>Menú</Text>
         </TouchableOpacity>
         <TouchableOpacity

@@ -52,37 +52,32 @@ export default function BusinessListScreen() {
 
   const loadBusinesses = useCallback(async () => {
     try {
-      const response = await apiRequest("GET", "/api/businesses");
+      const response = await apiRequest("GET", "/api/promotions");
       const data = await response.json();
+      const rawPromotions = data.promotions || [];
       
-      const rawBusinesses = data.businesses || [];
-      
-      if (rawBusinesses.length > 0) {
-        
-      }
-
-      const businessList: Business[] = rawBusinesses.map((b: any) => ({
-        id: b.id,
-        name: b.name,
-        description: b.description || "",
-        type: b.type || "bar",
-        profileImage: b.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
-        bannerImage: b.coverImage || b.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
-        rating: (b.rating || 0) / 100,
-        reviewCount: b.totalRatings || 0,
-        deliveryTime: "Abierto hasta 3:00 AM",
-        deliveryFee: 0,
-        minimumOrder: 0,
-        isOpen: b.isActive ?? false,
+      // Map promotions to Business format for display
+      const businessList: Business[] = rawPromotions.map((p: any) => ({
+        id: p.id,
+        name: p.title,
+        description: p.description || "",
+        type: p.type === 'flash' ? 'flash' : 'bar',
+        profileImage: p.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
+        bannerImage: p.image || "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
+        rating: 4.5,
+        reviewCount: 0,
+        deliveryTime: p.type === 'flash' ? 'Flash' : 'Común',
+        deliveryFee: p.promoPrice / 100,
+        minimumOrder: p.originalPrice / 100,
+        isOpen: p.isActive ?? false,
         openingHours: [],
-        address: b.address || "Buenos Aires, Argentina",
-        phone: b.phone || "",
-        categories: b.categories ? b.categories.split(",") : ["Bar", "Bebidas"],
+        address: p.business?.address || p.businessName || "Buenos Aires",
+        phone: "",
+        categories: [p.type === 'flash' ? 'Flash' : 'Común'],
         acceptsCash: true,
-        featured: b.isFeatured || false,
+        featured: p.type === 'flash',
       }));
 
-      
       setBusinesses(businessList);
     } catch (error) {
       console.error("Error loading businesses:", error);
@@ -356,7 +351,7 @@ export default function BusinessListScreen() {
                 style={[styles.emptyText, { color: theme.textSecondary }]}
               >
                 No encontramos bares con esos filtros.{"\n"}Intenta con otra
-                b�squeda.
+                b�squeda.
               </ThemedText>
               {hasActiveFilters ? (
                 <Pressable
@@ -504,3 +499,5 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
   },
 });
+
+

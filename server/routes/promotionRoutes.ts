@@ -168,9 +168,9 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
     const commissionRate = Array.isArray(commissionResult[0]) ? commissionResult[0][0]?.commission : commissionResult[0]?.commission;
     const platformCommissionRate = Number(commissionRate || 0.30);
     
-    const promoPrice = promotion.promoPrice; // Bar receives this
+    const promoPrice = promotion.promoPrice; // Bar receives this (en centavos)
     const platformCommission = Math.round(promoPrice * platformCommissionRate); // Commission based on bar config
-    const totalAmount = promoPrice + platformCommission; // User pays this
+    const totalAmount = promoPrice + platformCommission; // User pays this (en centavos)
 
     // Generate unique QR code
     const qrCode = `ASTRO-${uuidv4().substring(0, 8).toUpperCase()}`;

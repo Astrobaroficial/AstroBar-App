@@ -76,7 +76,7 @@ export default function MyQRsScreen() {
           </ThemedText>
         </View>
         <ThemedText type="h4" style={{ color: AstroBarColors.success }}>
-          ${(item.amountPaid / 100).toFixed(2)}
+          ${item.amountPaid.toLocaleString('es-AR')}
         </ThemedText>
       </View>
     </Pressable>

@@ -90,7 +90,7 @@ export default function ActivePromotionsScreen() {
   };
 
   const handleCancel = async () => {
-    if (!activeTransaction || !canCancel) return;
+    if (!activeTransaction) return;
 
     setIsCancelling(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -127,7 +127,7 @@ export default function ActivePromotionsScreen() {
         style={styles.container}
       >
         <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-          <Pressable onPress={() => navigation.goBack()}>
+          <Pressable onPress={() => navigation.navigate('Home' as never)}>
             <Feather name="arrow-left" size={24} color="#FFFFFF" />
           </Pressable>
           <ThemedText type="h3" style={{ color: '#FFFFFF' }}>
@@ -164,7 +164,7 @@ export default function ActivePromotionsScreen() {
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable onPress={() => navigation.navigate('Home' as never)}>
           <Feather name="arrow-left" size={24} color="#FFFFFF" />
         </Pressable>
         <ThemedText type="h3" style={{ color: '#FFFFFF' }}>
@@ -227,7 +227,7 @@ export default function ActivePromotionsScreen() {
                 Total pagado
               </ThemedText>
               <ThemedText type="h3" style={{ color: '#4CAF50' }}>
-                ${activeTransaction.amountPaid.toFixed(2)}
+                ${activeTransaction.amountPaid.toLocaleString('es-AR')}
               </ThemedText>
             </View>
           </View>
@@ -259,19 +259,21 @@ export default function ActivePromotionsScreen() {
         </View>
 
         {/* Buttons */}
-        {canCancel && (
-          <Button
-            onPress={handleCancel}
-            disabled={isCancelling}
-            style={[styles.cancelButton, { backgroundColor: '#F44336' }]}
-          >
-            {isCancelling ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              'CANCELAR PROMOCIÓN'
-            )}
-          </Button>
-        )}
+        <Button
+          onPress={handleCancel}
+          disabled={isCancelling || activeTransaction.status !== 'pending'}
+          style={[styles.cancelButton, { backgroundColor: canCancel ? '#F44336' : '#666' }]}
+        >
+          {isCancelling ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : canCancel ? (
+            'CANCELAR PROMOCIÓN'
+          ) : activeTransaction.status !== 'pending' ? (
+            'YA CANJEADA'
+          ) : (
+            'CANCELAR (TIEMPO EXPIRADO)'
+          )}
+        </Button>
       </ScrollView>
     </LinearGradient>
   );

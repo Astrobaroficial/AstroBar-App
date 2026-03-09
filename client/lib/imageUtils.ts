@@ -1,6 +1,23 @@
 import { getApiUrl } from "./query-client";
 
 /**
+ * Agrega un parámetro de versión a una URL para evitar caché.
+ * NO lo agrega si la URL es Base64 (data:image).
+ */
+export function addCacheBuster(url: string, version?: number): string {
+  if (!url) return "";
+  
+  // No agregar cache buster a imágenes Base64
+  if (url.startsWith('data:image')) {
+    return url;
+  }
+  
+  const timestamp = version || Date.now();
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${timestamp}`;
+}
+
+/**
  * Resuelve la URL de una imagen de perfil.
  * Si la imagen es un data URI base64, la devuelve directamente.
  * Si es una URL relativa, la concatena con la URL del backend.
@@ -11,9 +28,10 @@ export function resolveProfileImageUrl(profileImage: string | null | undefined):
     return "";
   }
 
-  // Si ya es un data URI base64, devolverlo directamente
+  // Si ya es un data URI base64, devolverlo directamente (sin query params)
   if (profileImage.startsWith('data:image')) {
-    return profileImage;
+    // Remover cualquier query param que pueda tener
+    return profileImage.split('?')[0];
   }
 
   const apiBase = getApiUrl().replace(/\/+$/, "");

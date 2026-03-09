@@ -77,7 +77,7 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      // Obtener ubicaciÛn del usuario
+      // Obtener ubicaciÔøΩn del usuario
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
@@ -91,7 +91,7 @@ export default function HomeScreen() {
         
       }
 
-      const response = await apiRequest('GET', '/api/businesses');
+      const response = await apiRequest('GET', '/api/public/businesses');
       const data = await response.json();
       const rawBusinesses = data.businesses || [];
       
@@ -112,7 +112,7 @@ export default function HomeScreen() {
         minimumOrder: (b.min_order || 5000) / 100, // Convertir de centavos a pesos
         isOpen: b.isOpen ?? b.is_open ?? false,
         openingHours: [],
-        address: b.address || 'Autl·n, Argentina',
+        address: b.address || 'AutlÔøΩn, Argentina',
         phone: b.phone || '',
         categories: b.categories ? b.categories.split(',') : [],
         acceptsCash: true,
@@ -175,7 +175,7 @@ export default function HomeScreen() {
       if (activeFilter) {
         switch (activeFilter) {
           case "cercano":
-            // Filtrar por distancia (implementar con geolocalizaciÛn)
+            // Filtrar por distancia (implementar con geolocalizaciÔøΩn)
             break;
           case "flash":
             // Filtrar bares con promociones flash activas
@@ -267,7 +267,7 @@ export default function HomeScreen() {
               AstroBar ??
             </ThemedText>
             <ThemedText type="body" style={styles.bannerSubtitle}>
-              Promociones Nocturnas ∑ Buenos Aires
+              Promociones Nocturnas ÔøΩ Buenos Aires
             </ThemedText>
           </LinearGradient>
         </Animated.View>
@@ -278,7 +278,7 @@ export default function HomeScreen() {
           style={styles.questionContainer}
         >
           <ThemedText type="h1" style={styles.questionText}>
-            øQuÈ bar visitar·s esta noche?
+            ÔøΩQuÔøΩ bar visitarÔøΩs esta noche?
           </ThemedText>
         </Animated.View>
 
@@ -296,7 +296,7 @@ export default function HomeScreen() {
               { id: "flash", icon: "zap", label: "Flash", color: "#FFD700" },
               { id: "bar", icon: "coffee", label: "Bares", color: "#E91E63" },
               { id: "nightclub", icon: "music", label: "Discotecas", color: "#9C27B0" },
-              { id: "pub", icon: "beer", label: "Pubs", color: "#FF5722" },
+              { id: "pub", icon: "coffee", label: "Pubs", color: "#FF5722" },
               { id: "lounge", icon: "moon", label: "Lounges", color: "#3F51B5" },
               { id: "promo", icon: "gift", label: "Promos", color: "#00BCD4" },
             ].map((item) => {
@@ -359,7 +359,7 @@ export default function HomeScreen() {
           <Feather name="search" size={20} color={theme.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: theme.text }]}
-            placeholder="Buscar bar o promociÛn..."
+            placeholder="Buscar bar o promociÔøΩn..."
             placeholderTextColor={theme.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -567,7 +567,7 @@ export default function HomeScreen() {
             {!hasActiveFilters ? (
               <View style={styles.section}>
                 <ThemedText type="h3" style={styles.sectionTitle}>
-                  Restaurantes populares
+                  AstroBares populares
                 </ThemedText>
                 {featuredBusinesses.length > 0 ? (
                   <Pressable
@@ -604,20 +604,7 @@ export default function HomeScreen() {
                       <View style={styles.featuredMeta}>
                         <View style={styles.metaItem}>
                           <Feather
-                            name="zap"
-                            size={12}
-                            color={AstroBarColors.primary}
-                          />
-                          <ThemedText
-                            type="small"
-                            style={{ color: AstroBarColors.primary, marginLeft: 4 }}
-                          >
-                            Rapido
-                          </ThemedText>
-                        </View>
-                        <View style={styles.metaItem}>
-                          <Feather
-                            name="clock"
+                            name="map-pin"
                             size={12}
                             color={theme.textSecondary}
                           />
@@ -628,7 +615,7 @@ export default function HomeScreen() {
                               marginLeft: 4,
                             }}
                           >
-                            {featuredBusinesses[0].deliveryTime}
+                            {featuredBusinesses[0].address || 'Buenos Aires'}
                           </ThemedText>
                         </View>
                         <View style={styles.metaItem}>
@@ -676,30 +663,6 @@ export default function HomeScreen() {
                       {business.name}
                     </ThemedText>
                     <View style={styles.gridMeta}>
-                      {index === 0 ? (
-                        <View style={styles.flashBadge}>
-                          <Feather
-                            name="zap"
-                            size={10}
-                            color="#FFD700"
-                          />
-                          <ThemedText
-                            type="caption"
-                            style={{ color: "#FFD700", marginLeft: 2 }}
-                          >
-                            FLASH
-                          </ThemedText>
-                        </View>
-                      ) : index === 1 ? (
-                        <View style={styles.popularSmallBadge}>
-                          <ThemedText
-                            type="caption"
-                            style={{ color: AstroBarColors.primary }}
-                          >
-                            POPULAR
-                          </ThemedText>
-                        </View>
-                      ) : null}
                       <View style={styles.ratingSmall}>
                         <ThemedText type="caption">
                           {business.rating}
@@ -725,7 +688,7 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {/* Mapa de Bares - BotÛn Principal */}
+            {/* Mapa de Bares - BotÔøΩn Principal */}
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
               style={styles.section}
@@ -772,7 +735,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Promociones Flash - BotÛn Secundario */}
+            {/* Promociones Flash - BotÔøΩn Secundario */}
             <Animated.View
               entering={FadeInDown.delay(350).springify()}
               style={styles.section}
@@ -780,7 +743,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  navigation.navigate("BusinessList");
+                  navigation.navigate("PromotionsList");
                 }}
                 style={({ pressed }) => [
                   styles.marketsBanner,
@@ -808,6 +771,53 @@ export default function HomeScreen() {
                       <View style={styles.marketsCTA}>
                         <ThemedText type="small" style={styles.marketsSubtitle}>
                           Ofertas por tiempo limitado ?
+                        </ThemedText>
+                      </View>
+                    </View>
+                    <View style={styles.marketsArrow}>
+                      <Feather name="chevron-right" size={24} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+
+            {/* Promociones Comunes - Bot√≥n Terciario */}
+            <Animated.View
+              entering={FadeInDown.delay(400).springify()}
+              style={styles.section}
+            >
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  navigation.navigate("AllPromotions");
+                }}
+                style={({ pressed }) => [
+                  styles.marketsBanner,
+                  {
+                    backgroundColor: "#4CAF50",
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  },
+                  Shadows.md,
+                ]}
+              >
+                <LinearGradient
+                  colors={["#4CAF50", "#388E3C", "#2E7D32"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.marketsGradient}
+                >
+                  <View style={styles.marketsContent}>
+                    <View style={styles.marketsIconContainer}>
+                      <Feather name="gift" size={32} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.marketsTextContainer}>
+                      <ThemedText type="h3" style={styles.marketsTitle}>
+                        Promociones Comunes üéÅ
+                      </ThemedText>
+                      <View style={styles.marketsCTA}>
+                        <ThemedText type="small" style={styles.marketsSubtitle}>
+                          Ofertas programadas y especiales
                         </ThemedText>
                       </View>
                     </View>

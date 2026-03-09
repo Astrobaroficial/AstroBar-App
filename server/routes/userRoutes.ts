@@ -181,4 +181,73 @@ router.post("/profile-image", authenticateToken, async (req, res) => {
   }
 });
 
+// Get wallet stats for customer
+router.get("/wallet-stats", authenticateToken, async (req, res) => {
+  try {
+    const { promotionTransactions } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and, gte, sql } = await import("drizzle-orm");
+
+    const userId = req.user!.id;
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Total spent (all redeemed transactions)
+    const allTransactions = await db
+      .select({ amountPaid: promotionTransactions.amountPaid })
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.status, 'redeemed')
+        )
+      );
+
+    const totalEarnings = allTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
+    const totalTransactions = allTransactions.length;
+
+    // This month spending
+    const monthTransactions = await db
+      .select({ amountPaid: promotionTransactions.amountPaid })
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.status, 'redeemed'),
+          gte(promotionTransactions.redeemedAt, firstDayOfMonth)
+        )
+      );
+
+    const thisMonthEarnings = monthTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
+
+    // Pending (accepted but not redeemed)
+    const pendingTransactions = await db
+      .select({ amountPaid: promotionTransactions.amountPaid })
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.userId, userId),
+          eq(promotionTransactions.status, 'accepted')
+        )
+      );
+
+    const pendingPayouts = pendingTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
+
+    res.json({
+      success: true,
+      stats: {
+        totalEarnings,
+        pendingPayouts,
+        thisMonthEarnings,
+        totalTransactions,
+        platformCommission: 0.10, // 10% for display
+        averageOrderValue: totalTransactions > 0 ? totalEarnings / totalTransactions : 0,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error loading wallet stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

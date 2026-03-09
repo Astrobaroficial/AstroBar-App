@@ -38,11 +38,19 @@ export default function WalletScreen() {
 
   useEffect(() => {
     loadWalletStats();
-  }, []);
+  }, [user?.role]);
 
   const loadWalletStats = async () => {
     try {
-      const response = await apiRequest('GET', '/api/business/wallet-stats');
+      let endpoint = '/api/business/wallet-stats';
+      
+      if (user?.role === 'customer') {
+        endpoint = '/api/user/wallet-stats';
+      } else if (user?.role === 'admin' || user?.role === 'super_admin') {
+        endpoint = '/api/admin/wallet-stats';
+      }
+      
+      const response = await apiRequest('GET', endpoint);
       const data = await response.json();
       if (data.success) {
         setStats(data.stats);
@@ -85,7 +93,7 @@ export default function WalletScreen() {
           <View style={styles.balanceHeader}>
             <Feather name="dollar-sign" size={24} color="#FFFFFF" />
             <ThemedText type="body" style={{ color: '#FFFFFF', opacity: 0.9 }}>
-              Balance Total
+              {user?.role === 'customer' ? 'Total Gastado' : user?.role === 'admin' || user?.role === 'super_admin' ? 'Ingresos Plataforma' : 'Balance Total'}
             </ThemedText>
           </View>
           <ThemedText type="h1" style={{ color: '#FFFFFF', marginVertical: Spacing.sm }}>
@@ -99,9 +107,11 @@ export default function WalletScreen() {
               </ThemedText>
             </View>
             <View style={styles.balanceItem}>
-              <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>Comisión</ThemedText>
+              <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>
+                {user?.role === 'customer' ? 'Promociones' : 'Comisión'}
+              </ThemedText>
               <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                {loading ? '...' : `${((stats?.platformCommission || 0) * 100).toFixed(0)}%`}
+                {loading ? '...' : user?.role === 'customer' ? stats?.totalTransactions || 0 : `${((stats?.platformCommission || 0) * 100).toFixed(0)}%`}
               </ThemedText>
             </View>
           </View>
@@ -146,27 +156,31 @@ export default function WalletScreen() {
             </View>
             <View style={styles.actionContent}>
               <ThemedText type="body">Mercado Pago</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Conectar cuenta para recibir pagos</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                {user?.role === 'customer' ? 'Gestionar métodos de pago' : 'Conectar cuenta para recibir pagos'}
+              </ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
 
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: theme.border }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('WithdrawalRequest');
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
-              <Feather name="download" size={20} color={AstroBarColors.primary} />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Solicitar Retiro</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Transferir ganancias a tu cuenta</ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
+          {user?.role !== 'customer' && (
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('WithdrawalRequest');
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
+                <Feather name="download" size={20} color={AstroBarColors.primary} />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Solicitar Retiro</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Transferir ganancias a tu cuenta</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          )}
 
           <Pressable
             style={[styles.actionItem, { borderBottomColor: theme.border }]}
@@ -179,42 +193,50 @@ export default function WalletScreen() {
               <Feather name="file-text" size={20} color={AstroBarColors.info} />
             </View>
             <View style={styles.actionContent}>
-              <ThemedText type="body">Historial de Pagos</ThemedText>
+              <ThemedText type="body">
+                {user?.role === 'customer' ? 'Historial de Compras' : user?.role === 'admin' || user?.role === 'super_admin' ? 'Todas las Transacciones' : 'Historial de Pagos'}
+              </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary }}>Ver todas las transacciones</ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
 
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: theme.border }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('BankAccountSetup');
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.warningLight }]}>
-              <Feather name="settings" size={20} color={AstroBarColors.warning} />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Configurar Cuenta Bancaria</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Agregar datos para retiros</ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
+          {user?.role !== 'customer' && (
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('BankAccountSetup');
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.warningLight }]}>
+                <Feather name="settings" size={20} color={AstroBarColors.warning} />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Configurar Cuenta Bancaria</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Agregar datos para retiros</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          )}
 
           <Pressable
             style={styles.actionItem}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('StripeConnectStatus');
+              navigation.navigate(user?.role === 'customer' ? 'MercadoPagoConnect' : 'StripeConnectStatus' as any);
             }}
           >
             <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.successLight }]}>
               <Feather name="credit-card" size={20} color={AstroBarColors.success} />
             </View>
             <View style={styles.actionContent}>
-              <ThemedText type="body">Estado Stripe Connect</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Verificar cuenta de pagos</ThemedText>
+              <ThemedText type="body">
+                {user?.role === 'customer' ? 'Tarjetas Guardadas' : 'Estado Stripe Connect'}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                {user?.role === 'customer' ? 'Gestionar tarjetas de crédito/débito' : 'Verificar cuenta de pagos'}
+              </ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
@@ -226,9 +248,13 @@ export default function WalletScreen() {
           <View style={{ flex: 1, marginLeft: Spacing.sm }}>
             <ThemedText type="body" style={{ color: AstroBarColors.info, fontWeight: '600' }}>Información Importante</ThemedText>
             <ThemedText type="small" style={{ color: AstroBarColors.info, marginTop: Spacing.xs }}>
-              • Recibes el 100% del precio de tus productos{"\n"}
-              • La comisión se cobra adicional al cliente{"\n"}
-              • Los retiros se procesan en 2-3 días hábiles
+              {user?.role === 'customer' ? (
+                '• Todos los pagos se procesan con Mercado Pago\n• Tus tarjetas están protegidas y encriptadas\n• Recibes 10 puntos por cada promoción canjeada'
+              ) : user?.role === 'admin' || user?.role === 'super_admin' ? (
+                '• Ingresos totales de comisiones de la plataforma\n• Pagos procesados con Stripe y Mercado Pago\n• Reportes detallados disponibles en el panel admin'
+              ) : (
+                '• Recibes el 100% del precio de tus productos\n• La comisión se cobra adicional al cliente\n• Los retiros se procesan en 2-3 días hábiles'
+              )}
             </ThemedText>
           </View>
         </View>

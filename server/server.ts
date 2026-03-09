@@ -97,6 +97,11 @@ import adminCompleteRoutes from './routes/adminCompleteRoutes';
 
 app.use('/api/admin-complete', adminCompleteRoutes);
 
+// Public routes
+import publicRoutes from './routes/publicRoutes';
+
+app.use('/api/public', publicRoutes);
+
 // Order routes
 import orderRoutes from './routes/orderRoutes';
 
