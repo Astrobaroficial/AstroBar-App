@@ -1,96 +1,54 @@
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-}
+import chalk from 'chalk';
 
-interface LogContext {
-  userId?: string;
-  orderId?: string;
-  businessId?: string;
-  action?: string;
-  [key: string]: any;
-}
+type LogLevel = 'info' | 'success' | 'warning' | 'error' | 'debug';
 
 class Logger {
-  private minLevel: LogLevel | null = null;
+  private isDevelopment = process.env.NODE_ENV === 'development';
 
-  private getMinLevel(): LogLevel {
-    if (this.minLevel === null) {
-      this.minLevel = process.env.NODE_ENV === "production" ? LogLevel.INFO : LogLevel.DEBUG;
-    }
-    return this.minLevel;
-  }
-
-  private formatMessage(
-    level: string,
-    message: string,
-    context?: LogContext,
-  ): string {
+  private formatMessage(level: LogLevel, message: string, data?: any): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : "";
-    return `[${timestamp}] ${level}: ${message}${contextStr}`;
+    const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+    
+    let formattedMessage = `${prefix} ${message}`;
+    if (data) {
+      formattedMessage += ` ${JSON.stringify(data)}`;
+    }
+    
+    return formattedMessage;
   }
 
-  private shouldLog(level: LogLevel): boolean {
-    return level >= this.getMinLevel();
-  }
-
-  debug(message: string, context?: LogContext): void {
-    if (this.shouldLog(LogLevel.DEBUG)) {
-      console.log(this.formatMessage("DEBUG", message, context));
+  info(message: string, data?: any) {
+    if (this.isDevelopment) {
+      console.log(chalk.blue(this.formatMessage('info', message, data)));
     }
   }
 
-  info(message: string, context?: LogContext): void {
-    if (this.shouldLog(LogLevel.INFO)) {
-      console.log(this.formatMessage("INFO", message, context));
+  success(message: string, data?: any) {
+    console.log(chalk.green(this.formatMessage('success', message, data)));
+  }
+
+  warning(message: string, data?: any) {
+    console.log(chalk.yellow(this.formatMessage('warning', message, data)));
+  }
+
+  error(message: string, error?: any) {
+    console.error(chalk.red(this.formatMessage('error', message, error?.message || error)));
+    if (error?.stack && this.isDevelopment) {
+      console.error(chalk.red(error.stack));
     }
   }
 
-  warn(message: string, context?: LogContext): void {
-    if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage("WARN", message, context));
+  debug(message: string, data?: any) {
+    if (this.isDevelopment) {
+      console.log(chalk.gray(this.formatMessage('debug', message, data)));
     }
   }
 
-  error(message: string, error?: Error | unknown, context?: LogContext): void {
-    if (this.shouldLog(LogLevel.ERROR)) {
-      const errorContext = {
-        ...context,
-        error:
-          error instanceof Error
-            ? {
-                message: error.message,
-                stack: error.stack,
-                name: error.name,
-              }
-            : error,
-      };
-      console.error(this.formatMessage("ERROR", message, errorContext));
-    }
-  }
-
-  // Specific loggers for common operations
-  payment(message: string, context: LogContext): void {
-    this.info(`[PAYMENT] ${message}`, context);
-  }
-
-  order(message: string, context: LogContext): void {
-    this.info(`[ORDER] ${message}`, context);
-  }
-
-  delivery(message: string, context: LogContext): void {
-    this.info(`[DELIVERY] ${message}`, context);
-  }
-
-  webhook(message: string, context: LogContext): void {
-    this.info(`[WEBHOOK] ${message}`, context);
-  }
-
-  security(message: string, context: LogContext): void {
-    this.warn(`[SECURITY] ${message}`, context);
+  request(method: string, path: string, status?: number) {
+    if (!this.isDevelopment) return;
+    
+    const statusColor = status && status >= 400 ? chalk.red : status && status >= 300 ? chalk.yellow : chalk.green;
+    console.log(`${chalk.cyan(method)} ${path}${status ? ` ${statusColor(status)}` : ''}`);
   }
 }
 

@@ -39,12 +39,12 @@ app.use('/api/', limiter);
 
 // Request logging
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.originalUrl}`);
+  
   
   const originalSend = res.send;
   res.send = function(data) {
     if (res.statusCode >= 400) {
-      console.error(`❌ ${req.method} ${req.originalUrl} - Status: ${res.statusCode}`);
+      
     }
     return originalSend.call(this, data);
   };
@@ -84,32 +84,32 @@ app.use('/api', apiRoutes);
 
 // Admin Panel routes
 import adminPanelRoutes from './routes/adminPanelRoutes';
-console.log('🔧 Registering Admin Panel routes at /api/admin');
+
 app.use('/api/admin', adminPanelRoutes);
 
 // FASE 2 routes
 import phase2Routes from './routes/phase2Routes';
-console.log('🚀 Registering FASE 2 routes at /api/phase2');
+
 app.use('/api/phase2', phase2Routes);
 
 // Admin Complete routes
 import adminCompleteRoutes from './routes/adminCompleteRoutes';
-console.log('🔧 Registering Admin Complete routes at /api/admin-complete');
+
 app.use('/api/admin-complete', adminCompleteRoutes);
 
 // Order routes
 import orderRoutes from './routes/orderRoutes';
-console.log('🛒 Registering Order routes at /api/orders');
+
 app.use('/api/orders', orderRoutes);
 
 // Upload routes
 import uploadRoutes from './routes/uploadRoutes';
-console.log('📤 Registering Upload routes at /api/upload');
+
 app.use('/api/upload', uploadRoutes);
 
 // Mercado Pago routes
 import mercadopagoRoutes from './routes/mercadopagoRoutes';
-console.log('💳 Registering Mercado Pago routes at /api/mp');
+
 app.use('/api/mp', mercadopagoRoutes);
 
 // Favorites routes removed
@@ -150,37 +150,37 @@ if (isProduction) {
 
 // Error handling
 app.use((err: any, req: any, res: any, next: any) => {
-  console.error('Server error:', err);
+  
   res.status(500).json({ error: 'Internal server error' });
 });
 
 // 404 handler
 app.use((req, res) => {
-  console.log(`404 - ${req.method} ${req.originalUrl}`);
+  
   res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
 });
 
 // Start server
 app.listen(PORT, async () => {
-  console.log(`🌙 AstroBar Server - Buenos Aires, Argentina 🇦🇷`);
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8081'}`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  
+  
+  
   
   // Initialize audit logs table
   const { createAuditTable } = await import('./routes/auditRoutes');
   await createAuditTable();
   
   if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn('⚠️  Stripe not configured - payments disabled');
+    
   }
   if (!process.env.TWILIO_ACCOUNT_SID) {
-    console.warn('⚠️  Twilio not configured - SMS disabled');
+    
   }
   if (!process.env.GOOGLE_MAPS_API_KEY) {
-    console.warn('⚠️  Google Maps not configured');
+    
   }
   if (!process.env.EXPO_ACCESS_TOKEN) {
-    console.warn('⚠️  Expo Push Notifications not configured');
+    
   }
 });

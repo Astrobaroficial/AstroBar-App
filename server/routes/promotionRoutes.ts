@@ -674,7 +674,7 @@ router.post("/redeem", authenticateToken, requireRole("business_owner"), async (
 router.get("/business/transactions", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     const businessId = req.query.businessId as string | undefined;
-    console.log('📊 Getting business transactions for user:', req.user!.id, 'businessId:', businessId);
+    
     const { promotionTransactions, promotions, businesses, users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq, desc, and } = await import("drizzle-orm");
@@ -697,10 +697,10 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
         .limit(1);
     }
 
-    console.log('🏢 Found business:', business?.id, business?.name);
+    
 
     if (!business) {
-      console.log('❌ No business found for user');
+      
       return res.status(404).json({ error: "No tienes un bar registrado" });
     }
 
@@ -710,7 +710,7 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       .where(eq(promotionTransactions.businessId, business.id))
       .orderBy(desc(promotionTransactions.createdAt));
 
-    console.log('💰 Found transactions:', transactions.length);
+    
 
     // Enrich with promotion and user data
     const enriched = await Promise.all(
@@ -736,7 +736,7 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       })
     );
 
-    console.log('✅ Sending', enriched.length, 'transactions');
+    
     res.json({ success: true, transactions: enriched });
   } catch (error: any) {
     console.error("Error loading business transactions:", error);
