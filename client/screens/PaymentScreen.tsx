@@ -10,6 +10,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { api } from "@/lib/api";
+import { apiRequest } from "@/lib/query-client";
 
 export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
@@ -23,20 +24,31 @@ export default function PaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      const { data } = await api.post("/payments/create-intent", { userPromotionId });
+      const response = await apiRequest("POST", "/api/payments/create-intent", { userPromotionId });
+      const data = await response.json();
       
-      // Simulate payment success (in production, use Stripe SDK)
-      await api.post("/payments/confirm", {
+      if (!data.success) {
+        throw new Error(data.error || "Error al crear intención de pago");
+      }
+      
+      const confirmResponse = await apiRequest("POST", "/api/payments/confirm", {
         userPromotionId,
         paymentIntentId: data.clientSecret,
       });
+      
+      const confirmData = await confirmResponse.json();
+      
+      if (!confirmData.success) {
+        throw new Error(confirmData.error || "Error al confirmar pago");
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("¡Pago exitoso!", "Tu promoción está lista", [
         { text: "Ver QR", onPress: () => navigation.replace("QRScreen", { userPromotionId }) }
       ]);
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "No se pudo procesar el pago");
+      console.error("Payment error:", error);
+      Alert.alert("Error", error.message || "No se pudo procesar el pago");
     } finally {
       setLoading(false);
     }

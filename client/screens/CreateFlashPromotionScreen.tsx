@@ -41,6 +41,12 @@ export default function CreateFlashPromotionScreen() {
     checkLimits();
   }, []);
 
+  useEffect(() => {
+    if (showProductSelector) {
+      loadProducts();
+    }
+  }, [showProductSelector]);
+
   const checkLimits = async () => {
     try {
       const response = await apiRequest("GET", "/api/business/limits");
@@ -124,6 +130,7 @@ export default function CreateFlashPromotionScreen() {
       style={[styles.productCard, { backgroundColor: theme.card, borderColor: theme.border }]}
       onPress={() => {
         setSelectedProduct(item);
+        setDiscountedPrice("");
         setShowProductSelector(false);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }}

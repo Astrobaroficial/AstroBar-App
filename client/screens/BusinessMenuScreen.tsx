@@ -36,6 +36,7 @@ export default function BusinessMenuScreen() {
     description: "",
     image: ""
   });
+  const [editProductImage, setEditProductImage] = useState("");
   const [limits, setLimits] = useState<any>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -180,8 +181,10 @@ export default function BusinessMenuScreen() {
           name: item.name,
           category: item.category,
           price: (item.price / 100).toString(),
-          description: item.description || ""
+          description: item.description || "",
+          image: item.image || ""
         });
+        setEditProductImage(item.image || "");
         setShowEditModal(true);
       }}
     >
@@ -360,6 +363,24 @@ export default function BusinessMenuScreen() {
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Nuevo Producto</Text>
             
+            {/* Botón para subir imagen */}
+            <TouchableOpacity
+              style={[styles.imagePickerButton, { backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1 }]}
+              onPress={handlePickImage}
+              disabled={isUploadingImage}
+            >
+              {newProduct.image ? (
+                <Image source={{ uri: newProduct.image }} style={styles.previewImage} contentFit="cover" />
+              ) : (
+                <View style={{ alignItems: 'center' }}>
+                  <Feather name="camera" size={32} color={theme.textSecondary} />
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary, marginTop: 8 }]}>
+                    {isUploadingImage ? 'Subiendo...' : 'Toca para agregar foto'}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
             <TextInput
               style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
               placeholder="Nombre del producto"
@@ -418,7 +439,7 @@ export default function BusinessMenuScreen() {
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => {
                   setShowCreateModal(false);
-                  setNewProduct({ name: "", category: "Bebidas", price: "", description: "" });
+                  setNewProduct({ name: "", category: "Bebidas", price: "", description: "", image: "" });
                 }}
               >
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -436,9 +457,9 @@ export default function BusinessMenuScreen() {
                     const productData = {
                       name: newProduct.name,
                       category: newProduct.category,
-                      price: parseInt(newProduct.price) * 100, // Convertir a centavos
+                      price: parseInt(newProduct.price) * 100,
                       description: newProduct.description,
-                      image: getDefaultImage(newProduct.category), // Imagen por defecto
+                      image: newProduct.image || getDefaultImage(newProduct.category),
                       isAvailable: true
                     };
                     
@@ -447,7 +468,7 @@ export default function BusinessMenuScreen() {
                     
                     if (data.success) {
                       setShowCreateModal(false);
-                      setNewProduct({ name: "", category: "Bebidas", price: "", description: "" });
+                      setNewProduct({ name: "", category: "Bebidas", price: "", description: "", image: "" });
                       loadProducts();
                       Alert.alert("Éxito", "Producto creado correctamente");
                     }
@@ -472,6 +493,62 @@ export default function BusinessMenuScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Editar Producto</Text>
+            
+            {/* Botón para subir imagen */}
+            <TouchableOpacity
+              style={[styles.imagePickerButton, { backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1 }]}
+              onPress={async () => {
+                try {
+                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                  if (status !== 'granted') {
+                    Alert.alert('Permiso denegado', 'Necesitamos acceso a tus fotos');
+                    return;
+                  }
+
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.5,
+                  });
+
+                  if (!result.canceled && result.assets[0]) {
+                    setIsUploadingImage(true);
+                    const response = await fetch(result.assets[0].uri);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    
+                    reader.onloadend = async () => {
+                      const base64data = reader.result as string;
+                      const apiResponse = await apiRequest('POST', '/api/upload/product-image', { image: base64data });
+                      const data = await apiResponse.json();
+                      if (data.success) {
+                        setNewProduct({...newProduct, image: data.imageUrl});
+                        setEditProductImage(data.imageUrl);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      }
+                      setIsUploadingImage(false);
+                    };
+                    reader.readAsDataURL(blob);
+                  }
+                } catch (error: any) {
+                  Alert.alert('Error', 'No se pudo subir imagen');
+                  setIsUploadingImage(false);
+                }
+              }}
+              disabled={isUploadingImage}
+            >
+              {newProduct.image ? (
+                <Image source={{ uri: newProduct.image }} style={styles.previewImage} contentFit="cover" />
+              ) : (
+                <View style={{ alignItems: 'center' }}>
+                  <Feather name="camera" size={32} color={theme.textSecondary} />
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary, marginTop: 8 }]}>
+                    {isUploadingImage ? 'Subiendo...' : 'Toca para cambiar foto'}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
             
             <TextInput
               style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
@@ -532,7 +609,8 @@ export default function BusinessMenuScreen() {
                 onPress={() => {
                   setShowEditModal(false);
                   setEditingProduct(null);
-                  setNewProduct({ name: "", category: "Bebidas", price: "", description: "" });
+                  setEditProductImage("");
+                  setNewProduct({ name: "", category: "Bebidas", price: "", description: "", image: "" });
                 }}
               >
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -552,7 +630,7 @@ export default function BusinessMenuScreen() {
                       category: newProduct.category,
                       price: parseInt(newProduct.price) * 100,
                       description: newProduct.description,
-                      image: getDefaultImage(newProduct.category),
+                      image: newProduct.image || editProductImage || getDefaultImage(newProduct.category),
                       isAvailable: true
                     };
                     
@@ -562,7 +640,8 @@ export default function BusinessMenuScreen() {
                     if (data.success) {
                       setShowEditModal(false);
                       setEditingProduct(null);
-                      setNewProduct({ name: "", category: "Bebidas", price: "", description: "" });
+                      setEditProductImage("");
+                      setNewProduct({ name: "", category: "Bebidas", price: "", description: "", image: "" });
                       loadProducts();
                       Alert.alert("Éxito", "Producto actualizado correctamente");
                     }
