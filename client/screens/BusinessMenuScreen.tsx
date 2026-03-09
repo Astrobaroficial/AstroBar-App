@@ -254,6 +254,13 @@ export default function BusinessMenuScreen() {
           <Feather name="restaurant" size={20} color="#FFD700" />
           <Text style={styles.navButtonText}>Menú</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('PromotionTransactions')}
+        >
+          <Feather name="list" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Historial</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Limits Header */}

@@ -115,7 +115,7 @@ export default function PromotionTransactionsScreen() {
       <View style={styles.topNav}>
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => navigation.navigate('BusinessPromotionsPanel')}
+          onPress={() => navigation.navigate('BusinessPromotions')}
         >
           <Ionicons name="megaphone" size={20} color="#999" />
           <Text style={[styles.navButtonText, { color: '#999' }]}>Promociones</Text>
