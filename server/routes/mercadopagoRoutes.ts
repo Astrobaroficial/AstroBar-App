@@ -147,18 +147,40 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "El bar no tiene Mercado Pago conectado" });
     }
 
+    // Obtener comisión específica del bar
+    const { sql } = await import("drizzle-orm");
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission
+      FROM business_commissions
+      WHERE business_id = ${transaction.businessId}
+      LIMIT 1
+    `);
+    
+    // Usar comisión del bar o 30% por defecto
+    let commissionRate = 0.30;
+    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
+      commissionRate = parseFloat(commissionResult[0][0].platform_commission);
+    }
+
+    // Calcular montos (la transacción ya tiene los valores correctos)
+    const totalAmount = transaction.amountPaid; // Total que paga el usuario
+    const platformFee = transaction.platformCommission; // Comisión de la plataforma
+    const businessAmount = transaction.businessRevenue; // Lo que recibe el bar
+
+    console.log(`💰 Split: Usuario paga $${totalAmount/100} | Bar recibe $${businessAmount/100} | Plataforma $${platformFee/100} (${(commissionRate*100).toFixed(0)}%)`);
+
     // Crear preferencia de pago con split
     const preference = {
       items: [
         {
           title: "Promoción AstroBar",
           quantity: 1,
-          unit_price: transaction.amountPaid / 100, // Convertir de centavos a pesos
+          unit_price: totalAmount / 100, // Convertir de centavos a pesos
         },
       ],
-      marketplace_fee: transaction.platformCommission / 100, // Comisión de la plataforma
+      marketplace_fee: platformFee / 100, // Comisión de la plataforma en pesos
       external_reference: transaction.id,
-      notification_url: `https://astrobar-backend.onrender.com/api/webhooks/mercadopago`,
+      notification_url: `https://astrobar-backend.onrender.com/api/mp/webhook`,
       back_urls: {
         success: `astrobar://payment-success`,
         failure: `astrobar://payment-failure`,
@@ -187,6 +209,9 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
       success: true,
       preferenceId: data.id,
       initPoint: data.init_point, // URL para abrir checkout de MP
+      commission: `${(commissionRate*100).toFixed(0)}%`,
+      businessAmount: businessAmount / 100,
+      platformFee: platformFee / 100,
     });
   } catch (error: any) {
     console.error("Error creating MP payment:", error);
