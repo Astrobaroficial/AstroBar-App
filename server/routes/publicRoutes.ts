@@ -27,7 +27,8 @@ router.get("/businesses", async (req, res) => {
               eq(promotions.type, 'flash'),
               eq(promotions.isActive, true),
               lte(promotions.startTime, now),
-              gte(promotions.endTime, now)
+              gte(promotions.endTime, now),
+              sql`${promotions.stock} > ${promotions.stockConsumed}`
             )
           );
 
