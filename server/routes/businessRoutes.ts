@@ -661,28 +661,34 @@ router.post("/products", authenticateToken, requireRole("business_owner"), async
 router.put("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, type, address, phone, image } = req.body;
+    const { name, description, address, phone, image, latitude, longitude } = req.body;
+    
+    console.log('📝 Update business request:', { id, name, address, latitude, longitude });
     
     // Verificar que el negocio pertenece al usuario
     const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
     if (!business || business.ownerId !== req.user!.id) {
+      console.error('❌ Permission denied or business not found');
       return res.status(403).json({ error: "No tienes permiso para editar este negocio" });
     }
     
     const updatedBusiness = {
       name,
       description,
-      type,
       address,
       phone,
       image,
+      latitude,
+      longitude,
       updatedAt: new Date()
     };
     
+    console.log('✅ Updating business with:', updatedBusiness);
     await db.update(businesses).set(updatedBusiness).where(eq(businesses.id, id));
+    
     res.json({ success: true, business: updatedBusiness });
   } catch (error: any) {
-    console.error('Update business error:', error);
+    console.error('❌ Update business error:', error);
     res.status(500).json({ error: error.message });
   }
 });

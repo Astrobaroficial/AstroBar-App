@@ -112,7 +112,6 @@ export default function BusinessManageScreen() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"products" | "settings">("settings");
   const [editMode, setEditMode] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
@@ -339,53 +338,6 @@ export default function BusinessManageScreen() {
         </View>
       </View>
 
-      <View style={styles.tabs}>
-        <Pressable
-          onPress={() => setActiveTab("products")}
-          style={[
-            styles.tab,
-            activeTab === "products" && { backgroundColor: AstroBarColors.primary },
-          ]}
-        >
-          <Feather
-            name="package"
-            size={16}
-            color={activeTab === "products" ? "#FFFFFF" : theme.text}
-          />
-          <ThemedText
-            type="body"
-            style={{
-              color: activeTab === "products" ? "#FFFFFF" : theme.text,
-              marginLeft: Spacing.xs,
-            }}
-          >
-            Productos ({products.length})
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => setActiveTab("settings")}
-          style={[
-            styles.tab,
-            activeTab === "settings" && { backgroundColor: AstroBarColors.primary },
-          ]}
-        >
-          <Feather
-            name="settings"
-            size={16}
-            color={activeTab === "settings" ? "#FFFFFF" : theme.text}
-          />
-          <ThemedText
-            type="body"
-            style={{
-              color: activeTab === "settings" ? "#FFFFFF" : theme.text,
-              marginLeft: Spacing.xs,
-            }}
-          >
-            Ajustes
-          </ThemedText>
-        </Pressable>
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -401,45 +353,7 @@ export default function BusinessManageScreen() {
           />
         }
       >
-        {activeTab === "products" ? (
-          <>
-            {unavailableProducts.length > 0 ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <Feather name="x-circle" size={16} color="#F44336" />
-                  <ThemedText
-                    type="h4"
-                    style={{ marginLeft: Spacing.sm, color: "#F44336" }}
-                  >
-                    Agotados ({unavailableProducts.length})
-                  </ThemedText>
-                </View>
-                {unavailableProducts.map((product) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                    onToggle={handleToggleProduct}
-                  />
-                ))}
-              </>
-            ) : null}
-
-            <View style={styles.sectionHeader}>
-              <Feather name="check-circle" size={16} color="#4CAF50" />
-              <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>
-                Disponibles ({availableProducts.length})
-              </ThemedText>
-            </View>
-            {availableProducts.map((product) => (
-              <ProductRow
-                key={product.id}
-                product={product}
-                onToggle={handleToggleProduct}
-              />
-            ))}
-          </>
-        ) : (
-          <View>
+        <View>
             {/* Foto del Bar */}
             <View style={[styles.settingsSection, { backgroundColor: theme.card }, Shadows.sm]}>
               <View style={styles.sectionHeaderRow}>
@@ -573,7 +487,6 @@ export default function BusinessManageScreen() {
             )}
           </View>
         )}
-      </ScrollView>
     </ThemedView>
   );
 }

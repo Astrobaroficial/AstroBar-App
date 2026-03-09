@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -62,6 +63,8 @@ export default function MyBusinessesScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState<Business | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [businessLat, setBusinessLat] = useState<number | null>(null);
+  const [businessLng, setBusinessLng] = useState<number | null>(null);
 
   const [newBusiness, setNewBusiness] = useState({
     name: "",
@@ -138,6 +141,35 @@ export default function MyBusinessesScreen() {
     }
   };
 
+  const handlePickLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permiso denegado", "Necesitamos acceso a tu ubicación");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      const fullAddress = geocode[0]
+        ? `${geocode[0].street || ""} ${geocode[0].streetNumber || ""}, ${geocode[0].city || ""}, ${geocode[0].region || ""}`.trim()
+        : "Buenos Aires, Argentina";
+
+      setNewBusiness(prev => ({ ...prev, address: fullAddress }));
+      setBusinessLat(location.coords.latitude);
+      setBusinessLng(location.coords.longitude);
+      
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Éxito", "Ubicación obtenida");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo obtener la ubicación");
+    }
+  };
+
   const handleEditBusiness = (business: Business) => {
     setEditingBusiness(business);
     setNewBusiness({
@@ -159,7 +191,11 @@ export default function MyBusinessesScreen() {
 
     setSubmitting(true);
     try {
-      const response = await apiRequest("PUT", `/api/business/${editingBusiness.id}`, newBusiness);
+      const response = await apiRequest("PUT", `/api/business/${editingBusiness.id}`, {
+        ...newBusiness,
+        latitude: businessLat,
+        longitude: businessLng,
+      });
       const data = await response.json();
       
       if (data.success) {
@@ -895,6 +931,24 @@ export default function MyBusinessesScreen() {
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, phone: text }))}
               keyboardType="phone-pad"
             />
+
+            <Pressable
+              style={[styles.modalButton, styles.confirmButton, { marginBottom: Spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
+              onPress={handlePickLocation}
+            >
+              <Feather name="map-pin" size={18} color="#fff" />
+              <ThemedText style={[styles.buttonText, { color: "#fff", marginLeft: 8 }]}>
+                Usar mi ubicación GPS
+              </ThemedText>
+            </Pressable>
+            {businessLat && businessLng && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
+                <Feather name="check-circle" size={16} color="#4CAF50" />
+                <ThemedText style={{ color: "#4CAF50", marginLeft: 6, fontSize: 12 }}>
+                  Ubicación configurada ({businessLat.toFixed(4)}, {businessLng.toFixed(4)})
+                </ThemedText>
+              </View>
+            )}
 
             <ThemedText style={styles.inputLabel}>Imagen del negocio</ThemedText>
             <Pressable style={styles.imagePickerButton} onPress={handlePickImage}>
