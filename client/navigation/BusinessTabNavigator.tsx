@@ -8,7 +8,7 @@ import BusinessManageScreen from "@/screens/BusinessManageScreen";
 import QRScannerScreen from "@/screens/QRScannerScreen";
 import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
 import ScheduledPromotionsScreen from "@/screens/ScheduledPromotionsScreen";
-import HeatmapScreen from "@/screens/HeatmapScreen";
+
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
@@ -79,16 +79,7 @@ export default function BusinessTabNavigator() {
           ),
         }}
       />
-      <Tab.Screen
-        name="BusinessAnalytics"
-        component={HeatmapScreen}
-        options={{
-          title: "Análisis",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="bar-chart-2" size={size} color={color} />
-          ),
-        }}
-      />
+
       <Tab.Screen
         name="BusinessProfile"
         component={ProfileStackNavigator}
