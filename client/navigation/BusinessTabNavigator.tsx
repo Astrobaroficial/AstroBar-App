@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 
 import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
@@ -7,14 +8,16 @@ import BusinessMenuScreen from "@/screens/BusinessMenuScreen";
 import BusinessManageScreen from "@/screens/BusinessManageScreen";
 import QRScannerScreen from "@/screens/QRScannerScreen";
 import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
+import PromotionTransactionsScreen from "@/screens/PromotionTransactionsScreen";
 import ScheduledPromotionsScreen from "@/screens/ScheduledPromotionsScreen";
+import CreateFlashPromotionScreen from "@/screens/CreateFlashPromotionScreen";
+import CreateCommonPromotionScreen from "@/screens/CreateCommonPromotionScreen";
 
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
-import { createStackNavigator } from "@react-navigation/stack";
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const Tab = createBottomTabNavigator();
 
@@ -24,6 +27,9 @@ function ManagementStack() {
       <Stack.Screen name="BusinessPromotions" component={BusinessPromotionsPanel} />
       <Stack.Screen name="BusinessMenu" component={BusinessMenuScreen} />
       <Stack.Screen name="BusinessSettings" component={BusinessManageScreen} />
+      <Stack.Screen name="PromotionTransactions" component={PromotionTransactionsScreen} />
+      <Stack.Screen name="CreateFlashPromotion" component={CreateFlashPromotionScreen} />
+      <Stack.Screen name="CreateCommonPromotion" component={CreateCommonPromotionScreen} />
     </Stack.Navigator>
   );
 }
