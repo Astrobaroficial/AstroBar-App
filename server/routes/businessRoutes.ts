@@ -511,6 +511,29 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
   }
 });
 
+// Get current user's business (PROTECTED - debe ir antes de /:id)
+router.get("/", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    // Get products
+    const businessProducts = await db.select().from(products).where(eq(products.businessId, business.id));
+    
+    res.json({ 
+      success: true, 
+      ...business,
+      products: businessProducts
+    });
+  } catch (error: any) {
+    console.error('Get business error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Public route to list all businesses
 router.get("/", async (req, res) => {
   try {
