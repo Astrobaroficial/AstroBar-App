@@ -102,6 +102,11 @@ import orderRoutes from './routes/orderRoutes';
 console.log('🛒 Registering Order routes at /api/orders');
 app.use('/api/orders', orderRoutes);
 
+// Upload routes
+import uploadRoutes from './routes/uploadRoutes';
+console.log('📤 Registering Upload routes at /api/upload');
+app.use('/api/upload', uploadRoutes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed

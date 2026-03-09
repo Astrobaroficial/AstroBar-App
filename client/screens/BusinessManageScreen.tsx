@@ -6,6 +6,9 @@ import {
   Pressable,
   RefreshControl,
   Switch,
+  TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -13,6 +16,8 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -35,6 +40,12 @@ interface Product {
 interface Business {
   id: string;
   name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  image?: string;
+  latitude?: number;
+  longitude?: number;
   isOpen: boolean;
   products: Product[];
 }
@@ -101,9 +112,16 @@ export default function BusinessManageScreen() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"products" | "settings">(
-    "products",
-  );
+  const [activeTab, setActiveTab] = useState<"products" | "settings">("products");
+  const [editMode, setEditMode] = useState(false);
+  const [businessName, setBusinessName] = useState("");
+  const [businessDescription, setBusinessDescription] = useState("");
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [businessImage, setBusinessImage] = useState("");
+  const [businessLat, setBusinessLat] = useState<number | null>(null);
+  const [businessLng, setBusinessLng] = useState<number | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const {
     data: business,
@@ -158,6 +176,102 @@ export default function BusinessManageScreen() {
   const handleToggleBusiness = (isOpen: boolean) => {
     if (business) {
       toggleBusinessMutation.mutate({ businessId: business.id, isOpen });
+    }
+  };
+
+  React.useEffect(() => {
+    if (business) {
+      setBusinessName(business.name || "");
+      setBusinessDescription(business.description || "");
+      setBusinessAddress(business.address || "");
+      setBusinessPhone(business.phone || "");
+      setBusinessImage(business.image || "");
+      setBusinessLat(business.latitude || null);
+      setBusinessLng(business.longitude || null);
+    }
+  }, [business]);
+
+  const handlePickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permiso denegado", "Necesitamos acceso a tus fotos");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setBusinessImage(result.assets[0].uri);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    } catch (error) {
+      Alert.alert("Error", "No se pudo seleccionar la imagen");
+    }
+  };
+
+  const handlePickLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permiso denegado", "Necesitamos acceso a tu ubicación");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      const fullAddress = geocode[0]
+        ? `${geocode[0].street || ""} ${geocode[0].streetNumber || ""}, ${geocode[0].city || ""}, ${geocode[0].region || ""}`.trim()
+        : "Buenos Aires, Argentina";
+
+      setBusinessAddress(fullAddress);
+      setBusinessLat(location.coords.latitude);
+      setBusinessLng(location.coords.longitude);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Éxito", "Ubicación obtenida");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo obtener la ubicación");
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!businessName.trim()) {
+      Alert.alert("Error", "El nombre del bar es obligatorio");
+      return;
+    }
+
+    if (!businessLat || !businessLng) {
+      Alert.alert("Error", "Debes configurar la ubicación del bar para que aparezca en el mapa");
+      return;
+    }
+
+    try {
+      await apiRequest("PUT", `/api/business/${business?.id}`, {
+        name: businessName.trim(),
+        description: businessDescription.trim(),
+        address: businessAddress.trim(),
+        phone: businessPhone.trim(),
+        image: businessImage,
+        latitude: businessLat,
+        longitude: businessLng,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Éxito", "Información actualizada");
+      setEditMode(false);
+      refetch();
+    } catch (error) {
+      Alert.alert("Error", "No se pudo guardar los cambios");
     }
   };
 
@@ -307,106 +421,138 @@ export default function BusinessManageScreen() {
             ))}
           </>
         ) : (
-          <View
-            style={[
-              styles.settingsSection,
-              { backgroundColor: theme.card },
-              Shadows.sm,
-            ]}
-          >
-            <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>
-              Configuración del negocio
-            </ThemedText>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Feather name="clock" size={20} color={theme.textSecondary} />
-                <View style={{ marginLeft: Spacing.md }}>
-                  <ThemedText type="body">Horario de operación</ThemedText>
-                  <ThemedText
-                    type="caption"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    Lun - Dom: 8:00 AM - 10:00 PM
-                  </ThemedText>
-                </View>
+          <View>
+            {/* Foto del Bar */}
+            <View style={[styles.settingsSection, { backgroundColor: theme.card }, Shadows.sm]}>
+              <View style={styles.sectionHeaderRow}>
+                <ThemedText type="h4">Foto del Bar</ThemedText>
+                {!editMode && (
+                  <Pressable onPress={() => setEditMode(true)}>
+                    <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
+                  </Pressable>
+                )}
               </View>
-              <Feather
-                name="chevron-right"
-                size={20}
-                color={theme.textSecondary}
-              />
+              
+              <Pressable onPress={editMode ? handlePickImage : undefined} style={styles.imageContainer}>
+                {businessImage ? (
+                  <Image source={{ uri: businessImage }} style={styles.businessImage} contentFit="cover" />
+                ) : (
+                  <View style={[styles.imagePlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
+                    <Feather name="camera" size={32} color={theme.textSecondary} />
+                    <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 8 }}>
+                      {editMode ? "Toca para subir foto" : "Sin foto"}
+                    </ThemedText>
+                  </View>
+                )}
+              </Pressable>
             </View>
 
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            {/* Información Básica */}
+            <View style={[styles.settingsSection, { backgroundColor: theme.card }, Shadows.sm]}>
+              <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Información Básica</ThemedText>
 
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Feather name="map-pin" size={20} color={theme.textSecondary} />
-                <View style={{ marginLeft: Spacing.md }}>
-                  <ThemedText type="body">Zona de entrega</ThemedText>
-                  <ThemedText
-                    type="caption"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    Radio de 5 km
-                  </ThemedText>
-                </View>
-              </View>
-              <Feather
-                name="chevron-right"
-                size={20}
-                color={theme.textSecondary}
-              />
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Feather name="truck" size={20} color={theme.textSecondary} />
-                <View style={{ marginLeft: Spacing.md }}>
-                  <ThemedText type="body">Costo de envío</ThemedText>
-                  <ThemedText
-                    type="caption"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    $25.00 MXN
-                  </ThemedText>
-                </View>
-              </View>
-              <Feather
-                name="chevron-right"
-                size={20}
-                color={theme.textSecondary}
-              />
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Feather
-                  name="shopping-cart"
-                  size={20}
-                  color={theme.textSecondary}
+              <View style={styles.inputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>Nombre del Bar *</ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                  editable={editMode}
+                  placeholder="Nombre del bar"
+                  placeholderTextColor={theme.textSecondary}
                 />
-                <View style={{ marginLeft: Spacing.md }}>
-                  <ThemedText type="body">Pedido mínimo</ThemedText>
-                  <ThemedText
-                    type="caption"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    $50.00 MXN
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>Descripción</ThemedText>
+                <TextInput
+                  style={[styles.input, styles.textArea, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                  value={businessDescription}
+                  onChangeText={setBusinessDescription}
+                  editable={editMode}
+                  placeholder="Describe tu bar..."
+                  placeholderTextColor={theme.textSecondary}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>Teléfono</ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                  value={businessPhone}
+                  onChangeText={setBusinessPhone}
+                  editable={editMode}
+                  placeholder="+54 11 1234-5678"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
+
+            {/* Ubicación */}
+            <View style={[styles.settingsSection, { backgroundColor: theme.card }, Shadows.sm]}>
+              <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>Ubicación *</ThemedText>
+              
+              <View style={styles.inputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>Dirección</ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+                  value={businessAddress}
+                  onChangeText={setBusinessAddress}
+                  editable={editMode}
+                  placeholder="Dirección del bar"
+                  placeholderTextColor={theme.textSecondary}
+                />
+              </View>
+
+              {editMode && (
+                <Pressable onPress={handlePickLocation} style={[styles.locationButton, { backgroundColor: AstroBarColors.primary }]}>
+                  <Feather name="map-pin" size={20} color="#FFFFFF" />
+                  <ThemedText type="body" style={{ color: "#FFFFFF", marginLeft: 8 }}>Usar mi ubicación actual</ThemedText>
+                </Pressable>
+              )}
+
+              {businessLat && businessLng ? (
+                <View style={styles.coordsInfo}>
+                  <Feather name="check-circle" size={16} color="#4CAF50" />
+                  <ThemedText type="caption" style={{ color: "#4CAF50", marginLeft: 6 }}>
+                    Ubicación configurada ({businessLat.toFixed(4)}, {businessLng.toFixed(4)})
                   </ThemedText>
                 </View>
-              </View>
-              <Feather
-                name="chevron-right"
-                size={20}
-                color={theme.textSecondary}
-              />
+              ) : (
+                <View style={styles.coordsInfo}>
+                  <Feather name="alert-circle" size={16} color="#FF9800" />
+                  <ThemedText type="caption" style={{ color: "#FF9800", marginLeft: 6 }}>
+                    Configura la ubicación para aparecer en el mapa
+                  </ThemedText>
+                </View>
+              )}
             </View>
+
+            {editMode && (
+              <View style={styles.actionButtons}>
+                <Pressable
+                  onPress={() => {
+                    setEditMode(false);
+                    setBusinessName(business?.name || "");
+                    setBusinessDescription(business?.description || "");
+                    setBusinessAddress(business?.address || "");
+                    setBusinessPhone(business?.phone || "");
+                    setBusinessImage(business?.image || "");
+                    setBusinessLat(business?.latitude || null);
+                    setBusinessLng(business?.longitude || null);
+                  }}
+                  style={[styles.button, { backgroundColor: theme.card }]}
+                >
+                  <ThemedText type="body">Cancelar</ThemedText>
+                </Pressable>
+                <Pressable onPress={handleSaveSettings} style={[styles.button, { backgroundColor: AstroBarColors.primary }]}>
+                  <ThemedText type="body" style={{ color: "#FFFFFF" }}>Guardar Cambios</ThemedText>
+                </Pressable>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -505,5 +651,64 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  imageContainer: {
+    width: "100%",
+    height: 200,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+  },
+  businessImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inputGroup: {
+    marginBottom: Spacing.md,
+  },
+  input: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    fontSize: 16,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: "top",
+  },
+  locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+  },
+  coordsInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.sm,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  button: {
+    flex: 1,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    ...Shadows.sm,
   },
 });
