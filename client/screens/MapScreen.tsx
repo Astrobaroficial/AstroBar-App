@@ -51,7 +51,7 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const response = await apiRequest('GET', `/api/businesses?lat=${currentLocation.coords.latitude}&lng=${currentLocation.coords.longitude}&radius=${searchRadius}`);
+      const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
       if (data.success) {
@@ -271,8 +271,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   header: {
-    padding: Spacing.xl,
-    paddingTop: Spacing['3xl'],
+    padding: Spacing.lg,
+    paddingTop: Spacing['2xl'],
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   headerTop: {
     flexDirection: 'row',

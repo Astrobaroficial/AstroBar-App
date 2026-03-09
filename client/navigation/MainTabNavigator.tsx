@@ -10,7 +10,7 @@ import MyQRsScreen from "@/screens/MyQRsScreen";
 import HistoryScreen from "@/screens/HistoryScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import ReferralScreen from "@/screens/ReferralScreen";
-import HeatmapScreen from "@/screens/HeatmapScreen";
+import MapScreen from "@/screens/MapScreen";
 import RankingScreen from "@/screens/RankingScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors, Spacing } from "@/constants/theme";
@@ -109,11 +109,11 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="ExploreTab"
-        component={HeatmapScreen}
+        component={MapScreen}
         options={{
           title: "Explorar",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="compass" size={size} color={color} />
+            <Feather name="map" size={size} color={color} />
           ),
         }}
       />
