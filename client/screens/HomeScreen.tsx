@@ -813,7 +813,7 @@ export default function HomeScreen() {
                     </View>
                     <View style={styles.marketsTextContainer}>
                       <ThemedText type="h3" style={styles.marketsTitle}>
-                        Promociones Comunes ðŸŽ
+                        Promociones Comunes
                       </ThemedText>
                       <View style={styles.marketsCTA}>
                         <ThemedText type="small" style={styles.marketsSubtitle}>
@@ -1200,6 +1200,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
   },
 });
+
 
 
 
