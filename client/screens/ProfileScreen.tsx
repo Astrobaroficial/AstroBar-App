@@ -32,7 +32,8 @@ import { useApp, ThemeMode } from "@/contexts/AppContext";
 import { useToast } from "@/contexts/ToastContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { apiRequest } from "@/lib/query-client";
+import { resolveProfileImageUrl } from "@/lib/imageUtils";
 
 type ProfileScreenNavigationProp =
   NativeStackNavigationProp<ProfileStackParamList>;
@@ -96,28 +97,6 @@ const themeOptions: { value: ThemeMode; label: string }[] = [
   { value: "system", label: "Sistema" },
   { value: "light", label: "Claro" },
   { value: "dark", label: "Oscuro" }];
-
-function resolveProfileImageUrl(profileImage: string): string {
-  const apiBase = getApiUrl().replace(/\/+$/, "");
-
-  if (/^https?:\/\//i.test(profileImage)) {
-    try {
-      const source = new URL(profileImage);
-      if (source.hostname === "localhost" || source.hostname === "127.0.0.1") {
-        const target = new URL(apiBase);
-        source.protocol = target.protocol;
-        source.host = target.host;
-        return source.toString();
-      }
-    } catch {
-      return profileImage;
-    }
-
-    return profileImage;
-  }
-
-  return `${apiBase}${profileImage.startsWith("/") ? "" : "/"}${profileImage}`;
-}
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
