@@ -5,6 +5,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "@/hooks/useTheme";
 import { apiRequest } from "@/lib/query-client";
 import { AstroBarColors, Spacing } from "@/constants/theme";
+import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
 
 interface Product {
@@ -31,9 +33,63 @@ export default function BusinessMenuScreen() {
     name: "",
     category: "Bebidas",
     price: "",
-    description: ""
+    description: "",
+    image: ""
   });
   const [limits, setLimits] = useState<any>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handlePickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a tus fotos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo seleccionar imagen');
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    setIsUploadingImage(true);
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        
+        const apiResponse = await apiRequest('POST', '/api/upload/product-image', {
+          image: base64data,
+        });
+
+        const data = await apiResponse.json();
+        if (data.success) {
+          setNewProduct({...newProduct, image: data.imageUrl});
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      };
+      
+      reader.readAsDataURL(blob);
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo subir imagen');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const categories = ["all", "Bebidas", "Comidas", "Postres", "Cafetería", "Combos", "Otros"];
 
@@ -758,5 +814,18 @@ const styles = StyleSheet.create({
   limitProgress: {
     height: "100%",
     borderRadius: 3,
+  },
+  imagePickerButton: {
+    padding: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 120,
+    marginBottom: 16,
+  },
+  previewImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 8,
   },
 });
