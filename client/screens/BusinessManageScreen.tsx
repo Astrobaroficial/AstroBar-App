@@ -198,19 +198,24 @@ export default function BusinessManageScreen() {
         return;
       }
 
+      setUploadingImage(true);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.7,
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]) {
-        setBusinessImage(result.assets[0].uri);
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        setBusinessImage(base64Image);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     } catch (error) {
       Alert.alert("Error", "No se pudo seleccionar la imagen");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -366,7 +371,14 @@ export default function BusinessManageScreen() {
               </View>
               
               <Pressable onPress={editMode ? handlePickImage : undefined} style={styles.imageContainer}>
-                {businessImage ? (
+                {uploadingImage ? (
+                  <View style={[styles.imagePlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
+                    <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                    <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 8 }}>
+                      Cargando imagen...
+                    </ThemedText>
+                  </View>
+                ) : businessImage ? (
                   <Image source={{ uri: businessImage }} style={styles.businessImage} contentFit="cover" />
                 ) : (
                   <View style={[styles.imagePlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
