@@ -469,41 +469,38 @@ router.get("/debug-commission", authenticateToken, async (req, res) => {
 // Get wallet stats for business owner
 router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
-    if (!business) {
+    // Obtener TODOS los negocios del usuario
+    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    
+    if (userBusinesses.length === 0) {
       return res.status(404).json({ error: "Business not found" });
     }
 
-    const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id));
+    // Obtener transacciones de TODOS los negocios
+    const businessIds = userBusinesses.map(b => b.id);
+    const { inArray } = await import("drizzle-orm");
+    const allTransactions = await db.select().from(promotionTransactions).where(inArray(promotionTransactions.businessId, businessIds));
     
     console.log(`📊 Wallet Stats Debug:`);
-    console.log(`  Business: ${business.name} (${business.id})`);
-    console.log(`  Total transactions: ${transactions.length}`);
-    console.log(`  Transactions:`, transactions.map(t => ({ status: t.status, revenue: t.businessRevenue })));
+    console.log(`  User: ${req.user!.id}`);
+    console.log(`  Total businesses: ${userBusinesses.length}`);
+    console.log(`  Business names: ${userBusinesses.map(b => b.name).join(', ')}`);
+    console.log(`  Total transactions: ${allTransactions.length}`);
     
-    const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
+    // INGRESOS = pending + redeemed (NO canceladas)
+    const paidTransactions = allTransactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
     
     const totalEarnings = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
-    const pendingBalance = transactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
-    const availableBalance = transactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const pendingBalance = allTransactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    const availableBalance = allTransactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     console.log(`  Total earnings (centavos): ${totalEarnings}`);
     console.log(`  Pending balance (centavos): ${pendingBalance}`);
     console.log(`  Available balance (centavos): ${availableBalance}`);
     
-    // Get commission info
+    // Comisión promedio
     const { sql } = await import("drizzle-orm");
-    const commissionResult: any = await db.execute(sql`
-      SELECT platform_commission
-      FROM business_commissions
-      WHERE business_id = ${business.id}
-      LIMIT 1
-    `);
-    
     let platformCommission = 30;
-    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
-      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
-    }
 
     res.json({
       success: true,
