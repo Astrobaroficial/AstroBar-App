@@ -200,6 +200,13 @@ export default function BusinessPromotionsPanel() {
           <Ionicons name="restaurant" size={20} color="#999" />
           <Text style={[styles.navButtonText, { color: '#999' }]}>Menú</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('PromotionTransactions')}
+        >
+          <Ionicons name="list" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Historial</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.summary}>

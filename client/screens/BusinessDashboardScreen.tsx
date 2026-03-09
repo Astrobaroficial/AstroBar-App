@@ -559,7 +559,7 @@ export default function BusinessDashboardScreen() {
           <View style={styles.actionsRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: theme.card }]}
-              onPress={() => navigation.navigate("BusinessPromotions" as any)}
+              onPress={() => navigation.navigate("BusinessPromotionsPanel" as any)}
             >
               <Feather name="zap" size={24} color={AstroBarColors.primary} />
               <ThemedText type="small" style={{ marginTop: Spacing.xs }}>Promociones</ThemedText>
