@@ -696,7 +696,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  navigation.navigate("Map");
+                  navigation.navigate("MainTabs", { screen: "Explore" });
                 }}
                 style={({ pressed }) => [
                   styles.mapBanner,

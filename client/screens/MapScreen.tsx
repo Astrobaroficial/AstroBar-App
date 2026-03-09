@@ -51,7 +51,7 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const response = await apiRequest('GET', `/api/businesses?lat=${currentLocation.coords.latitude}&lng=${currentLocation.coords.longitude}&radius=${searchRadius}`);
+      const response = await apiRequest('GET', `/api/public/businesses?lat=${currentLocation.coords.latitude}&lng=${currentLocation.coords.longitude}&radius=${searchRadius}`);
       const data = await response.json();
       
       if (data.success) {

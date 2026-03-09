@@ -30,8 +30,9 @@ export function resolveProfileImageUrl(profileImage: string | null | undefined):
 
   // Si ya es un data URI base64, devolverlo directamente (sin query params)
   if (profileImage.startsWith('data:image')) {
-    // Remover cualquier query param que pueda tener
-    return profileImage.split('?')[0];
+    // Remover cualquier query param que pueda tener Y limpiar espacios/saltos de línea
+    const cleaned = profileImage.split('?')[0].replace(/\s/g, '');
+    return cleaned;
   }
 
   const apiBase = getApiUrl().replace(/\/+$/, "");
