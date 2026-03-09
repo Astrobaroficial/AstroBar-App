@@ -687,3 +687,23 @@ export const userPoints = mysqlTable("user_points", {
 export type Promotion = typeof promotions.$inferSelect;
 export type PromotionTransaction = typeof promotionTransactions.$inferSelect;
 export type UserPoints = typeof userPoints.$inferSelect;
+
+// Mercado Pago Accounts - Cuentas conectadas de Mercado Pago (OAuth)
+export const mercadopagoAccounts = mysqlTable("mercadopago_accounts", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  businessId: varchar("business_id", { length: 255 }).notNull().unique(),
+  mpUserId: varchar("mp_user_id", { length: 255 }).notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  publicKey: varchar("public_key", { length: 255 }),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+export type MercadoPagoAccount = typeof mercadopagoAccounts.$inferSelect;

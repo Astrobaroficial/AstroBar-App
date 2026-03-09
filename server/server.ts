@@ -107,6 +107,11 @@ import uploadRoutes from './routes/uploadRoutes';
 console.log('📤 Registering Upload routes at /api/upload');
 app.use('/api/upload', uploadRoutes);
 
+// Mercado Pago routes
+import mercadopagoRoutes from './routes/mercadopagoRoutes';
+console.log('💳 Registering Mercado Pago routes at /api/mp');
+app.use('/api/mp', mercadopagoRoutes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed
