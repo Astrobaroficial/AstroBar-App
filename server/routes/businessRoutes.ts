@@ -475,11 +475,21 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
     }
 
     const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id));
+    
+    console.log(`📊 Wallet Stats Debug:`);
+    console.log(`  Business: ${business.name} (${business.id})`);
+    console.log(`  Total transactions: ${transactions.length}`);
+    console.log(`  Transactions:`, transactions.map(t => ({ status: t.status, revenue: t.businessRevenue })));
+    
     const paidTransactions = transactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
     
     const totalEarnings = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     const pendingBalance = transactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     const availableBalance = transactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
+    
+    console.log(`  Total earnings (centavos): ${totalEarnings}`);
+    console.log(`  Pending balance (centavos): ${pendingBalance}`);
+    console.log(`  Available balance (centavos): ${availableBalance}`);
     
     // Get commission info
     const { sql } = await import("drizzle-orm");
@@ -502,7 +512,10 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
         pendingBalance: pendingBalance / 100,
         availableBalance: availableBalance / 100,
         platformCommission,
-        totalTransactions: paidTransactions.length
+        totalTransactions: paidTransactions.length,
+        thisMonthEarnings: totalEarnings / 100,
+        pendingPayouts: pendingBalance / 100,
+        averageOrderValue: paidTransactions.length > 0 ? (totalEarnings / paidTransactions.length) / 100 : 0
       }
     });
   } catch (error: any) {
