@@ -15,6 +15,7 @@ import PrivacyScreen from "@/screens/PrivacyScreen";
 import BankAccountSetupScreen from "@/screens/BankAccountSetupScreen";
 import PaymentHistoryScreen from "@/screens/PaymentHistoryScreen";
 import WithdrawalRequestScreen from "@/screens/WithdrawalRequestScreen";
+import StripeConnectStatusScreen from "@/screens/StripeConnectStatusScreen";
 import MercadoPagoConnectScreen from "@/screens/MercadoPagoConnectScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
