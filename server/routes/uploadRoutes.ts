@@ -137,6 +137,24 @@ router.post("/product-image", authenticateToken, async (req, res) => {
   }
 });
 
+// Subir imagen de perfil de usuario (base64)
+router.post("/user/profile-image", authenticateToken, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: "No se proporcionó imagen" });
+    }
+
+    // Guardar imagen como base64 directamente en DB
+    await db.update(users).set({ profileImage: image }).where(eq(users.id, req.user!.id));
+
+    res.json({ success: true, profileImage: image });
+  } catch (error: any) {
+    console.error("Error uploading user profile image:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Subir imagen de perfil de usuario
 router.post("/user/upload-image", authenticateToken, upload.single("image"), async (req, res) => {
   try {
