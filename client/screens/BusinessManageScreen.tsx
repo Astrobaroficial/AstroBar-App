@@ -486,7 +486,7 @@ export default function BusinessManageScreen() {
               </View>
             )}
           </View>
-        )}
+      </ScrollView>
     </ThemedView>
   );
 }
