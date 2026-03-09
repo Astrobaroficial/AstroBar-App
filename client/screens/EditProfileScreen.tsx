@@ -160,6 +160,8 @@ export default function EditProfileScreen() {
         if (data.success) {
           await updateUser({ profileImage: data.profileImage });
           showToast('Foto actualizada', 'success');
+          // Force re-render
+          navigation.goBack();
         }
       };
       

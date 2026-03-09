@@ -58,6 +58,9 @@ export default function QRScannerScreen() {
         <Text style={[styles.text, { color: theme.text }]}>
           Se necesita permiso de cámara para escanear códigos QR
         </Text>
+        <Text style={[styles.text, { color: theme.textSecondary, fontSize: 14, marginTop: 10 }]}>
+          Ve a Configuración → AstroBar → Permisos → Cámara
+        </Text>
       </View>
     );
   }
