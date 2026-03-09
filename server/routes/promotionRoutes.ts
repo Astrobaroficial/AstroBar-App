@@ -208,7 +208,7 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
           await sendPushNotification(
             owner.pushToken,
             "¡Nueva promoción aceptada!",
-            `${promotion.title} - $${promoPrice.toFixed(2)}`,,
+            `${promotion.title} - $${promoPrice.toFixed(2)}`,
             { type: 'promotion_accepted', promotionId, transactionId }
           );
         }
