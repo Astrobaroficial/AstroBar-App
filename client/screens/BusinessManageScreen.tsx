@@ -281,6 +281,31 @@ export default function BusinessManageScreen() {
 
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header con navegación */}
+      <View style={styles.topNav}>
+        <Pressable
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessPromotions')}
+        >
+          <Feather name="megaphone" size={20} color="#999" />
+          <ThemedText style={[styles.navButtonText, { color: '#999' }]}>Promociones</ThemedText>
+        </Pressable>
+        <Pressable
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessMenu')}
+        >
+          <Feather name="restaurant" size={20} color="#999" />
+          <ThemedText style={[styles.navButtonText, { color: '#999' }]}>Menú</ThemedText>
+        </Pressable>
+        <Pressable
+          style={[styles.navButton, styles.navButtonActive]}
+          onPress={() => {}}
+        >
+          <Feather name="settings" size={20} color="#FFD700" />
+          <ThemedText style={styles.navButtonText}>Ajustes</ThemedText>
+        </Pressable>
+      </View>
+
       <View style={styles.header}>
         <ThemedText type="h2">Ajustes del Bar</ThemedText>
       </View>
@@ -556,6 +581,30 @@ export default function BusinessManageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1F3A',
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2F4A',
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  navButtonActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFD700',
+  },
+  navButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFD700',
   },
   header: {
     flexDirection: "row",

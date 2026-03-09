@@ -179,6 +179,31 @@ export default function BusinessMenuScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header con navegación */}
+      <View style={styles.topNav}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessPromotions')}
+        >
+          <Feather name="megaphone" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Promociones</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.navButton, styles.navButtonActive]}
+          onPress={() => {}}
+        >
+          <Feather name="restaurant" size={20} color="#FFD700" />
+          <Text style={styles.navButtonText}>Menú</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessSettings')}
+        >
+          <Feather name="settings" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Ajustes</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Limits Header */}
       {limits && (
         <View style={[styles.limitsContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -503,6 +528,31 @@ export default function BusinessMenuScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1F3A',
+    paddingTop: 40,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2F4A',
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  navButtonActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFD700',
+  },
+  navButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFD700',
   },
   filterContainer: {
     paddingVertical: Spacing.sm,
