@@ -180,7 +180,7 @@ export default function BusinessMenuScreen() {
         setNewProduct({
           name: item.name,
           category: item.category,
-          price: (item.price / 100).toString(),
+          price: item.price.toString(),
           description: item.description || "",
           image: item.image || ""
         });
@@ -452,7 +452,7 @@ export default function BusinessMenuScreen() {
                     const productData = {
                       name: newProduct.name,
                       category: newProduct.category,
-                      price: parseInt(newProduct.price) * 100,
+                      price: parseInt(newProduct.price),
                       description: newProduct.description,
                       image: newProduct.image || getDefaultImage(newProduct.category),
                       isAvailable: true
@@ -625,7 +625,7 @@ export default function BusinessMenuScreen() {
                     const productData = {
                       name: newProduct.name,
                       category: newProduct.category,
-                      price: parseInt(newProduct.price) * 100,
+                      price: parseInt(newProduct.price),
                       description: newProduct.description,
                       image: newProduct.image || editProductImage || getDefaultImage(newProduct.category),
                       isAvailable: true
