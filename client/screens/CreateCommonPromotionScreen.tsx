@@ -22,10 +22,12 @@ interface Product {
   isAvailable: boolean;
 }
 
-export default function CreateCommonPromotionScreen() {
+export default function CreateCommonPromotionScreen({ route }: any) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
+  const editPromotion = route?.params?.editPromotion;
+  const isEditing = !!editPromotion;
   
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -36,14 +38,22 @@ export default function CreateCommonPromotionScreen() {
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [customImage, setCustomImage] = useState("");
 
   useEffect(() => {
     loadProducts();
-    // Configurar fechas por defecto (hoy y mañana)
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    setStartDate(formatDateTime(now));
-    setEndDate(formatDateTime(tomorrow));
+    if (isEditing && editPromotion) {
+      setDiscountedPrice((editPromotion.promoPrice / 100).toString());
+      setStock(editPromotion.stock.toString());
+      setStartDate(new Date(editPromotion.startTime).toISOString().slice(0, 16));
+      setEndDate(new Date(editPromotion.endTime).toISOString().slice(0, 16));
+      setCustomImage(editPromotion.image || "");
+    } else {
+      const now = new Date();
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      setStartDate(formatDateTime(now));
+      setEndDate(formatDateTime(tomorrow));
+    }
   }, []);
 
   const formatDateTime = (date: Date) => {
@@ -70,7 +80,7 @@ export default function CreateCommonPromotionScreen() {
       return;
     }
 
-    const discountPrice = parseFloat(discountedPrice) * 100; // Convertir a centavos
+    const discountPrice = parseFloat(discountedPrice) * 100;
     if (discountPrice >= selectedProduct.price) {
       Alert.alert("Error", "El precio promocional debe ser menor al precio original");
       return;
@@ -86,7 +96,7 @@ export default function CreateCommonPromotionScreen() {
     setLoading(true);
     try {
       const promotionData = {
-        businessId: "", // Se obtiene automáticamente en el backend
+        businessId: "",
         title: `${selectedProduct.name} - Promoción`,
         description: selectedProduct.description || `Promoción de ${selectedProduct.name}`,
         type: "common",
@@ -95,20 +105,22 @@ export default function CreateCommonPromotionScreen() {
         stock: parseInt(stock),
         startTime: start.toISOString(),
         endTime: end.toISOString(),
-        image: selectedProduct.image
+        image: customImage || selectedProduct.image
       };
       
-      const response = await apiRequest("POST", "/api/promotions", promotionData);
+      const url = isEditing ? `/api/promotions/${editPromotion.id}` : "/api/promotions";
+      const method = isEditing ? "PUT" : "POST";
+      const response = await apiRequest(method, url, promotionData);
       const data = await response.json();
       
       if (data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("¡Éxito!", "Promoción creada", [
+        Alert.alert("¡Éxito!", isEditing ? "Promoción actualizada" : "Promoción creada", [
           { text: "OK", onPress: () => navigation.goBack() }
         ]);
       }
     } catch (error: any) {
-      Alert.alert("Error", "No se pudo crear la promoción");
+      Alert.alert("Error", "No se pudo guardar la promoción");
     } finally {
       setLoading(false);
     }
@@ -160,7 +172,7 @@ export default function CreateCommonPromotionScreen() {
         </Pressable>
 
         <ThemedText type="h2" style={{ marginBottom: Spacing.xs }}>
-          Crear Promoción Programada
+          {isEditing ? "Editar Promoción" : "Crear Promoción Programada"}
         </ThemedText>
         <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xl }}>
           Configura fechas y horarios
@@ -252,7 +264,7 @@ export default function CreateCommonPromotionScreen() {
         >
           <Feather name="calendar" size={20} color="#000" style={{ marginRight: Spacing.sm }} />
           <ThemedText style={{ color: "#000", fontWeight: "600" }}>
-            {loading ? "Creando..." : "Crear Promoción"}
+            {loading ? "Guardando..." : isEditing ? "Actualizar Promoción" : "Crear Promoción"}
           </ThemedText>
         </Pressable>
       </ScrollView>

@@ -254,7 +254,7 @@ export default function BusinessPromotionsPanel() {
           style={[styles.fab, styles.flashFab]}
           onPress={() => navigation.navigate('CreateFlashPromotion')}
         >
-          <Ionicons name="flash" size={24} color="#000" />
+          <Ionicons name="flash" size={24} color="#FFF" />
           <Text style={styles.fabText}>Flash</Text>
         </TouchableOpacity>
         
@@ -262,7 +262,7 @@ export default function BusinessPromotionsPanel() {
           style={[styles.fab, styles.commonFab]}
           onPress={() => navigation.navigate('CreateCommonPromotion')}
         >
-          <Ionicons name="calendar" size={24} color="#000" />
+          <Ionicons name="calendar" size={24} color="#FFF" />
           <Text style={styles.fabText}>Común</Text>
         </TouchableOpacity>
       </View>
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   fabText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#FFF',
     marginTop: 4,
   },
 });
