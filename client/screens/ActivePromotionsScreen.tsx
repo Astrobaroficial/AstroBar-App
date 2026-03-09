@@ -227,7 +227,7 @@ export default function ActivePromotionsScreen() {
                 Total pagado
               </ThemedText>
               <ThemedText type="h3" style={{ color: '#4CAF50' }}>
-                ${(activeTransaction.amountPaid / 100).toFixed(2)}
+                ${activeTransaction.amountPaid.toFixed(2)}
               </ThemedText>
             </View>
           </View>

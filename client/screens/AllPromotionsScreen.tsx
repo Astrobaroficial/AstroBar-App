@@ -97,10 +97,10 @@ export default function AllPromotionsScreen() {
               </ThemedText>
             </View>
             <ThemedText type="small" style={{ textDecorationLine: 'line-through', color: theme.textSecondary }}>
-              ${(item.originalPrice / 100).toFixed(2)}
+              ${item.originalPrice.toFixed(2)}
             </ThemedText>
             <ThemedText type="h3" style={{ color: AstroBarColors.success }}>
-              ${(item.promoPrice / 100).toFixed(2)}
+              ${item.promoPrice.toFixed(2)}
             </ThemedText>
           </View>
         </View>

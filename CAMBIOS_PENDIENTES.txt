@@ -1,0 +1,22 @@
+RESUMEN DE CAMBIOS - ELIMINAR CONVERSIÓN CENTAVOS
+
+✅ COMPLETADOS:
+1. server/routes/promotionRoutes.tsx - Línea 197
+2. server/routes/businessRoutes.ts - Líneas 237, 260
+3. client/screens/BusinessDashboardScreen.tsx - Múltiples líneas
+4. client/screens/ActivePromotionsScreen.tsx - Línea amountPaid
+5. client/screens/AllPromotionsScreen.tsx - originalPrice y promoPrice
+6. client/screens/BusinessPromotionsPanel.tsx - promoPrice
+
+⏳ PENDIENTES (CRÍTICOS):
+1. CreateFlashPromotionScreen.tsx - ELIMINAR: * 100 y / 100
+2. CreateCommonPromotionScreen.tsx - ELIMINAR: * 100 y / 100
+3. ConfirmPromotionScreen.tsx - ELIMINAR: / 100
+4. PromotionQRScreen.tsx - ELIMINAR: / 100
+5. ScheduledPromotionsScreen.tsx - ELIMINAR: * 100 y / 100
+
+LÓGICA:
+- DB almacena en PESOS (2000-15000 ARS)
+- NO convertir a centavos (* 100)
+- NO convertir de centavos (/ 100)
+- Mostrar directamente: ${value.toFixed(2)}

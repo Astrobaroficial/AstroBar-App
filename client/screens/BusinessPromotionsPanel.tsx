@@ -152,7 +152,7 @@ export default function BusinessPromotionsPanel() {
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Precio</Text>
-            <Text style={styles.statValue}>${(item.promoPrice / 100).toFixed(2)}</Text>
+            <Text style={styles.statValue}>${item.promoPrice.toFixed(2)}</Text>
           </View>
         </View>
 

@@ -1,0 +1,15 @@
+BACKEND - server/routes/promotionRoutes.ts:
+Línea 197: `${promotion.title} - $${(promoPrice / 100).toFixed(2)}`
+
+BACKEND - server/routes/businessRoutes.ts:
+Línea 237: revenue: Number(p.revenue) / 100 (YA CORREGIDO)
+Línea 260: totalSpent: Number(u.totalSpent) / 100 (YA CORREGIDO)
+
+FRONTEND - client/screens/BusinessDashboardScreen.tsx:
+Múltiples líneas con / 100 (YA CORREGIDO)
+
+PENDIENTE REVISAR:
+- client/screens/*.tsx (todas las pantallas)
+- server/routes/statsRoutes.ts
+- server/routes/adminRoutes.ts
+- server/routes/paymentRoutes.ts

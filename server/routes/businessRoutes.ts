@@ -237,7 +237,7 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     const topProducts = (Array.isArray(topProductsResult[0]) ? topProductsResult[0] : topProductsResult).map((p: any) => ({
       name: p.name,
       quantity: Number(p.quantity),
-      revenue: Number(p.revenue) / 100
+      revenue: Number(p.revenue)
     }));
 
     // Tasa de cancelación
@@ -269,7 +269,7 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
       name: u.name,
       phone: u.phone,
       redemptions: Number(u.redemptions),
-      totalSpent: Number(u.totalSpent) / 100
+      totalSpent: Number(u.totalSpent)
     }));
     
     res.json({ 
@@ -513,14 +513,14 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
     res.json({
       success: true,
       stats: {
-        totalEarnings: totalEarnings / 100,
-        pendingBalance: pendingBalance / 100,
-        availableBalance: availableBalance / 100,
+        totalEarnings: totalEarnings,
+        pendingBalance: pendingBalance,
+        availableBalance: availableBalance,
         platformCommission,
         totalTransactions: paidTransactions.length,
-        thisMonthEarnings: totalEarnings / 100,
-        pendingPayouts: pendingBalance / 100,
-        averageOrderValue: paidTransactions.length > 0 ? (totalEarnings / paidTransactions.length) / 100 : 0
+        thisMonthEarnings: totalEarnings,
+        pendingPayouts: pendingBalance,
+        averageOrderValue: paidTransactions.length > 0 ? (totalEarnings / paidTransactions.length) : 0
       }
     });
   } catch (error: any) {
