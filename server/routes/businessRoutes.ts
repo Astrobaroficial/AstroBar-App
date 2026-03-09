@@ -621,6 +621,37 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Create business route
+router.post("/create", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { name, description, type, address, phone, image } = req.body;
+    const businessId = uuidv4();
+    
+    const newBusiness = {
+      id: businessId,
+      name: name || "Mi Bar",
+      description: description || "",
+      type: type || "bar",
+      address: address || "Buenos Aires, Argentina",
+      phone: phone || "",
+      image: image || "",
+      latitude: -34.6037,
+      longitude: -58.3816,
+      ownerId: req.user!.id,
+      isActive: true,
+      isVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await db.insert(businesses).values(newBusiness);
+    res.json({ success: true, business: newBusiness });
+  } catch (error: any) {
+    console.error('Create business error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Create product route
 router.post("/products", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
