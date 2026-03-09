@@ -112,17 +112,25 @@ export default function BusinessPromotionsPanel() {
               </View>
             )}
           </View>
-          <TouchableOpacity
-            onPress={() => togglePromotion(item.id, item.isActive)}
-            style={[styles.statusBtn, !item.isActive && styles.inactiveBtn]}
-            disabled={isExpired}
-          >
-            <Ionicons
-              name={item.isActive ? 'pause' : 'play'}
-              size={16}
-              color="#FFF"
-            />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate(item.type === 'flash' ? 'CreateFlashPromotion' : 'CreateCommonPromotion', { editPromotion: item })}
+              style={[styles.statusBtn, { backgroundColor: '#2196F3' }]}
+            >
+              <Ionicons name="pencil" size={16} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => togglePromotion(item.id, item.isActive)}
+              style={[styles.statusBtn, !item.isActive && styles.inactiveBtn]}
+              disabled={isExpired}
+            >
+              <Ionicons
+                name={item.isActive ? 'pause' : 'play'}
+                size={16}
+                color="#FFF"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.stats}>

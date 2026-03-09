@@ -180,6 +180,7 @@ export default function BusinessManageScreen() {
 
   React.useEffect(() => {
     if (business) {
+      console.log('📸 Business image:', business.image?.substring(0, 50));
       setBusinessName(business.name || "");
       setBusinessDescription(business.description || "");
       setBusinessAddress(business.address || "");
@@ -378,8 +379,8 @@ export default function BusinessManageScreen() {
                       Cargando imagen...
                     </ThemedText>
                   </View>
-                ) : businessImage ? (
-                  <Image source={{ uri: businessImage }} style={styles.businessImage} contentFit="cover" />
+                ) : businessImage && (businessImage.startsWith('data:image') || businessImage.startsWith('http')) ? (
+                  <Image source={{ uri: businessImage }} style={styles.businessImage} contentFit="cover" key={businessImage} />
                 ) : (
                   <View style={[styles.imagePlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
                     <Feather name="camera" size={32} color={theme.textSecondary} />

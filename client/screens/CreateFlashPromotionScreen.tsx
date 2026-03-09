@@ -22,10 +22,12 @@ interface Product {
   isAvailable: boolean;
 }
 
-export default function CreateFlashPromotionScreen() {
+export default function CreateFlashPromotionScreen({ route }: any) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
+  const editPromotion = route?.params?.editPromotion;
+  const isEditing = !!editPromotion;
   
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -35,10 +37,18 @@ export default function CreateFlashPromotionScreen() {
   const [duration, setDuration] = useState<5 | 10 | 15>(5);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [customImage, setCustomImage] = useState("");
 
   useEffect(() => {
     loadProducts();
-    checkLimits();
+    if (!isEditing) {
+      checkLimits();
+    }
+    if (isEditing && editPromotion) {
+      setDiscountedPrice((editPromotion.promoPrice / 100).toString());
+      setStock(editPromotion.stock.toString());
+      setCustomImage(editPromotion.image || "");
+    }
   }, []);
 
   useEffect(() => {
@@ -86,7 +96,7 @@ export default function CreateFlashPromotionScreen() {
       return;
     }
 
-    const discountPrice = parseFloat(discountedPrice) * 100; // Convertir a centavos
+    const discountPrice = parseFloat(discountedPrice) * 100;
     if (discountPrice >= selectedProduct.price) {
       Alert.alert("Error", "El precio promocional debe ser menor al precio original");
       return;
@@ -95,31 +105,32 @@ export default function CreateFlashPromotionScreen() {
     setLoading(true);
     try {
       const promotionData = {
-        businessId: "", // Se obtiene automáticamente en el backend
+        businessId: "",
         title: `${selectedProduct.name} - Promoción Flash`,
         description: selectedProduct.description || `Promoción flash de ${selectedProduct.name}`,
         type: "flash",
         originalPrice: selectedProduct.price,
         promoPrice: discountPrice,
         stock: parseInt(stock),
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + duration * 60 * 1000).toISOString(),
-        image: selectedProduct.image
+        startTime: isEditing ? editPromotion.startTime : new Date().toISOString(),
+        endTime: isEditing ? editPromotion.endTime : new Date(Date.now() + duration * 60 * 1000).toISOString(),
+        image: customImage || selectedProduct.image
       };
       
-      const response = await apiRequest("POST", "/api/promotions", promotionData);
+      const url = isEditing ? `/api/promotions/${editPromotion.id}` : "/api/promotions";
+      const method = isEditing ? "PUT" : "POST";
+      const response = await apiRequest(method, url, promotionData);
       const data = await response.json();
       
       if (data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("¡Éxito!", "Promoción flash creada", [
+        Alert.alert("¡Éxito!", isEditing ? "Promoción actualizada" : "Promoción flash creada", [
           { text: "OK", onPress: () => navigation.goBack() }
         ]);
       }
     } catch (error: any) {
-      console.error("Error creating promotion:", error);
-      const errorMessage = error.message || "No se pudo crear la promoción";
-      Alert.alert("Error", errorMessage);
+      console.error("Error:", error);
+      Alert.alert("Error", error.message || "No se pudo guardar la promoción");
     } finally {
       setLoading(false);
     }
@@ -172,7 +183,7 @@ export default function CreateFlashPromotionScreen() {
         </Pressable>
 
         <ThemedText type="h2" style={{ marginBottom: Spacing.xs }}>
-          Crear Promoción Flash
+          {isEditing ? "Editar Promoción Flash" : "Crear Promoción Flash"}
         </ThemedText>
         <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xl }}>
           Duración: 5, 10 o 15 minutos
@@ -260,7 +271,7 @@ export default function CreateFlashPromotionScreen() {
         >
           <Feather name="zap" size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />
           <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
-            {loading ? "Creando..." : "Crear Promoción Flash"}
+            {loading ? "Guardando..." : isEditing ? "Actualizar Promoción" : "Crear Promoción Flash"}
           </ThemedText>
         </Pressable>
       </ScrollView>
