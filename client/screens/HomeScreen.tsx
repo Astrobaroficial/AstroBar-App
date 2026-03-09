@@ -20,6 +20,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
+import * as Location from "expo-location";
 import Animated, {
   FadeInDown,
   FadeInRight,
@@ -72,9 +73,24 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
 
   const loadData = useCallback(async () => {
     try {
+      // Obtener ubicación del usuario
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const location = await Location.getCurrentPositionAsync({});
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        }
+      } catch (locError) {
+        console.log('Location not available:', locError);
+      }
+
       const response = await apiRequest('GET', '/api/businesses');
       const data = await response.json();
       const rawBusinesses = data.businesses || [];
@@ -181,6 +197,31 @@ export default function HomeScreen() {
   const firstName = user?.name.split(" ")[0] || "Usuario";
 
   const hasActiveFilters = searchQuery.trim() || activeCategory || activeFilter;
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const getDistanceText = (business: Business) => {
+    if (!userLocation || !business.latitude || !business.longitude) return null;
+    const distance = calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      business.latitude,
+      business.longitude
+    );
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)}m`;
+    }
+    return `${distance.toFixed(1)}km`;
+  };
 
   return (
     <LinearGradient
@@ -671,6 +712,14 @@ export default function HomeScreen() {
                         />
                       </View>
                     </View>
+                    {getDistanceText(business) && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                        <Feather name="map-pin" size={10} color={theme.textSecondary} />
+                        <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 2 }}>
+                          {getDistanceText(business)}
+                        </ThemedText>
+                      </View>
+                    )}
                   </View>
                 </Pressable>
               ))}

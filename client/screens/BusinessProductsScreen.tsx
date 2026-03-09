@@ -172,7 +172,7 @@ export default function BusinessProductsScreen() {
         imageData = `data:${mimeType};base64,${base64}`;
       }
 
-      const apiResponse = await apiRequest("POST", "/api/business/product-image", {
+      const apiResponse = await apiRequest("POST", "/api/upload/product-image", {
         image: imageData,
       });
 

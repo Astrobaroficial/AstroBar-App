@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { apiRequest } from '../lib/query-client';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +17,7 @@ interface Promotion {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  image?: string;
 }
 
 export default function BusinessPromotionsPanel() {
@@ -88,6 +90,13 @@ export default function BusinessPromotionsPanel() {
 
     return (
       <View style={[styles.card, item.type === 'flash' && styles.flashCard, !item.isActive && styles.inactiveCard]}>
+        {item.image && (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.promoImage}
+            contentFit="cover"
+          />
+        )}
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{item.title}</Text>
@@ -250,6 +259,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#2A2F4A',
+  },
+  promoImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   flashCard: { borderColor: '#FFD700', borderWidth: 2 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },

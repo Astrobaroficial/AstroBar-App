@@ -96,6 +96,37 @@ router.post("/product/:id/upload-image", authenticateToken, upload.single("image
   }
 });
 
+// Subir imagen de producto (base64)
+router.post("/product-image", authenticateToken, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: "No se proporcionó imagen" });
+    }
+
+    // Extraer base64 y guardar como archivo
+    const matches = image.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) {
+      return res.status(400).json({ error: "Formato de imagen inválido" });
+    }
+
+    const extension = matches[1];
+    const base64Data = matches[2];
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${extension}`;
+    const filepath = path.join(__dirname, "../uploads", filename);
+
+    // Guardar archivo
+    const fs = require("fs");
+    fs.writeFileSync(filepath, Buffer.from(base64Data, "base64"));
+
+    const imageUrl = `/uploads/${filename}`;
+    res.json({ success: true, imageUrl });
+  } catch (error: any) {
+    console.error("Error uploading product image:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Subir imagen de perfil de usuario
 router.post("/user/upload-image", authenticateToken, upload.single("image"), async (req, res) => {
   try {
