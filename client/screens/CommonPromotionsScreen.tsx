@@ -13,12 +13,12 @@ import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
-type PromotionsListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type CommonPromotionsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export default function PromotionsListScreen() {
+export default function CommonPromotionsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const navigation = useNavigation<PromotionsListScreenNavigationProp>();
+  const navigation = useNavigation<CommonPromotionsScreenNavigationProp>();
   
   const [promotions, setPromotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export default function PromotionsListScreen() {
 
   const loadPromotions = async () => {
     try {
-      const response = await apiRequest('GET', '/api/promotions?type=flash');
+      const response = await apiRequest('GET', '/api/promotions?type=common');
       const data = await response.json();
       setPromotions(data.promotions || []);
     } catch (error) {
@@ -65,14 +65,6 @@ export default function PromotionsListScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <ThemedText type="h4" numberOfLines={2}>{item.title}</ThemedText>
-          {item.type === 'flash' && (
-            <View style={styles.flashBadge}>
-              <Feather name="zap" size={12} color="#FFD700" />
-              <ThemedText type="caption" style={{ color: '#FFD700', marginLeft: 4 }}>
-                FLASH
-              </ThemedText>
-            </View>
-          )}
         </View>
 
         <ThemedText type="small" style={{ color: theme.textSecondary }} numberOfLines={2}>
@@ -121,7 +113,7 @@ export default function PromotionsListScreen() {
         <Pressable onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={24} color={theme.text} />
         </Pressable>
-        <ThemedText type="h3">Promociones Flash</ThemedText>
+        <ThemedText type="h3">Promociones Comunes</ThemedText>
         <Pressable onPress={handleRefresh}>
           <Feather name="refresh-cw" size={24} color={theme.text} />
         </Pressable>
@@ -139,7 +131,7 @@ export default function PromotionsListScreen() {
           <View style={styles.empty}>
             <Feather name="inbox" size={48} color={theme.textSecondary} />
             <ThemedText type="h4" style={{ marginTop: Spacing.lg, color: theme.textSecondary }}>
-              No hay promociones disponibles
+              No hay promociones comunes disponibles
             </ThemedText>
           </View>
         }
@@ -175,18 +167,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: Spacing.sm,
-  },
-  flashBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
   },
   businessInfo: {
     flexDirection: 'row',

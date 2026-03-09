@@ -23,6 +23,7 @@ import PromotionQRScreen from "@/screens/PromotionQRScreen";
 import ScanQRScreen from "@/screens/ScanQRScreen";
 import CreateFlashPromotionScreen from "@/screens/CreateFlashPromotionScreen";
 import CreateCommonPromotionScreen from "@/screens/CreateCommonPromotionScreen";
+import CommonPromotionsScreen from "@/screens/CommonPromotionsScreen";
 import BarMenuScreen from "@/screens/BarMenuScreen";
 import OrderCartScreen from "@/screens/OrderCartScreen";
 
@@ -77,6 +78,7 @@ export type RootStackParamList = {
   BarMenu: { businessId: string };
   OrderCart: undefined;
   OrderPayment: { total: number; items: any[] };
+  CommonPromotions: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -188,6 +190,11 @@ export default function RootStackNavigator() {
           <Stack.Screen
             name="OrderPayment"
             component={OrderPaymentScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CommonPromotions"
+            component={CommonPromotionsScreen}
             options={{ headerShown: false }}
           />
         </>

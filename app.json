@@ -22,12 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.astrobar.app",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
-        }
-      }
+      "package": "com.astrobar.app"
     },
     "web": {
       "output": "single",
@@ -45,12 +40,6 @@
       ],
       "expo-web-browser",
       "expo-secure-store",
-      [
-        "react-native-maps",
-        {
-          "googleMapsApiKey": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
-        }
-      ],
       [
         "expo-location",
         {
