@@ -176,6 +176,31 @@ export default function BusinessPromotionsPanel() {
 
   return (
     <View style={styles.container}>
+      {/* Header con navegación */}
+      <View style={styles.topNav}>
+        <TouchableOpacity
+          style={[styles.navButton, styles.navButtonActive]}
+          onPress={() => {}}
+        >
+          <Ionicons name="megaphone" size={20} color="#FFD700" />
+          <Text style={styles.navButtonText}>Promociones</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessMenu')}
+        >
+          <Ionicons name="restaurant" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Menú</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('BusinessSettings')}
+        >
+          <Ionicons name="settings" size={20} color="#999" />
+          <Text style={[styles.navButtonText, { color: '#999' }]}>Ajustes</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{promotions.filter(p => p.isActive).length || 0}</Text>
@@ -239,6 +264,31 @@ export default function BusinessPromotionsPanel() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0E27' },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1F3A',
+    paddingTop: 40,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2F4A',
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  navButtonActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFD700',
+  },
+  navButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFD700',
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#FFF', fontSize: 16 },
   summary: {

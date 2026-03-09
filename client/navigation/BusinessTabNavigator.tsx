@@ -4,6 +4,7 @@ import { Feather } from "@expo/vector-icons";
 
 import BusinessDashboardScreen from "@/screens/BusinessDashboardScreen";
 import BusinessMenuScreen from "@/screens/BusinessMenuScreen";
+import BusinessManageScreen from "@/screens/BusinessManageScreen";
 import QRScannerScreen from "@/screens/QRScannerScreen";
 import BusinessPromotionsPanel from "@/screens/BusinessPromotionsPanel";
 import ScheduledPromotionsScreen from "@/screens/ScheduledPromotionsScreen";
@@ -11,8 +12,21 @@ import HeatmapScreen from "@/screens/HeatmapScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const Stack = createStackNavigator();
 
 const Tab = createBottomTabNavigator();
+
+function ManagementStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="BusinessPromotions" component={BusinessPromotionsPanel} />
+      <Stack.Screen name="BusinessMenu" component={BusinessMenuScreen} />
+      <Stack.Screen name="BusinessSettings" component={BusinessManageScreen} />
+    </Stack.Navigator>
+  );
+}
 
 export default function BusinessTabNavigator() {
   const { theme } = useTheme();
@@ -46,9 +60,10 @@ export default function BusinessTabNavigator() {
       />
       <Tab.Screen
         name="BusinessManagement"
-        component={BusinessMenuScreen}
+        component={ManagementStack}
         options={{
           title: "Gestión",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="briefcase" size={size} color={color} />
           ),
