@@ -51,27 +51,10 @@ router.post("/business-image", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    // Extraer base64 y guardar como archivo
-    const matches = image.match(/^data:image\/(\w+);base64,(.+)$/);
-    if (!matches) {
-      return res.status(400).json({ error: "Formato de imagen inválido" });
-    }
+    // Guardar imagen como base64 directamente en DB
+    await db.update(businesses).set({ image }).where(eq(businesses.id, business.id));
 
-    const extension = matches[1];
-    const base64Data = matches[2];
-    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${extension}`;
-    const filepath = path.join(__dirname, "../uploads", filename);
-
-    // Guardar archivo
-    const fs = require("fs");
-    fs.writeFileSync(filepath, Buffer.from(base64Data, "base64"));
-
-    const imageUrl = `/uploads/${filename}`;
-    
-    // Actualizar imagen del negocio
-    await db.update(businesses).set({ image: imageUrl }).where(eq(businesses.id, business.id));
-
-    res.json({ success: true, imageUrl });
+    res.json({ success: true, imageUrl: image });
   } catch (error: any) {
     console.error("Error uploading business image:", error);
     res.status(500).json({ error: error.message });
@@ -146,23 +129,8 @@ router.post("/product-image", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "No se proporcionó imagen" });
     }
 
-    // Extraer base64 y guardar como archivo
-    const matches = image.match(/^data:image\/(\w+);base64,(.+)$/);
-    if (!matches) {
-      return res.status(400).json({ error: "Formato de imagen inválido" });
-    }
-
-    const extension = matches[1];
-    const base64Data = matches[2];
-    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${extension}`;
-    const filepath = path.join(__dirname, "../uploads", filename);
-
-    // Guardar archivo
-    const fs = require("fs");
-    fs.writeFileSync(filepath, Buffer.from(base64Data, "base64"));
-
-    const imageUrl = `/uploads/${filename}`;
-    res.json({ success: true, imageUrl });
+    // Guardar imagen como base64 directamente
+    res.json({ success: true, imageUrl: image });
   } catch (error: any) {
     console.error("Error uploading product image:", error);
     res.status(500).json({ error: error.message });
