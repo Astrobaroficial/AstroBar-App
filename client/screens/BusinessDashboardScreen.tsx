@@ -171,10 +171,11 @@ export default function BusinessDashboardScreen() {
   const loadData = async () => {
     try {
       const businessId = selectedBusiness?.id;
+      const dashboardUrl = businessId ? `/api/business/dashboard?businessId=${businessId}` : "/api/business/dashboard";
       const statsUrl = businessId ? `/api/business/stats?businessId=${businessId}` : "/api/business/stats";
       
       const [dashboardRes, statsRes, limitsRes] = await Promise.all([
-        apiRequest("GET", "/api/business/dashboard"),
+        apiRequest("GET", dashboardUrl),
         apiRequest("GET", statsUrl),
         apiRequest("GET", "/api/business/limits"),
       ]);
