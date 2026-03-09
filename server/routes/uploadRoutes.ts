@@ -37,6 +37,48 @@ const upload = multer({
 });
 
 // Subir imagen de negocio
+router.post("/business-image", authenticateToken, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: "No se proporcionó imagen" });
+    }
+
+    // Obtener negocio del usuario
+    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    // Extraer base64 y guardar como archivo
+    const matches = image.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) {
+      return res.status(400).json({ error: "Formato de imagen inválido" });
+    }
+
+    const extension = matches[1];
+    const base64Data = matches[2];
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${extension}`;
+    const filepath = path.join(__dirname, "../uploads", filename);
+
+    // Guardar archivo
+    const fs = require("fs");
+    fs.writeFileSync(filepath, Buffer.from(base64Data, "base64"));
+
+    const imageUrl = `/uploads/${filename}`;
+    
+    // Actualizar imagen del negocio
+    await db.update(businesses).set({ image: imageUrl }).where(eq(businesses.id, business.id));
+
+    res.json({ success: true, imageUrl });
+  } catch (error: any) {
+    console.error("Error uploading business image:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Subir imagen de negocio (multipart)
 router.post("/business/upload-image", authenticateToken, upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
