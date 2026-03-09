@@ -1,43 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  ScrollView,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
-import * as Notifications from "expo-notifications";
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
-import { BarPinMarker, PinStatus } from "@/components/BarPinMarker";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type PinStatus = 'closed' | 'opening_soon' | 'open' | 'hot_promo';
 
-const SEARCH_RADIUS_OPTIONS = [1, 2, 5, 10, 15]; // km
+const { width, height } = Dimensions.get('window');
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export default function MapScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<MapScreenNavigationProp>();
+  const mapRef = useRef<MapView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [location, setLocation] = useState<any>(null);
   const [bars, setBars] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [searchRadius, setSearchRadius] = useState(5); // km
-  const [showRadiusSelector, setShowRadiusSelector] = useState(false);
+  const [selectedBar, setSelectedBar] = useState<any>(null);
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);
+  const [routeInfo, setRouteInfo] = useState<any>(null);
 
   useEffect(() => {
     loadMapData();
-    setupProximityNotifications();
-  }, [searchRadius]);
+  }, []);
 
   const loadMapData = async () => {
     try {
@@ -55,8 +57,8 @@ export default function MapScreen() {
       const data = await response.json();
       
       if (data.success) {
-        setBars(data.businesses || []);
-        checkProximityNotifications(data.businesses || [], currentLocation);
+        const activeBars = (data.businesses || []).filter((b: any) => b.latitude && b.longitude);
+        setBars(activeBars);
       }
     } catch (err: any) {
       console.error('Error loading map:', err);
@@ -66,29 +68,65 @@ export default function MapScreen() {
     }
   };
 
-  const setupProximityNotifications = async () => {
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') {
-      await Notifications.requestPermissionsAsync();
+  const getDirections = async (bar: any) => {
+    if (!location) return;
+
+    try {
+      const origin = `${location.coords.latitude},${location.coords.longitude}`;
+      const destination = `${bar.latitude},${bar.longitude}`;
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const points = decodePolyline(route.overview_polyline.points);
+        setRouteCoords(points);
+        setRouteInfo({
+          distance: route.legs[0].distance.text,
+          duration: route.legs[0].duration.text,
+        });
+
+        // Fit map to route
+        mapRef.current?.fitToCoordinates(points, {
+          edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
+          animated: true,
+        });
+      }
+    } catch (err) {
+      console.error('Error getting directions:', err);
     }
   };
 
-  const checkProximityNotifications = async (businesses: any[], userLocation: any) => {
-    const hotPromoBars = businesses.filter(bar => 
-      bar.hasFlashPromo && 
-      calculateDistance(userLocation.coords, { latitude: bar.latitude, longitude: bar.longitude }) <= 1 // 1km radius
-    );
+  const decodePolyline = (encoded: string) => {
+    const points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
 
-    if (hotPromoBars.length > 0) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🔥 ¡Promoción Flash Cerca!',
-          body: `${hotPromoBars[0].name} tiene promociones activas a ${Math.round(calculateDistance(userLocation.coords, { latitude: hotPromoBars[0].latitude, longitude: hotPromoBars[0].longitude }) * 1000)}m`,
-          data: { businessId: hotPromoBars[0].id, type: 'flash_promo_nearby' },
-        },
-        trigger: { seconds: 1 },
-      });
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
     }
+    return points;
   };
 
   const calculateDistance = (coord1: any, coord2: any) => {
@@ -102,17 +140,38 @@ export default function MapScreen() {
     return R * c;
   };
 
-  const getBarStatus = (bar: any): PinStatus => {
-    // Priority: hot_promo > open > opening_soon > closed
-    if (bar.hasFlashPromo && bar.isOpen) return 'hot_promo';
-    if (bar.isOpen) return 'open';
-    if (bar.openingSoon) return 'opening_soon';
-    return 'closed';
+  const getMarkerColor = (bar: any) => {
+    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700';
+    if (bar.isOpen) return '#4CAF50';
+    if (bar.openingSoon) return '#FFB800';
+    return '#EF4444';
   };
 
-  const handleBarPress = (bar: any) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate('BusinessDetail', { businessId: bar.id });
+  const handleMarkerPress = (bar: any) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedBar(bar);
+    setRouteCoords([]);
+    setRouteInfo(null);
+    mapRef.current?.animateToRegion({
+      latitude: parseFloat(bar.latitude),
+      longitude: parseFloat(bar.longitude),
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+  };
+
+  const handleGetDirections = () => {
+    if (selectedBar) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      getDirections(selectedBar);
+    }
+  };
+
+  const handleViewDetails = () => {
+    if (selectedBar) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      navigation.navigate('BusinessDetail', { businessId: selectedBar.id });
+    }
   };
 
   if (isLoading) {
@@ -141,111 +200,106 @@ export default function MapScreen() {
   }
 
   return (
-    <View style={[styles.fullContainer, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <ThemedText type="h2">Bares Cercanos 🗺️</ThemedText>
-          <Pressable
-            style={[styles.radiusButton, { backgroundColor: theme.card }]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setShowRadiusSelector(!showRadiusSelector);
+    <View style={styles.fullContainer}>
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        initialRegion={{
+          latitude: location?.coords.latitude || -34.6037,
+          longitude: location?.coords.longitude || -58.3816,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showsUserLocation
+        showsMyLocationButton
+      >
+        {bars.map((bar) => (
+          <Marker
+            key={bar.id}
+            coordinate={{
+              latitude: parseFloat(bar.latitude),
+              longitude: parseFloat(bar.longitude),
             }}
+            onPress={() => handleMarkerPress(bar)}
+            pinColor={getMarkerColor(bar)}
           >
-            <Feather name="target" size={16} color={AstroBarColors.primary} />
-            <ThemedText type="small" style={{ color: AstroBarColors.primary, marginLeft: 4 }}>
-              {searchRadius}km
-            </ThemedText>
-          </Pressable>
-        </View>
-        
-        <ThemedText type="small" style={{ color: theme.textSecondary }}>
-          {bars.length} bares en {searchRadius}km
-        </ThemedText>
-
-        {showRadiusSelector && (
-          <View style={[styles.radiusSelector, { backgroundColor: theme.card }]}>
-            {SEARCH_RADIUS_OPTIONS.map(radius => (
-              <Pressable
-                key={radius}
-                style={[
-                  styles.radiusOption,
-                  {
-                    backgroundColor: searchRadius === radius ? AstroBarColors.primaryLight : 'transparent'
-                  }
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSearchRadius(radius);
-                  setShowRadiusSelector(false);
-                }}
-              >
-                <ThemedText
-                  type="small"
-                  style={{
-                    color: searchRadius === radius ? AstroBarColors.primary : theme.text,
-                    fontWeight: searchRadius === radius ? '600' : '400'
-                  }}
-                >
-                  {radius}km
-                </ThemedText>
-              </Pressable>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.listContainer}>
-        {bars.map((bar) => {
-          const status = getBarStatus(bar);
-          const distance = location ? calculateDistance(location.coords, { latitude: bar.latitude, longitude: bar.longitude }) : 0;
-          
-          return (
-            <View key={bar.id} style={styles.barRow}>
-              <BarPinMarker
-                status={status}
-                businessName={bar.name}
-                onPress={() => handleBarPress(bar)}
-                timeUntilOpen={bar.timeUntilOpen}
-                hotPromoCount={bar.flashPromoCount}
-              />
-              
-              <Pressable
-                onPress={() => handleBarPress(bar)}
-                style={[
-                  styles.barCard,
-                  { backgroundColor: theme.card },
-                  status === 'hot_promo' && styles.barCardFlash,
-                ]}
-              >
-                <View style={styles.barInfo}>
-                  <ThemedText type="body" style={styles.barName}>
-                    {bar.name}
-                  </ThemedText>
-                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                    {bar.address || 'Buenos Aires'} • {distance.toFixed(1)}km
-                  </ThemedText>
-                  <View style={styles.barMeta}>
-                    <ThemedText type="caption" style={{
-                      color: status === 'hot_promo' ? '#FFD700' : 
-                             status === 'open' ? '#4CAF50' : 
-                             status === 'opening_soon' ? '#FFB800' : '#999999',
-                      fontWeight: '700'
-                    }}>
-                      {status === 'hot_promo' ? `⚡ ${bar.flashPromoCount || 1} FLASH ACTIVO` :
-                       status === 'open' ? '● Abierto' :
-                       status === 'opening_soon' ? `🕐 ${bar.timeUntilOpen || 'Próximo a abrir'}` :
-                       '● Cerrado'}
-                    </ThemedText>
-                  </View>
+            <View style={[styles.customMarker, { backgroundColor: getMarkerColor(bar) }]}>
+              <Feather name="home" size={20} color="#FFF" />
+              {bar.hasFlashPromo && (
+                <View style={styles.flashBadge}>
+                  <Feather name="zap" size={10} color="#FFD700" />
                 </View>
-
-                <Feather name="chevron-right" size={24} color={theme.textSecondary} />
-              </Pressable>
+              )}
             </View>
-          );
-        })}
-      </ScrollView>
+          </Marker>
+        ))}
+
+        {routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeColor={AstroBarColors.primary}
+            strokeWidth={4}
+          />
+        )}
+      </MapView>
+
+      {selectedBar && (
+        <View style={[styles.bottomSheet, { backgroundColor: theme.card }]}>
+          <View style={styles.sheetHeader}>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="h3">{selectedBar.name}</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {selectedBar.address || 'Buenos Aires'}
+              </ThemedText>
+              <View style={styles.statusRow}>
+                <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedBar) }]} />
+                <ThemedText type="small" style={{ color: getMarkerColor(selectedBar), fontWeight: '600' }}>
+                  {selectedBar.hasFlashPromo ? `⚡ ${selectedBar.flashPromoCount} Flash Activo` :
+                   selectedBar.isOpen ? 'Abierto' : 'Cerrado'}
+                </ThemedText>
+              </View>
+            </View>
+            <Pressable onPress={() => setSelectedBar(null)} style={styles.closeButton}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+
+          {routeInfo && (
+            <View style={styles.routeInfo}>
+              <View style={styles.routeItem}>
+                <Feather name="navigation" size={16} color={AstroBarColors.primary} />
+                <ThemedText type="small" style={{ marginLeft: 8 }}>{routeInfo.distance}</ThemedText>
+              </View>
+              <View style={styles.routeItem}>
+                <Feather name="clock" size={16} color={AstroBarColors.primary} />
+                <ThemedText type="small" style={{ marginLeft: 8 }}>{routeInfo.duration}</ThemedText>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={[styles.actionButton, { backgroundColor: AstroBarColors.primary }]}
+              onPress={handleGetDirections}
+            >
+              <Feather name="navigation" size={18} color="#FFF" />
+              <ThemedText type="small" style={{ color: '#FFF', marginLeft: 8, fontWeight: '600' }}>
+                Cómo llegar
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[styles.actionButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}
+              onPress={handleViewDetails}
+            >
+              <Feather name="info" size={18} color={theme.text} />
+              <ThemedText type="small" style={{ marginLeft: 8, fontWeight: '600' }}>
+                Ver detalles
+              </ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -259,6 +313,10 @@ const styles = StyleSheet.create({
   fullContainer: {
     flex: 1,
   },
+  map: {
+    width,
+    height,
+  },
   loadingText: {
     marginTop: Spacing.md,
   },
@@ -270,85 +328,86 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  header: {
-    padding: Spacing.lg,
-    paddingTop: Spacing['2xl'],
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  customMarker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    borderWidth: 3,
+    borderColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  radiusButton: {
-    flexDirection: 'row',
+  flashBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FF4444',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
-  radiusSelector: {
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  sheetHeader: {
     flexDirection: 'row',
-    marginTop: Spacing.md,
-    borderRadius: BorderRadius.md,
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+  },
+  closeButton: {
     padding: Spacing.xs,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
     gap: Spacing.xs,
   },
-  radiusOption: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  listContainer: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-    gap: Spacing.md,
-  },
-  barCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.md,
-  },
-  barCardFlash: {
-    borderWidth: 2,
-    borderColor: '#FFD700',
-  },
   statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  barInfo: {
-    flex: 1,
+  routeInfo: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
-  barName: {
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
-  },
-  barMeta: {
+  routeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.xs,
   },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
   },
-  statusText: {
-    fontWeight: '700',
-    fontSize: 11,
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
   },
 });

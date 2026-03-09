@@ -140,7 +140,7 @@ export const businesses = mysqlTable("businesses", {
   minOrder: int("min_order").default(5000), // in cents
   isActive: boolean("is_active").notNull().default(true),
   isOpen: boolean("is_open").notNull().default(true),
-  openingHours: text("opening_hours"), // JSON string
+  openingHours: text("opening_hours"), // JSON: {"monday":{"open":"18:00","close":"03:00","closed":false},"tuesday":{...}}
   categories: text("categories"), // comma-separated
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   // Campos para ubicación y zonas de entrega
