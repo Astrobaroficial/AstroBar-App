@@ -122,22 +122,14 @@ export default function MyBusinessesScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [16, 9],
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      try {
-        const response = await apiRequest("POST", "/api/upload/business-image", {
-          image: `data:image/jpeg;base64,${result.assets[0].base64}`,
-        });
-        const data = await response.json();
-        if (data.success && data.imageUrl) {
-          setNewBusiness(prev => ({ ...prev, image: data.imageUrl }));
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-      }
+      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setNewBusiness(prev => ({ ...prev, image: base64Image }));
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
