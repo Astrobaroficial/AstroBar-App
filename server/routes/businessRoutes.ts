@@ -168,7 +168,11 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
 // Stats route (PROTECTED - debe ir antes de /:id)
 router.get("/stats", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    const { businessId } = req.query;
+    
+    let [business] = businessId 
+      ? await db.select().from(businesses).where(eq(businesses.id, businessId as string)).limit(1)
+      : await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
     if (!business) {
       const businessId = uuidv4();
