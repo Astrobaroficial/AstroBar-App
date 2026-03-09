@@ -15,7 +15,7 @@ import PrivacyScreen from "@/screens/PrivacyScreen";
 import BankAccountSetupScreen from "@/screens/BankAccountSetupScreen";
 import PaymentHistoryScreen from "@/screens/PaymentHistoryScreen";
 import WithdrawalRequestScreen from "@/screens/WithdrawalRequestScreen";
-import StripeConnectStatusScreen from "@/screens/StripeConnectStatusScreen";
+import MercadoPagoConnectScreen from "@/screens/MercadoPagoConnectScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type ProfileStackParamList = {
@@ -36,6 +36,7 @@ export type ProfileStackParamList = {
   PaymentHistory: undefined;
   WithdrawalRequest: undefined;
   StripeConnectStatus: undefined;
+  MercadoPagoConnect: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -123,6 +124,11 @@ export default function ProfileStackNavigator() {
         name="StripeConnectStatus"
         component={StripeConnectStatusScreen}
         options={{ headerTitle: "Estado Stripe Connect" }}
+      />
+      <Stack.Screen
+        name="MercadoPagoConnect"
+        component={MercadoPagoConnectScreen}
+        options={{ headerTitle: "Mercado Pago" }}
       />
     </Stack.Navigator>
   );

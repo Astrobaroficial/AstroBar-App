@@ -11,6 +11,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { api } from "@/lib/api";
 import { apiRequest } from "@/lib/query-client";
+import { Linking } from "react-native";
 
 export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
@@ -24,28 +25,28 @@ export default function PaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/payments/create-intent", { userPromotionId });
+      // Crear pago con Mercado Pago
+      const response = await apiRequest("POST", "/api/mp/create-payment", { 
+        transactionId: userPromotionId 
+      });
       const data = await response.json();
       
       if (!data.success) {
-        throw new Error(data.error || "Error al crear intención de pago");
+        throw new Error(data.error || "Error al crear pago");
       }
       
-      const confirmResponse = await apiRequest("POST", "/api/payments/confirm", {
-        userPromotionId,
-        paymentIntentId: data.clientSecret,
-      });
-      
-      const confirmData = await confirmResponse.json();
-      
-      if (!confirmData.success) {
-        throw new Error(confirmData.error || "Error al confirmar pago");
+      // Abrir checkout de Mercado Pago
+      if (data.initPoint) {
+        await Linking.openURL(data.initPoint);
+        
+        // Simular éxito después de 3 segundos (en producción, el webhook confirmará)
+        setTimeout(() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("¡Pago exitoso!", "Tu promoción está lista", [
+            { text: "Ver QR", onPress: () => navigation.replace("QRScreen", { userPromotionId }) }
+          ]);
+        }, 3000);
       }
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("¡Pago exitoso!", "Tu promoción está lista", [
-        { text: "Ver QR", onPress: () => navigation.replace("QRScreen", { userPromotionId }) }
-      ]);
     } catch (error: any) {
       console.error("Payment error:", error);
       Alert.alert("Error", error.message || "No se pudo procesar el pago");

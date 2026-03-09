@@ -138,6 +138,23 @@ export default function WalletScreen() {
             style={[styles.actionItem, { borderBottomColor: theme.border }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.navigate('MercadoPagoConnect' as any);
+            }}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+              <Feather name="credit-card" size={20} color="#009EE3" />
+            </View>
+            <View style={styles.actionContent}>
+              <ThemedText type="body">Mercado Pago</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Conectar cuenta para recibir pagos</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+
+          <Pressable
+            style={[styles.actionItem, { borderBottomColor: theme.border }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.navigate('WithdrawalRequest');
             }}
           >

@@ -230,4 +230,32 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
+// 7. ADMIN - Ver todas las cuentas MP conectadas
+router.get("/admin/accounts", authenticateToken, requireRole("admin"), async (req, res) => {
+  try {
+    const { sql } = await import("drizzle-orm");
+    
+    const result: any = await db.execute(sql`
+      SELECT 
+        ma.id,
+        ma.business_id as businessId,
+        b.name as businessName,
+        ma.mp_user_id as mpUserId,
+        ma.is_active as isActive,
+        ma.expires_at as expiresAt,
+        ma.created_at as createdAt
+      FROM mercadopago_accounts ma
+      JOIN businesses b ON ma.business_id = b.id
+      ORDER BY ma.created_at DESC
+    `);
+
+    const accounts = result[0] || [];
+
+    res.json({ success: true, accounts });
+  } catch (error: any) {
+    console.error("Error fetching MP accounts:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
