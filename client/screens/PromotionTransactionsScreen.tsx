@@ -25,10 +25,14 @@ export default function PromotionTransactionsScreen() {
 
   const loadTransactions = async () => {
     try {
+      console.log('Loading business transactions...');
       const response = await apiRequest('GET', '/api/promotions/business/transactions');
       const data = await response.json();
+      console.log('Transactions response:', data);
       if (data.success) {
         setTransactions(data.transactions || []);
+      } else {
+        console.error('Error in response:', data.error);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
