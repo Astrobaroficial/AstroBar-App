@@ -278,9 +278,9 @@ export default function MyBusinessesScreen() {
 
   const getImageUrl = (imagePath: string | undefined): string | undefined => {
     if (!imagePath) {
-      // Usar imagen por defecto según el tipo de negocio
       return "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400&h=300&fit=crop";
     }
+    if (imagePath.startsWith("data:image")) return imagePath;
     if (imagePath.startsWith("http")) return imagePath;
     return `${getApiUrl()}${imagePath}`;
   };
