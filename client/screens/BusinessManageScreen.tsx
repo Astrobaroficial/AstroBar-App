@@ -112,7 +112,7 @@ export default function BusinessManageScreen() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"products" | "settings">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "settings">("settings");
   const [editMode, setEditMode] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
@@ -282,14 +282,7 @@ export default function BusinessManageScreen() {
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Feather name="arrow-left" size={24} color={theme.text} />
-        </Pressable>
-        <ThemedText type="h2">Gestionar Negocio</ThemedText>
-        <View style={{ width: 44 }} />
+        <ThemedText type="h2">Ajustes del Bar</ThemedText>
       </View>
 
       <View
