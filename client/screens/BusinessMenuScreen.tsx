@@ -362,13 +362,15 @@ export default function BusinessMenuScreen() {
               onPress={handlePickImage}
               disabled={isUploadingImage}
             >
-              {newProduct.image ? (
+              {isUploadingImage ? (
+                <ActivityIndicator size="large" color={AstroBarColors.primary} />
+              ) : newProduct.image ? (
                 <Image source={{ uri: newProduct.image }} style={styles.previewImage} contentFit="cover" />
               ) : (
                 <View style={{ alignItems: 'center' }}>
                   <Feather name="camera" size={32} color={theme.textSecondary} />
                   <Text style={[styles.inputLabel, { color: theme.textSecondary, marginTop: 8 }]}>
-                    {isUploadingImage ? 'Subiendo...' : 'Toca para agregar foto'}
+                    Toca para agregar foto
                   </Text>
                 </View>
               )}
@@ -531,13 +533,15 @@ export default function BusinessMenuScreen() {
               }}
               disabled={isUploadingImage}
             >
-              {newProduct.image ? (
+              {isUploadingImage ? (
+                <ActivityIndicator size="large" color={AstroBarColors.primary} />
+              ) : newProduct.image ? (
                 <Image source={{ uri: newProduct.image }} style={styles.previewImage} contentFit="cover" />
               ) : (
                 <View style={{ alignItems: 'center' }}>
                   <Feather name="camera" size={32} color={theme.textSecondary} />
                   <Text style={[styles.inputLabel, { color: theme.textSecondary, marginTop: 8 }]}>
-                    {isUploadingImage ? 'Subiendo...' : 'Toca para cambiar foto'}
+                    Toca para cambiar foto
                   </Text>
                 </View>
               )}

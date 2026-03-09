@@ -156,4 +156,29 @@ router.put("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Upload profile image (base64)
+router.post("/profile-image", authenticateToken, async (req, res) => {
+  try {
+    const { users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const { image } = req.body;
+
+    if (!image || !image.startsWith('data:image')) {
+      return res.status(400).json({ error: "Invalid image format" });
+    }
+
+    await db
+      .update(users)
+      .set({ profileImage: image })
+      .where(eq(users.id, req.user!.id));
+
+    res.json({ success: true, profileImage: image });
+  } catch (error: any) {
+    console.error("Error uploading profile image:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
