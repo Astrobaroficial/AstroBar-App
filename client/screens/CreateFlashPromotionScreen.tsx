@@ -38,7 +38,27 @@ export default function CreateFlashPromotionScreen() {
 
   useEffect(() => {
     loadProducts();
+    checkLimits();
   }, []);
+
+  const checkLimits = async () => {
+    try {
+      const response = await apiRequest("GET", "/api/business/limits");
+      const data = await response.json();
+      
+      if (data.success && data.limits) {
+        if (!data.limits.flashPromotions.canAdd) {
+          Alert.alert(
+            "Límite alcanzado",
+            `Ya tienes ${data.limits.flashPromotions.current} promociones flash activas. El máximo es ${data.limits.flashPromotions.max}. Espera a que terminen o pausa alguna.`,
+            [{ text: "OK", onPress: () => navigation.goBack() }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error checking limits:", error);
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -91,7 +111,9 @@ export default function CreateFlashPromotionScreen() {
         ]);
       }
     } catch (error: any) {
-      Alert.alert("Error", "No se pudo crear la promoción");
+      console.error("Error creating promotion:", error);
+      const errorMessage = error.message || "No se pudo crear la promoción";
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
