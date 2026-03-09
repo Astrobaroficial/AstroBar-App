@@ -63,6 +63,7 @@ export default function MyBusinessesScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState<Business | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [businessLat, setBusinessLat] = useState<number | null>(null);
   const [businessLng, setBusinessLng] = useState<number | null>(null);
 
@@ -118,18 +119,31 @@ export default function MyBusinessesScreen() {
   };
 
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.7,
-      base64: true,
-    });
+    console.log('📸 Iniciando selección de imagen');
+    try {
+      setUploadingImage(true);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.7,
+        base64: true,
+      });
 
-    if (!result.canceled && result.assets[0].base64) {
-      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      setNewBusiness(prev => ({ ...prev, image: base64Image }));
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      console.log('📸 Resultado:', { canceled: result.canceled, hasAssets: !!result.assets?.[0] });
+
+      if (!result.canceled && result.assets[0].base64) {
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        console.log('📸 Imagen convertida, tamaño:', base64Image.length);
+        setNewBusiness(prev => ({ ...prev, image: base64Image }));
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Alert.alert('Éxito', 'Imagen seleccionada. Presiona Actualizar.');
+      }
+    } catch (error) {
+      console.error('📸 Error:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -176,10 +190,13 @@ export default function MyBusinessesScreen() {
   };
 
   const handleUpdateBusiness = async () => {
+    console.log('💾 Actualizando negocio');
     if (!editingBusiness || !newBusiness.name.trim()) {
       Alert.alert("Error", "El nombre del negocio es requerido");
       return;
     }
+
+    console.log('💾 Datos:', { id: editingBusiness.id, hasImage: !!newBusiness.image, imageSize: newBusiness.image?.length });
 
     setSubmitting(true);
     try {
@@ -190,14 +207,19 @@ export default function MyBusinessesScreen() {
       });
       const data = await response.json();
       
+      console.log('💾 Respuesta:', data);
+      
       if (data.success) {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setShowEditModal(false);
         setEditingBusiness(null);
-        await loadBusinesses(); // Recargar lista
+        await loadBusinesses();
         Alert.alert("Éxito", "Negocio actualizado correctamente");
+      } else {
+        Alert.alert("Error", data.error || "No se pudo actualizar");
       }
     } catch (error: any) {
+      console.error('💾 Error:', error);
       Alert.alert("Error", error.message || "No se pudo actualizar el negocio");
     } finally {
       setSubmitting(false);
@@ -810,8 +832,15 @@ export default function MyBusinessesScreen() {
             />
 
             <ThemedText style={styles.inputLabel}>Imagen del negocio</ThemedText>
-            <Pressable style={styles.imagePickerButton} onPress={handlePickImage}>
-              {newBusiness.image ? (
+            <Pressable style={styles.imagePickerButton} onPress={handlePickImage} disabled={uploadingImage}>
+              {uploadingImage ? (
+                <>
+                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                  <ThemedText style={styles.imagePickerText}>
+                    Procesando imagen...
+                  </ThemedText>
+                </>
+              ) : newBusiness.image ? (
                 <Image
                   source={{ uri: getImageUrl(newBusiness.image) }}
                   style={styles.selectedImage}
@@ -943,8 +972,15 @@ export default function MyBusinessesScreen() {
             )}
 
             <ThemedText style={styles.inputLabel}>Imagen del negocio</ThemedText>
-            <Pressable style={styles.imagePickerButton} onPress={handlePickImage}>
-              {newBusiness.image ? (
+            <Pressable style={styles.imagePickerButton} onPress={handlePickImage} disabled={uploadingImage}>
+              {uploadingImage ? (
+                <>
+                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                  <ThemedText style={styles.imagePickerText}>
+                    Procesando imagen...
+                  </ThemedText>
+                </>
+              ) : newBusiness.image ? (
                 <Image
                   source={{ uri: getImageUrl(newBusiness.image) }}
                   style={styles.selectedImage}
@@ -975,7 +1011,7 @@ export default function MyBusinessesScreen() {
               <Pressable
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleUpdateBusiness}
-                disabled={submitting}
+                disabled={submitting || uploadingImage}
               >
                 {submitting ? (
                   <ActivityIndicator size="small" color="#fff" />
