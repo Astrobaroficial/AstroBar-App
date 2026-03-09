@@ -220,9 +220,10 @@ export default function BusinessDashboardScreen() {
   );
 
   useEffect(() => {
+    if (!selectedBusiness) return;
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedBusiness]);
 
   useEffect(() => {
     if (dashboard.pendingOrders > 0) {
