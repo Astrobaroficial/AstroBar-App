@@ -9,6 +9,7 @@ import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useToast } from "@/contexts/ToastContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 
@@ -25,6 +26,7 @@ interface Product {
 export default function CreateCommonPromotionScreen({ route }: any) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { showToast } = useToast();
   const navigation = useNavigation<any>();
   const editPromotion = route?.params?.editPromotion;
   const isEditing = !!editPromotion;
@@ -115,9 +117,8 @@ export default function CreateCommonPromotionScreen({ route }: any) {
       
       if (data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("¡Éxito!", isEditing ? "Promoción actualizada" : "Promoción creada", [
-          { text: "OK", onPress: () => navigation.goBack() }
-        ]);
+        showToast(isEditing ? "Promoción actualizada" : "Promoción creada", "success");
+        navigation.goBack();
       }
     } catch (error: any) {
       Alert.alert("Error", "No se pudo guardar la promoción");

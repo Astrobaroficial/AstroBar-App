@@ -1,0 +1,18 @@
+// Optimizaciones para mejorar rendimiento
+
+// 1. En app.json agregar:
+{
+  "expo": {
+    "jsEngine": "hermes",
+    "android": {
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResourcesInReleaseBuilds": true
+    }
+  }
+}
+
+// 2. Reducir re-renders innecesarios usando React.memo en componentes
+// 3. Usar useMemo y useCallback para funciones pesadas
+// 4. Lazy load de imágenes con placeholder
+// 5. Pagination en listas largas
+// 6. Reducir llamadas API con caché

@@ -33,10 +33,8 @@ export default function HistoryScreen() {
 
   const loadHistory = async () => {
     try {
-      console.log('Loading history for user...');
       const response = await apiRequest('GET', '/api/promotions/transactions/my');
       const data = await response.json();
-      console.log('History response:', data);
       
       if (data.success) {
         setTransactions(data.transactions || []);

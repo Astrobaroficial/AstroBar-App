@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -54,11 +54,11 @@ export default function BusinessListScreen() {
     try {
       const response = await apiRequest("GET", "/api/businesses");
       const data = await response.json();
-      console.log('📊 Raw businesses data:', data);
+      
       const rawBusinesses = data.businesses || [];
-      console.log('📊 Raw businesses count:', rawBusinesses.length);
+      
       if (rawBusinesses.length > 0) {
-        console.log('📊 First business:', rawBusinesses[0]);
+        
       }
 
       const businessList: Business[] = rawBusinesses.map((b: any) => ({
@@ -82,7 +82,7 @@ export default function BusinessListScreen() {
         featured: b.isFeatured || false,
       }));
 
-      console.log('📊 Mapped businesses:', businessList);
+      
       setBusinesses(businessList);
     } catch (error) {
       console.error("Error loading businesses:", error);
@@ -356,7 +356,7 @@ export default function BusinessListScreen() {
                 style={[styles.emptyText, { color: theme.textSecondary }]}
               >
                 No encontramos bares con esos filtros.{"\n"}Intenta con otra
-                búsqueda.
+                b�squeda.
               </ThemedText>
               {hasActiveFilters ? (
                 <Pressable

@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -159,7 +159,7 @@ export default function ProfileScreen() {
           }
         }
       } catch (error) {
-        console.log("Error loading profile from server:", error);
+        
       }
     };
 
@@ -173,7 +173,7 @@ export default function ProfileScreen() {
           setUserStats(data.stats);
         }
       } catch (error) {
-        console.log("Error loading user stats:", error);
+        
       } finally {
         setLoadingStats(false);
       }
@@ -211,7 +211,7 @@ export default function ProfileScreen() {
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      showToast("Permisos de galerÃ­a denegados", "error");
+      showToast("Permisos de galería denegados", "error");
       return;
     }
 
@@ -284,7 +284,7 @@ export default function ProfileScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       const friendly = error?.message || "No se pudo subir la imagen";
       showToast(friendly, "error");
-      // Si el backend devolviÃ³ texto de error completo (ej. 400: ...), muÃ©stralo para diagnÃ³stico en dispositivo.
+      // Si el backend devolvió texto de error completo (ej. 400: ...), muéstralo para diagnóstico en dispositivo.
       if (error?.message && error.message.includes(":")) {
         showToast(error.message, "error");
       }
@@ -329,7 +329,7 @@ export default function ProfileScreen() {
     }
 
     Linking.openURL(shareUrl).catch(() => {
-      console.log("No se pudo abrir la aplicaciÃ³n");
+      
     });
   };
 
@@ -379,7 +379,7 @@ export default function ProfileScreen() {
       }
 
       if (finalStatus !== "granted") {
-        showToast("Activa permisos de notificaciÃ³n en ajustes del sistema", "error");
+        showToast("Activa permisos de notificación en ajustes del sistema", "error");
         return;
       }
       await updateSettings({ notificationsEnabled: true });
@@ -391,12 +391,12 @@ export default function ProfileScreen() {
   };
 
   const getRoleLabel = () => {
-    console.log('User role:', user?.role);
+    
     switch (user?.role) {
       case "customer":
         return "Cliente";
       case "business_owner":
-        return "DueÃ±o de Bar";
+        return "Dueño de Bar";
       case "admin":
       case "super_admin":
         return "Administrador";
@@ -460,7 +460,7 @@ export default function ProfileScreen() {
             {user?.name || "Usuario"}
           </ThemedText>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            {user?.phone ? user.phone.replace(/^(\+52)+/, '+52') : "Sin telÃ©fono"}
+            {user?.phone ? user.phone.replace(/^(\+52)+/, '+52') : "Sin teléfono"}
           </ThemedText>
           <Badge
             text={getRoleLabel()}
@@ -524,7 +524,7 @@ export default function ProfileScreen() {
           <View style={[styles.statsCard, { backgroundColor: theme.card }, Shadows.md]}>
             <View style={styles.statsHeader}>
               <Feather name="award" size={24} color={AstroBarColors.primary} />
-              <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>Mis EstadÃ­sticas</ThemedText>
+              <ThemedText type="h4" style={{ marginLeft: Spacing.sm }}>Mis Estadísticas</ThemedText>
             </View>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
@@ -581,7 +581,7 @@ export default function ProfileScreen() {
           <SettingsItem
             icon="globe"
             label="Idioma"
-            value="EspaÃ±ol"
+            value="Español"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setShowLanguageModal(true);
@@ -593,7 +593,7 @@ export default function ProfileScreen() {
           style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
         >
           <ThemedText type="h4" style={styles.sectionTitle}>
-            MÃ¡s
+            Más
           </ThemedText>
           <SettingsItem
             icon="share-2"
@@ -629,7 +629,7 @@ export default function ProfileScreen() {
 
           <SettingsItem
             icon="file-text"
-            label="TÃ©rminos y condiciones"
+            label="Términos y condiciones"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.navigate('Terms' as any);
@@ -637,7 +637,7 @@ export default function ProfileScreen() {
           />
           <SettingsItem
             icon="shield"
-            label="PolÃ­tica de privacidad"
+            label="Política de privacidad"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.navigate('Privacy' as any);
@@ -650,7 +650,7 @@ export default function ProfileScreen() {
         >
           <SettingsItem
             icon="log-out"
-            label="Cerrar sesiÃ³n"
+            label="Cerrar sesión"
             onPress={handleLogout}
             danger
           />
@@ -679,13 +679,13 @@ export default function ProfileScreen() {
               <Feather name="log-out" size={28} color={AstroBarColors.error} />
             </View>
             <ThemedText type="h3" style={styles.modalTitle}>
-              Cerrar sesiÃ³n
+              Cerrar sesión
             </ThemedText>
             <ThemedText
               type="body"
               style={[styles.modalMessage, { color: theme.textSecondary }]}
             >
-              Â¿EstÃ¡s seguro que deseas cerrar sesiÃ³n?
+              ¿Estás seguro que deseas cerrar sesión?
             </ThemedText>
             <View style={styles.modalButtons}>
               <Pressable
@@ -707,7 +707,7 @@ export default function ProfileScreen() {
                   type="body"
                   style={{ color: "#FFFFFF", fontWeight: "600" }}
                 >
-                  Cerrar sesiÃ³n
+                  Cerrar sesión
                 </ThemedText>
               </Pressable>
             </View>
@@ -832,7 +832,7 @@ export default function ProfileScreen() {
               type="body"
               style={[styles.modalMessage, { color: theme.textSecondary }]}
             >
-              Recibe alertas sobre tus pedidos y promociones especiales. Si el permiso estÃ¡ bloqueado, debes activarlo en la configuraciÃ³n del sistema.
+              Recibe alertas sobre tus pedidos y promociones especiales. Si el permiso está bloqueado, debes activarlo en la configuración del sistema.
             </ThemedText>
             <View style={[styles.strikeInfoCard, { backgroundColor: theme.backgroundSecondary, marginBottom: Spacing.md }]}>
               <Feather name="info" size={16} color={theme.textSecondary} />
@@ -917,7 +917,7 @@ export default function ProfileScreen() {
                   type="body"
                   style={{ color: AstroBarColors.primary, fontWeight: "600" }}
                 >
-                  EspaÃ±ol
+                  Español
                 </ThemedText>
                 <Feather
                   name="check"
@@ -931,7 +931,7 @@ export default function ProfileScreen() {
               type="small"
               style={[styles.comingSoon, { color: theme.textSecondary }]}
             >
-              MÃ¡s idiomas prÃ³ximamente...
+              Más idiomas próximamente...
             </ThemedText>
             <Pressable
               style={[
@@ -962,7 +962,7 @@ export default function ProfileScreen() {
               styles.fullScreenHeader,
               { borderBottomColor: theme.border }]}
           >
-            <ThemedText type="h3">TÃ©rminos y condiciones</ThemedText>
+            <ThemedText type="h3">Términos y condiciones</ThemedText>
             <Pressable
               style={[
                 styles.closeButton,
@@ -980,46 +980,46 @@ export default function ProfileScreen() {
             }}
           >
             <ThemedText type="h4" style={styles.legalTitle}>
-              Ãšltima actualizaciÃ³n: Enero 2025
+              Última actualización: Enero 2025
             </ThemedText>
             
             <ThemedText type="body" style={styles.legalText}>
-              Bienvenido a AstroBar. Estos TÃ©rminos y Condiciones ("TÃ©rminos") rigen el uso de la aplicaciÃ³n mÃ³vil AstroBar y los servicios relacionados ("Servicios"). Al acceder o utilizar AstroBar, usted acepta estar legalmente vinculado por estos TÃ©rminos. Si no estÃ¡ de acuerdo, no utilice la aplicaciÃ³n.
+              Bienvenido a AstroBar. Estos Términos y Condiciones ("Términos") rigen el uso de la aplicación móvil AstroBar y los servicios relacionados ("Servicios"). Al acceder o utilizar AstroBar, usted acepta estar legalmente vinculado por estos Términos. Si no está de acuerdo, no utilice la aplicación.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               1. Definiciones
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              â€¢ "AstroBar", "nosotros", "nuestro" se refiere al operador de la aplicaciÃ³n.{"\n"}
-              â€¢ "Usuario", "usted" se refiere a cualquier persona que acceda o utilice los Servicios.{"\n"}
-              â€¢ "Bar" o "Establecimiento" se refiere a los negocios registrados en la plataforma.{"\n"}
-              â€¢ "PromociÃ³n" se refiere a ofertas especiales publicadas por los Bares.{"\n"}
-              â€¢ "PromociÃ³n Flash" se refiere a ofertas de tiempo limitado (5-15 minutos).
+              • "AstroBar", "nosotros", "nuestro" se refiere al operador de la aplicación.{"\n"}
+              • "Usuario", "usted" se refiere a cualquier persona que acceda o utilice los Servicios.{"\n"}
+              • "Bar" o "Establecimiento" se refiere a los negocios registrados en la plataforma.{"\n"}
+              • "Promoción" se refiere a ofertas especiales publicadas por los Bares.{"\n"}
+              • "Promoción Flash" se refiere a ofertas de tiempo limitado (5-15 minutos).
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               2. Elegibilidad y Registro
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              2.1. Debe ser mayor de 18 aÃ±os para utilizar AstroBar. Al registrarse, usted declara y garantiza que tiene al menos 18 aÃ±os de edad.{"\n\n"}
-              2.2. Debe proporcionar informaciÃ³n precisa, completa y actualizada durante el registro.{"\n\n"}
-              2.3. Es responsable de mantener la confidencialidad de su cuenta y contraseÃ±a.{"\n\n"}
+              2.1. Debe ser mayor de 18 años para utilizar AstroBar. Al registrarse, usted declara y garantiza que tiene al menos 18 años de edad.{"\n\n"}
+              2.2. Debe proporcionar información precisa, completa y actualizada durante el registro.{"\n\n"}
+              2.3. Es responsable de mantener la confidencialidad de su cuenta y contraseña.{"\n\n"}
               2.4. Debe notificarnos inmediatamente cualquier uso no autorizado de su cuenta.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              3. DescripciÃ³n de los Servicios
+              3. Descripción de los Servicios
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
               3.1. AstroBar es una plataforma que conecta usuarios con bares y establecimientos nocturnos en Buenos Aires, Argentina.{"\n\n"}
               3.2. Los Servicios incluyen:{"\n"}
-              â€¢ VisualizaciÃ³n de promociones de bares cercanos{"\n"}
-              â€¢ AceptaciÃ³n y pago de promociones{"\n"}
-              â€¢ GeneraciÃ³n de cÃ³digos QR para canje{"\n"}
-              â€¢ Sistema de puntos y niveles de fidelizaciÃ³n{"\n"}
-              â€¢ Notificaciones de promociones flash{"\n\n"}
-              3.3. AstroBar actÃºa como intermediario entre usuarios y establecimientos. No somos propietarios ni operadores de los bares listados.
+              • Visualización de promociones de bares cercanos{"\n"}
+              • Aceptación y pago de promociones{"\n"}
+              • Generación de códigos QR para canje{"\n"}
+              • Sistema de puntos y niveles de fidelización{"\n"}
+              • Notificaciones de promociones flash{"\n\n"}
+              3.3. AstroBar actúa como intermediario entre usuarios y establecimientos. No somos propietarios ni operadores de los bares listados.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1027,34 +1027,34 @@ export default function ProfileScreen() {
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
               4.1. Las promociones son creadas y gestionadas por los establecimientos. AstroBar no garantiza la disponibilidad, calidad o exactitud de las promociones.{"\n\n"}
-              4.2. Al aceptar una promociÃ³n, usted se compromete a pagar el precio indicado mÃ¡s la comisiÃ³n de plataforma.{"\n\n"}
-              4.3. Tiene 60 segundos (configurable) para cancelar una transacciÃ³n sin cargo despuÃ©s de aceptarla.{"\n\n"}
-              4.4. Una vez generado el cÃ³digo QR, debe canjearlo en el establecimiento dentro del horario de validez.{"\n\n"}
-              4.5. Los cÃ³digos QR son de un solo uso y no son transferibles.{"\n\n"}
-              4.6. Las promociones flash tienen stock limitado y se asignan por orden de aceptaciÃ³n.
+              4.2. Al aceptar una promoción, usted se compromete a pagar el precio indicado más la comisión de plataforma.{"\n\n"}
+              4.3. Tiene 60 segundos (configurable) para cancelar una transacción sin cargo después de aceptarla.{"\n\n"}
+              4.4. Una vez generado el código QR, debe canjearlo en el establecimiento dentro del horario de validez.{"\n\n"}
+              4.5. Los códigos QR son de un solo uso y no son transferibles.{"\n\n"}
+              4.6. Las promociones flash tienen stock limitado y se asignan por orden de aceptación.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               5. Pagos y Comisiones
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              5.1. Los pagos se procesan a travÃ©s de Stripe, un proveedor de servicios de pago de terceros.{"\n\n"}
+              5.1. Los pagos se procesan a través de Stripe, un proveedor de servicios de pago de terceros.{"\n\n"}
               5.2. El precio total incluye:{"\n"}
-              â€¢ Precio del producto/servicio (100% para el bar){"\n"}
-              â€¢ ComisiÃ³n de plataforma (5%-30% adicional){"\n\n"}
-              5.3. Todas las transacciones son finales despuÃ©s del perÃ­odo de cancelaciÃ³n.{"\n\n"}
-              5.4. Los reembolsos se procesan Ãºnicamente en casos de:{"\n"}
-              â€¢ CancelaciÃ³n dentro del perÃ­odo permitido{"\n"}
-              â€¢ Error tÃ©cnico comprobado{"\n"}
-              â€¢ Incumplimiento del establecimiento{"\n\n"}
-              5.5. Los reembolsos se procesan en 5-10 dÃ­as hÃ¡biles al mÃ©todo de pago original.
+              • Precio del producto/servicio (100% para el bar){"\n"}
+              • Comisión de plataforma (5%-30% adicional){"\n\n"}
+              5.3. Todas las transacciones son finales después del período de cancelación.{"\n\n"}
+              5.4. Los reembolsos se procesan únicamente en casos de:{"\n"}
+              • Cancelación dentro del período permitido{"\n"}
+              • Error técnico comprobado{"\n"}
+              • Incumplimiento del establecimiento{"\n\n"}
+              5.5. Los reembolsos se procesan en 5-10 días hábiles al método de pago original.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               6. Sistema de Puntos y Niveles
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              6.1. Los usuarios ganan 10 puntos por cada promociÃ³n canjeada exitosamente.{"\n\n"}
+              6.1. Los usuarios ganan 10 puntos por cada promoción canjeada exitosamente.{"\n\n"}
               6.2. Los niveles son: Copper (0-99), Bronze (100-249), Silver (250-499), Gold (500-999), Platinum (1000+).{"\n\n"}
               6.3. Los puntos no tienen valor monetario y no son transferibles.{"\n\n"}
               6.4. AstroBar se reserva el derecho de modificar o cancelar el sistema de puntos con previo aviso.
@@ -1065,14 +1065,14 @@ export default function ProfileScreen() {
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
               Usted se compromete a NO:{"\n"}
-              â€¢ Usar la aplicaciÃ³n para actividades ilegales{"\n"}
-              â€¢ Crear mÃºltiples cuentas para obtener beneficios indebidos{"\n"}
-              â€¢ Compartir o vender cÃ³digos QR{"\n"}
-              â€¢ Acosar o amenazar a personal de establecimientos{"\n"}
-              â€¢ Intentar acceder a sistemas o datos no autorizados{"\n"}
-              â€¢ Publicar contenido ofensivo, difamatorio o ilegal{"\n"}
-              â€¢ Usar bots, scripts o automatizaciÃ³n no autorizada{"\n\n"}
-              La violaciÃ³n de estas normas puede resultar en suspensiÃ³n o terminaciÃ³n de su cuenta.
+              • Usar la aplicación para actividades ilegales{"\n"}
+              • Crear múltiples cuentas para obtener beneficios indebidos{"\n"}
+              • Compartir o vender códigos QR{"\n"}
+              • Acosar o amenazar a personal de establecimientos{"\n"}
+              • Intentar acceder a sistemas o datos no autorizados{"\n"}
+              • Publicar contenido ofensivo, difamatorio o ilegal{"\n"}
+              • Usar bots, scripts o automatización no autorizada{"\n\n"}
+              La violación de estas normas puede resultar en suspensión o terminación de su cuenta.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1080,74 +1080,74 @@ export default function ProfileScreen() {
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
               8.1. Los establecimientos son responsables de:{"\n"}
-              â€¢ La calidad y seguridad de sus productos{"\n"}
-              â€¢ El cumplimiento de regulaciones sanitarias{"\n"}
-              â€¢ La informaciÃ³n de alÃ©rgenos{"\n"}
-              â€¢ El servicio al cliente en sus instalaciones{"\n\n"}
-              8.2. AstroBar no es responsable por problemas de salud, intoxicaciÃ³n o lesiones derivadas del consumo de productos en los establecimientos.
+              • La calidad y seguridad de sus productos{"\n"}
+              • El cumplimiento de regulaciones sanitarias{"\n"}
+              • La información de alérgenos{"\n"}
+              • El servicio al cliente en sus instalaciones{"\n\n"}
+              8.2. AstroBar no es responsable por problemas de salud, intoxicación o lesiones derivadas del consumo de productos en los establecimientos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              9. LimitaciÃ³n de Responsabilidad
+              9. Limitación de Responsabilidad
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              9.1. AstroBar se proporciona "tal cual" sin garantÃ­as de ningÃºn tipo.{"\n\n"}
+              9.1. AstroBar se proporciona "tal cual" sin garantías de ningún tipo.{"\n\n"}
               9.2. No garantizamos que los Servicios sean ininterrumpidos, seguros o libres de errores.{"\n\n"}
               9.3. No somos responsables por:{"\n"}
-              â€¢ PÃ©rdida de datos o contenido{"\n"}
-              â€¢ DaÃ±os indirectos, incidentales o consecuentes{"\n"}
-              â€¢ Acciones u omisiones de establecimientos{"\n"}
-              â€¢ Fallas tÃ©cnicas o interrupciones del servicio{"\n\n"}
-              9.4. Nuestra responsabilidad mÃ¡xima se limita al monto pagado por usted en los Ãºltimos 3 meses.
+              • Pérdida de datos o contenido{"\n"}
+              • Daños indirectos, incidentales o consecuentes{"\n"}
+              • Acciones u omisiones de establecimientos{"\n"}
+              • Fallas técnicas o interrupciones del servicio{"\n\n"}
+              9.4. Nuestra responsabilidad máxima se limita al monto pagado por usted en los últimos 3 meses.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               10. Propiedad Intelectual
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              10.1. Todos los derechos de propiedad intelectual de AstroBar (marca, logo, diseÃ±o, cÃ³digo) son propiedad exclusiva de AstroBar.{"\n\n"}
-              10.2. Se le otorga una licencia limitada, no exclusiva e intransferible para usar la aplicaciÃ³n.{"\n\n"}
-              10.3. No puede copiar, modificar, distribuir o crear obras derivadas sin autorizaciÃ³n escrita.
+              10.1. Todos los derechos de propiedad intelectual de AstroBar (marca, logo, diseño, código) son propiedad exclusiva de AstroBar.{"\n\n"}
+              10.2. Se le otorga una licencia limitada, no exclusiva e intransferible para usar la aplicación.{"\n\n"}
+              10.3. No puede copiar, modificar, distribuir o crear obras derivadas sin autorización escrita.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               11. Privacidad y Datos Personales
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              11.1. El uso de sus datos personales se rige por nuestra PolÃ­tica de Privacidad.{"\n\n"}
-              11.2. Al usar AstroBar, usted consiente la recopilaciÃ³n y uso de sus datos segÃºn lo descrito en la PolÃ­tica de Privacidad.{"\n\n"}
-              11.3. Cumplimos con la Ley de ProtecciÃ³n de Datos Personales de Argentina (Ley 25.326).
+              11.1. El uso de sus datos personales se rige por nuestra Política de Privacidad.{"\n\n"}
+              11.2. Al usar AstroBar, usted consiente la recopilación y uso de sus datos según lo descrito en la Política de Privacidad.{"\n\n"}
+              11.3. Cumplimos con la Ley de Protección de Datos Personales de Argentina (Ley 25.326).
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               12. Modificaciones
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              12.1. Podemos modificar estos TÃ©rminos en cualquier momento.{"\n\n"}
-              12.2. Los cambios significativos se notificarÃ¡n mediante la aplicaciÃ³n o por correo electrÃ³nico.{"\n\n"}
-              12.3. El uso continuado de los Servicios despuÃ©s de las modificaciones constituye aceptaciÃ³n de los nuevos TÃ©rminos.
+              12.1. Podemos modificar estos Términos en cualquier momento.{"\n\n"}
+              12.2. Los cambios significativos se notificarán mediante la aplicación o por correo electrónico.{"\n\n"}
+              12.3. El uso continuado de los Servicios después de las modificaciones constituye aceptación de los nuevos Términos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              13. TerminaciÃ³n
+              13. Terminación
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              13.1. Puede eliminar su cuenta en cualquier momento desde la configuraciÃ³n de la aplicaciÃ³n.{"\n\n"}
+              13.1. Puede eliminar su cuenta en cualquier momento desde la configuración de la aplicación.{"\n\n"}
               13.2. Podemos suspender o terminar su cuenta si:{"\n"}
-              â€¢ Viola estos TÃ©rminos{"\n"}
-              â€¢ Realiza actividades fraudulentas{"\n"}
-              â€¢ No paga por servicios adquiridos{"\n"}
-              â€¢ Por razones de seguridad o legales{"\n\n"}
-              13.3. La terminaciÃ³n no afecta obligaciones pendientes.
+              • Viola estos Términos{"\n"}
+              • Realiza actividades fraudulentas{"\n"}
+              • No paga por servicios adquiridos{"\n"}
+              • Por razones de seguridad o legales{"\n\n"}
+              13.3. La terminación no afecta obligaciones pendientes.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              14. Ley Aplicable y JurisdicciÃ³n
+              14. Ley Aplicable y Jurisdicción
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              14.1. Estos TÃ©rminos se rigen por las leyes de la RepÃºblica Argentina.{"\n\n"}
-              14.2. Cualquier disputa se resolverÃ¡ en los tribunales de la Ciudad AutÃ³noma de Buenos Aires, Argentina.{"\n\n"}
-              14.3. Si alguna disposiciÃ³n es invÃ¡lida, las demÃ¡s permanecen en vigor.
+              14.1. Estos Términos se rigen por las leyes de la República Argentina.{"\n\n"}
+              14.2. Cualquier disputa se resolverá en los tribunales de la Ciudad Autónoma de Buenos Aires, Argentina.{"\n\n"}
+              14.3. Si alguna disposición es inválida, las demás permanecen en vigor.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1156,19 +1156,19 @@ export default function ProfileScreen() {
             <ThemedText type="body" style={styles.legalText}>
               15.1. AstroBar promueve el consumo responsable de alcohol.{"\n\n"}
               15.2. No conduzca bajo los efectos del alcohol.{"\n\n"}
-              15.3. Los establecimientos pueden negarse a servir a personas en estado de intoxicaciÃ³n.{"\n\n"}
-              15.4. Si bebe, no maneje. Use transporte pÃºblico o servicios de taxi.
+              15.3. Los establecimientos pueden negarse a servir a personas en estado de intoxicación.{"\n\n"}
+              15.4. Si bebe, no maneje. Use transporte público o servicios de taxi.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               16. Contacto
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Para consultas sobre estos TÃ©rminos:{"\n\n"}
+              Para consultas sobre estos Términos:{"\n\n"}
               Email: legal@astrobar.com.ar{"\n"}
-              Soporte: SecciÃ³n "Ayuda y Soporte" en la aplicaciÃ³n{"\n"}
-              DirecciÃ³n: Buenos Aires, Argentina{"\n\n"}
-              Al utilizar AstroBar, usted reconoce haber leÃ­do, entendido y aceptado estos TÃ©rminos y Condiciones en su totalidad.
+              Soporte: Sección "Ayuda y Soporte" en la aplicación{"\n"}
+              Dirección: Buenos Aires, Argentina{"\n\n"}
+              Al utilizar AstroBar, usted reconoce haber leído, entendido y aceptado estos Términos y Condiciones en su totalidad.
             </ThemedText>
           </ScrollView>
         </View>
@@ -1207,81 +1207,81 @@ export default function ProfileScreen() {
             }}
           >
             <ThemedText type="h4" style={styles.legalTitle}>
-              Ãšltima actualizaciÃ³n: Enero 2025
+              Última actualización: Enero 2025
             </ThemedText>
 
             <ThemedText type="body" style={styles.legalText}>
-              En AstroBar, tu privacidad es nuestra prioridad. Esta polÃ­tica describe cÃ³mo recopilamos, usamos y protegemos tu informaciÃ³n personal en Buenos Aires, Argentina.
-            </ThemedText>
-
-            <ThemedText type="h4" style={styles.legalTitle}>
-              1. InformaciÃ³n que Recopilamos
-            </ThemedText>
-            <ThemedText type="body" style={styles.legalText}>
-              Recopilamos: nombre, nÃºmero de telÃ©fono, email, historial de promociones canjeadas, datos de pago (procesados de forma segura por Stripe), ubicaciÃ³n (solo cuando usas la app), y preferencias de usuario.
+              En AstroBar, tu privacidad es nuestra prioridad. Esta política describe cómo recopilamos, usamos y protegemos tu información personal en Buenos Aires, Argentina.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              2. Uso de la InformaciÃ³n
+              1. Información que Recopilamos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Usamos tu informaciÃ³n para: procesar transacciones de promociones, verificar tu identidad, procesar pagos, enviarte notificaciones sobre promociones flash, mejorar nuestros servicios, cumplir con obligaciones legales, y comunicarnos contigo sobre ofertas (con tu consentimiento).
+              Recopilamos: nombre, número de teléfono, email, historial de promociones canjeadas, datos de pago (procesados de forma segura por Stripe), ubicación (solo cuando usas la app), y preferencias de usuario.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              3. Compartir InformaciÃ³n
+              2. Uso de la Información
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Compartimos informaciÃ³n limitada con: establecimientos (nombre para validar cÃ³digos QR), procesadores de pago (Stripe), y autoridades cuando la ley lo requiera. No vendemos tus datos a terceros.
+              Usamos tu información para: procesar transacciones de promociones, verificar tu identidad, procesar pagos, enviarte notificaciones sobre promociones flash, mejorar nuestros servicios, cumplir con obligaciones legales, y comunicarnos contigo sobre ofertas (con tu consentimiento).
+            </ThemedText>
+
+            <ThemedText type="h4" style={styles.legalTitle}>
+              3. Compartir Información
+            </ThemedText>
+            <ThemedText type="body" style={styles.legalText}>
+              Compartimos información limitada con: establecimientos (nombre para validar códigos QR), procesadores de pago (Stripe), y autoridades cuando la ley lo requiera. No vendemos tus datos a terceros.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               4. Seguridad de Datos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Implementamos medidas de seguridad incluyendo: encriptaciÃ³n de datos en trÃ¡nsito y reposo, autenticaciÃ³n segura, almacenamiento seguro de contraseÃ±as con hash, y acceso restringido a datos personales.
+              Implementamos medidas de seguridad incluyendo: encriptación de datos en tránsito y reposo, autenticación segura, almacenamiento seguro de contraseñas con hash, y acceso restringido a datos personales.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               5. Tus Derechos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Tienes derecho a: acceder a tus datos personales, corregir informaciÃ³n inexacta, solicitar la eliminaciÃ³n de tu cuenta y datos, oponerte al procesamiento de tus datos, y retirar tu consentimiento para comunicaciones promocionales.
+              Tienes derecho a: acceder a tus datos personales, corregir información inexacta, solicitar la eliminación de tu cuenta y datos, oponerte al procesamiento de tus datos, y retirar tu consentimiento para comunicaciones promocionales.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              6. RetenciÃ³n de Datos
+              6. Retención de Datos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Conservamos tus datos mientras tu cuenta estÃ© activa y por el perÃ­odo requerido por ley argentina. Puedes solicitar la eliminaciÃ³n de tu cuenta desde la configuraciÃ³n de la aplicaciÃ³n.
+              Conservamos tus datos mientras tu cuenta esté activa y por el período requerido por ley argentina. Puedes solicitar la eliminación de tu cuenta desde la configuración de la aplicación.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              7. Cookies y TecnologÃ­as Similares
+              7. Cookies y Tecnologías Similares
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Usamos tecnologÃ­as similares a cookies para mejorar tu experiencia, recordar preferencias, y analizar el uso de la aplicaciÃ³n.
+              Usamos tecnologías similares a cookies para mejorar tu experiencia, recordar preferencias, y analizar el uso de la aplicación.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               8. Menores de Edad
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              AstroBar no estÃ¡ dirigido a menores de 18 aÃ±os. No recopilamos intencionalmente informaciÃ³n de menores. Si eres padre y crees que tu hijo ha proporcionado informaciÃ³n, contÃ¡ctanos.
+              AstroBar no está dirigido a menores de 18 años. No recopilamos intencionalmente información de menores. Si eres padre y crees que tu hijo ha proporcionado información, contáctanos.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
-              9. Cambios a esta PolÃ­tica
+              9. Cambios a esta Política
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Podemos actualizar esta polÃ­tica periÃ³dicamente. Te notificaremos de cambios significativos a travÃ©s de la aplicaciÃ³n o por email.
+              Podemos actualizar esta política periódicamente. Te notificaremos de cambios significativos a través de la aplicación o por email.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
               10. Ley Aplicable
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Esta polÃ­tica se rige por la Ley de ProtecciÃ³n de Datos Personales de Argentina (Ley 25.326) y las leyes de la RepÃºblica Argentina.
+              Esta política se rige por la Ley de Protección de Datos Personales de Argentina (Ley 25.326) y las leyes de la República Argentina.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1290,8 +1290,8 @@ export default function ProfileScreen() {
             <ThemedText type="body" style={styles.legalText}>
               Para ejercer tus derechos o resolver dudas sobre privacidad:{"\n\n"}
               Email: privacidad@astrobar.com.ar{"\n"}
-              Soporte: SecciÃ³n "Ayuda y Soporte" en la aplicaciÃ³n{"\n"}
-              DirecciÃ³n: Buenos Aires, Argentina
+              Soporte: Sección "Ayuda y Soporte" en la aplicación{"\n"}
+              Dirección: Buenos Aires, Argentina
             </ThemedText>
           </ScrollView>
         </View>
@@ -1351,7 +1351,7 @@ export default function ProfileScreen() {
               </View>
               
               <View>
-                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>TelÃ©fono</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Teléfono</ThemedText>
                 <TextInput
                   style={[
                     styles.profileInput,
@@ -1359,17 +1359,17 @@ export default function ProfileScreen() {
                   ]}
                   value={editProfile.phone}
                   onChangeText={(text) => setEditProfile({...editProfile, phone: text})}
-                  placeholder="Tu telÃ©fono"
+                  placeholder="Tu teléfono"
                   placeholderTextColor={theme.textSecondary}
                   keyboardType="phone-pad"
                 />
               </View>
               
               <View style={{ borderTopWidth: 1, borderTopColor: theme.border, paddingTop: 16, marginTop: 8 }}>
-                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 12, fontWeight: '600' }}>Cambiar contraseÃ±a (opcional)</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 12, fontWeight: '600' }}>Cambiar contraseña (opcional)</ThemedText>
                 
                 <View style={{ marginBottom: 12 }}>
-                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>ContraseÃ±a actual</ThemedText>
+                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Contraseña actual</ThemedText>
                   <TextInput
                     style={[
                       styles.profileInput,
@@ -1377,14 +1377,14 @@ export default function ProfileScreen() {
                     ]}
                     value={editProfile.currentPassword}
                     onChangeText={(text) => setEditProfile({...editProfile, currentPassword: text})}
-                    placeholder="ContraseÃ±a actual"
+                    placeholder="Contraseña actual"
                     placeholderTextColor={theme.textSecondary}
                     secureTextEntry
                   />
                 </View>
                 
                 <View style={{ marginBottom: 12 }}>
-                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Nueva contraseÃ±a</ThemedText>
+                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Nueva contraseña</ThemedText>
                   <TextInput
                     style={[
                       styles.profileInput,
@@ -1392,14 +1392,14 @@ export default function ProfileScreen() {
                     ]}
                     value={editProfile.newPassword}
                     onChangeText={(text) => setEditProfile({...editProfile, newPassword: text})}
-                    placeholder="Nueva contraseÃ±a"
+                    placeholder="Nueva contraseña"
                     placeholderTextColor={theme.textSecondary}
                     secureTextEntry
                   />
                 </View>
                 
                 <View>
-                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Confirmar contraseÃ±a</ThemedText>
+                  <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 8 }}>Confirmar contraseña</ThemedText>
                   <TextInput
                     style={[
                       styles.profileInput,
@@ -1407,7 +1407,7 @@ export default function ProfileScreen() {
                     ]}
                     value={editProfile.confirmPassword}
                     onChangeText={(text) => setEditProfile({...editProfile, confirmPassword: text})}
-                    placeholder="Confirmar contraseÃ±a"
+                    placeholder="Confirmar contraseña"
                     placeholderTextColor={theme.textSecondary}
                     secureTextEntry
                   />
@@ -1435,22 +1435,22 @@ export default function ProfileScreen() {
                     return;
                   }
                   
-                  // Validar cambio de contraseÃ±a si se intentÃ³
+                  // Validar cambio de contraseña si se intentó
                   if (editProfile.newPassword || editProfile.currentPassword || editProfile.confirmPassword) {
                     if (!editProfile.currentPassword) {
-                      showToast("Ingresa tu contraseÃ±a actual", "error");
+                      showToast("Ingresa tu contraseña actual", "error");
                       return;
                     }
                     if (!editProfile.newPassword) {
-                      showToast("Ingresa la nueva contraseÃ±a", "error");
+                      showToast("Ingresa la nueva contraseña", "error");
                       return;
                     }
                     if (editProfile.newPassword !== editProfile.confirmPassword) {
-                      showToast("Las contraseÃ±as no coinciden", "error");
+                      showToast("Las contraseñas no coinciden", "error");
                       return;
                     }
                     if (editProfile.newPassword.length < 6) {
-                      showToast("La contraseÃ±a debe tener al menos 6 caracteres", "error");
+                      showToast("La contraseña debe tener al menos 6 caracteres", "error");
                       return;
                     }
                   }
@@ -1462,7 +1462,7 @@ export default function ProfileScreen() {
                       phone: editProfile.phone.trim()
                     };
                     
-                    // Solo incluir contraseÃ±as si se estÃ¡ cambiando
+                    // Solo incluir contraseñas si se está cambiando
                     if (editProfile.newPassword) {
                       updateData.currentPassword = editProfile.currentPassword;
                       updateData.newPassword = editProfile.newPassword;
@@ -1479,7 +1479,7 @@ export default function ProfileScreen() {
                         phone: editProfile.phone.trim()
                       });
                       setShowEditProfileModal(false);
-                      showToast(editProfile.newPassword ? "Perfil y contraseÃ±a actualizados" : "Perfil actualizado", "success");
+                      showToast(editProfile.newPassword ? "Perfil y contraseña actualizados" : "Perfil actualizado", "success");
                       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                     } else {
                       throw new Error(data.error || "Error al actualizar");
@@ -1528,7 +1528,7 @@ export default function ProfileScreen() {
               type="body"
               style={[styles.modalMessage, { color: theme.textSecondary }]}
             >
-              Esta funciÃ³n estarÃ¡ disponible prÃ³ximamente. PodrÃ¡s gestionar tus
+              Esta función estará disponible próximamente. Podrás gestionar tus
               direcciones de entrega favoritas.
             </ThemedText>
             <Pressable

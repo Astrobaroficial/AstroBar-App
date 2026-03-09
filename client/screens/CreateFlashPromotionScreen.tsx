@@ -9,6 +9,7 @@ import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useToast } from "@/contexts/ToastContext";
 import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 
@@ -25,6 +26,7 @@ interface Product {
 export default function CreateFlashPromotionScreen({ route }: any) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { showToast } = useToast();
   const navigation = useNavigation<any>();
   const editPromotion = route?.params?.editPromotion;
   const isEditing = !!editPromotion;
@@ -112,8 +114,8 @@ export default function CreateFlashPromotionScreen({ route }: any) {
         originalPrice: selectedProduct.price,
         promoPrice: discountPrice,
         stock: parseInt(stock),
-        startTime: isEditing ? editPromotion.startTime : new Date().toISOString(),
-        endTime: isEditing ? editPromotion.endTime : new Date(Date.now() + duration * 60 * 1000).toISOString(),
+        startTime: new Date().toISOString(),
+        endTime: new Date(Date.now() + duration * 60 * 1000).toISOString(),
         image: customImage || selectedProduct.image
       };
       
@@ -124,9 +126,8 @@ export default function CreateFlashPromotionScreen({ route }: any) {
       
       if (data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("¡Éxito!", isEditing ? "Promoción actualizada" : "Promoción flash creada", [
-          { text: "OK", onPress: () => navigation.goBack() }
-        ]);
+        showToast(isEditing ? "Promoción actualizada" : "Promoción flash creada", "success");
+        navigation.goBack();
       }
     } catch (error: any) {
       console.error("Error:", error);

@@ -64,12 +64,12 @@ export default function BusinessPromotionsPanel() {
   };
 
   const togglePromotion = async (id: string, currentStatus: boolean) => {
-    console.log('Button pressed! ID:', id, 'Status:', currentStatus);
+    
     try {
-      console.log('Toggling promotion:', id, 'to:', !currentStatus);
+      
       const response = await apiRequest('PATCH', `/api/promotions/${id}`, { isActive: !currentStatus });
       const result = await response.json();
-      console.log('Toggle result:', result);
+      
       if (result.success) {
         loadPromotions();
         Alert.alert('Éxito', `Promoción ${!currentStatus ? 'activada' : 'pausada'}`);
@@ -77,7 +77,7 @@ export default function BusinessPromotionsPanel() {
         Alert.alert('Error', result.error || 'Error al actualizar');
       }
     } catch (error: any) {
-      console.log('Toggle error:', error);
+      
       Alert.alert('Error', 'Error al actualizar promoción');
     }
   };

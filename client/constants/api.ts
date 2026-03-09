@@ -1,4 +1,4 @@
-﻿// API Configuration for AstroBar Frontend
+// API Configuration for AstroBar Frontend
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 
@@ -10,7 +10,7 @@ export const getApiBaseUrl = (): string => {
   // PRODUCTION: Check expo config first (from app.config.js)
   const expoBackendUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL;
   if (expoBackendUrl && !__DEV__) {
-    console.log('✅ Using EXPO_PUBLIC_BACKEND_URL from config:', expoBackendUrl);
+    
     return expoBackendUrl;
   }
 
@@ -18,13 +18,13 @@ export const getApiBaseUrl = (): string => {
   const envBackendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   if (envBackendUrl) {
     const trimmed = envBackendUrl.trim();
-    console.log('Using EXPO_PUBLIC_BACKEND_URL from env:', trimmed);
+    
     return trimmed;
   }
 
   // Development mode - use localhost
   if (__DEV__) {
-    console.log('🔧 Development mode: using localhost:5000');
+    
     return "http://localhost:5000";
   }
 
@@ -34,7 +34,7 @@ export const getApiBaseUrl = (): string => {
   }
 
   // Production fallback
-  console.log('⚠️ Using fallback URL: https://AstroBar-app.replit.app');
+  
   return "https://AstroBar-app.replit.app";
 };
 
@@ -90,7 +90,7 @@ export const getDefaultHeaders = (token?: string) => {
   return headers;
 };
 
-console.log("🔗 API Configuration:", {
+console.log("?? API Configuration:", {
   baseUrl: API_CONFIG.BASE_URL,
   isDev: __DEV__,
   platform: Platform.OS,

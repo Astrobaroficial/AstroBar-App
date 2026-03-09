@@ -505,6 +505,66 @@ router.patch("/:id", authenticateToken, async (req, res) => {
   }
 });
 
+// Update promotion (full edit)
+router.put("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { promotions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and } = await import("drizzle-orm");
+
+    const promotionId = req.params.id;
+    const { title, description, originalPrice, promoPrice, stock, startTime, endTime, image } = req.body;
+
+    // Verify ownership
+    const [promotion] = await db
+      .select()
+      .from(promotions)
+      .where(eq(promotions.id, promotionId))
+      .limit(1);
+
+    if (!promotion) {
+      return res.status(404).json({ error: "Promoción no encontrada" });
+    }
+
+    const [business] = await db
+      .select()
+      .from(businesses)
+      .where(
+        and(
+          eq(businesses.id, promotion.businessId),
+          eq(businesses.ownerId, req.user!.id)
+        )
+      )
+      .limit(1);
+
+    if (!business) {
+      return res.status(403).json({ error: "No tienes acceso a esta promoción" });
+    }
+
+    const discountPercentage = Math.round(((originalPrice - promoPrice) / originalPrice) * 100);
+
+    await db
+      .update(promotions)
+      .set({
+        title,
+        description,
+        originalPrice,
+        promoPrice,
+        discountPercentage,
+        stock,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        image,
+      })
+      .where(eq(promotions.id, promotionId));
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating promotion:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Delete promotion (admin only)
 router.delete("/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
@@ -613,18 +673,34 @@ router.post("/redeem", authenticateToken, requireRole("business_owner"), async (
 // Get business transactions
 router.get("/business/transactions", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
+    const businessId = req.query.businessId as string | undefined;
+    console.log('📊 Getting business transactions for user:', req.user!.id, 'businessId:', businessId);
     const { promotionTransactions, promotions, businesses, users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, desc } = await import("drizzle-orm");
+    const { eq, desc, and } = await import("drizzle-orm");
 
     // Get business
-    const [business] = await db
-      .select()
-      .from(businesses)
-      .where(eq(businesses.ownerId, req.user!.id))
-      .limit(1);
+    let business;
+    if (businessId) {
+      // Verify ownership
+      [business] = await db
+        .select()
+        .from(businesses)
+        .where(and(eq(businesses.id, businessId), eq(businesses.ownerId, req.user!.id)))
+        .limit(1);
+    } else {
+      // Get first business
+      [business] = await db
+        .select()
+        .from(businesses)
+        .where(eq(businesses.ownerId, req.user!.id))
+        .limit(1);
+    }
+
+    console.log('🏢 Found business:', business?.id, business?.name);
 
     if (!business) {
+      console.log('❌ No business found for user');
       return res.status(404).json({ error: "No tienes un bar registrado" });
     }
 
@@ -633,6 +709,8 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       .from(promotionTransactions)
       .where(eq(promotionTransactions.businessId, business.id))
       .orderBy(desc(promotionTransactions.createdAt));
+
+    console.log('💰 Found transactions:', transactions.length);
 
     // Enrich with promotion and user data
     const enriched = await Promise.all(
@@ -658,6 +736,7 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       })
     );
 
+    console.log('✅ Sending', enriched.length, 'transactions');
     res.json({ success: true, transactions: enriched });
   } catch (error: any) {
     console.error("Error loading business transactions:", error);

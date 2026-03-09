@@ -522,7 +522,7 @@ export default function BusinessDashboardScreen() {
           <>
             <View style={styles.sectionHeader}>
               <ThemedText type="h3">Pedidos Recientes</ThemedText>
-              <Pressable onPress={() => navigation.navigate("BusinessOrders" as any)}>
+              <Pressable onPress={() => {}}>
                 <ThemedText type="small" style={{ color: AstroBarColors.primary }}>Ver todos</ThemedText>
               </Pressable>
             </View>
@@ -559,7 +559,7 @@ export default function BusinessDashboardScreen() {
           <View style={styles.actionsRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: theme.card }]}
-              onPress={() => navigation.navigate("BusinessPromotionsPanel" as any)}
+              onPress={() => navigation.navigate("BusinessManagement", { screen: "BusinessPromotions" })}
             >
               <Feather name="zap" size={24} color={AstroBarColors.primary} />
               <ThemedText type="small" style={{ marginTop: Spacing.xs }}>Promociones</ThemedText>

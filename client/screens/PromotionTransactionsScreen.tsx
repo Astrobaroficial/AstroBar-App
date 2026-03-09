@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { apiRequest } from '../lib/query-client';
+import { useBusiness } from '../contexts/BusinessContext';
 
 interface Transaction {
   id: string;
@@ -18,21 +19,22 @@ interface Transaction {
 
 export default function PromotionTransactionsScreen() {
   const navigation = useNavigation<any>();
+  const { selectedBusiness, businesses, setSelectedBusiness } = useBusiness();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'redeemed' | 'cancelled'>('all');
+  const [showBusinessSelector, setShowBusinessSelector] = useState(false);
 
   const loadTransactions = async () => {
     try {
-      console.log('Loading business transactions...');
-      const response = await apiRequest('GET', '/api/promotions/business/transactions');
+      const url = selectedBusiness?.id 
+        ? `/api/promotions/business/transactions?businessId=${selectedBusiness.id}`
+        : '/api/promotions/business/transactions';
+      const response = await apiRequest('GET', url);
       const data = await response.json();
-      console.log('Transactions response:', data);
       if (data.success) {
         setTransactions(data.transactions || []);
-      } else {
-        console.error('Error in response:', data.error);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
@@ -44,7 +46,7 @@ export default function PromotionTransactionsScreen() {
 
   useEffect(() => {
     loadTransactions();
-  }, []);
+  }, [selectedBusiness]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -139,6 +141,43 @@ export default function PromotionTransactionsScreen() {
           <Text style={styles.navButtonText}>Historial</Text>
         </TouchableOpacity>
       </View>
+
+      {businesses.length > 1 && (
+        <View style={styles.businessSelector}>
+          <TouchableOpacity
+            style={styles.businessButton}
+            onPress={() => setShowBusinessSelector(!showBusinessSelector)}
+          >
+            <Ionicons name="business" size={16} color="#FFD700" />
+            <Text style={styles.businessButtonText}>{selectedBusiness?.name || 'Seleccionar bar'}</Text>
+            <Ionicons name={showBusinessSelector ? "chevron-up" : "chevron-down"} size={16} color="#FFD700" />
+          </TouchableOpacity>
+          {showBusinessSelector && (
+            <ScrollView style={styles.businessList} horizontal showsHorizontalScrollIndicator={false}>
+              {businesses.map((business) => (
+                <TouchableOpacity
+                  key={business.id}
+                  style={[
+                    styles.businessItem,
+                    selectedBusiness?.id === business.id && styles.businessItemActive
+                  ]}
+                  onPress={() => {
+                    setSelectedBusiness(business);
+                    setShowBusinessSelector(false);
+                    setLoading(true);
+                    loadTransactions();
+                  }}
+                >
+                  <Text style={[
+                    styles.businessItemText,
+                    selectedBusiness?.id === business.id && styles.businessItemTextActive
+                  ]}>{business.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      )}
 
       <View style={styles.filterContainer}>
         {(['all', 'pending', 'redeemed', 'cancelled'] as const).map((f) => (
@@ -289,4 +328,44 @@ const styles = StyleSheet.create({
   redeemedText: { fontSize: 11, color: '#4CAF50', marginTop: 8 },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { color: '#666', fontSize: 16, marginTop: 16 },
+  businessSelector: {
+    backgroundColor: '#1A1F3A',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2F4A',
+  },
+  businessButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  businessButtonText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFD700',
+  },
+  businessList: {
+    marginTop: 12,
+    maxHeight: 120,
+  },
+  businessItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#2A2F4A',
+    marginRight: 8,
+  },
+  businessItemActive: {
+    backgroundColor: '#FFD700',
+  },
+  businessItemText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#999',
+  },
+  businessItemTextActive: {
+    color: '#000',
+  },
 });
