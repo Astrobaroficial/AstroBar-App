@@ -137,6 +137,9 @@ export default function HistoryScreen() {
                 key={transaction.id}
                 onPress={() => {
                   Haptics.selectionAsync();
+                  if (transaction.status === 'pending') {
+                    navigation.navigate('PromotionQR', { transactionId: transaction.id });
+                  }
                 }}
                 style={[styles.card, { backgroundColor: theme.card }]}
               >
