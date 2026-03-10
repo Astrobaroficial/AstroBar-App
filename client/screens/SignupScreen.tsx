@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "100%",
     fontSize: 16,
-    color: "#333333",
+    color: "#000000",
     letterSpacing: 1,
   },
   inputError: {

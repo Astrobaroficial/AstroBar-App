@@ -34,13 +34,27 @@ export default {
       favicon: "./assets/astrobarlogo.jpg"
     },
     plugins: [
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#8B5CF6"
+        }
+      ],
       "expo-web-browser",
       "expo-secure-store",
       [
         "expo-location",
         {
           locationAlwaysAndWhenInUsePermission: "Necesitamos tu ubicación para mostrarte bares cercanos y calcular rutas."
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          googleMapsApiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
         }
       ],
 

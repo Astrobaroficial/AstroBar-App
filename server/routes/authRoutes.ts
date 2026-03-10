@@ -316,7 +316,7 @@ router.post("/signup", async (req, res) => {
 // Signup
 router.post("/phone-signup", async (req, res) => {
   try {
-    const { phone, name, role } = req.body;
+    const { phone, name, role, email } = req.body;
     
     if (!phone || !name) {
       return res.status(400).json({ error: "Tel�fono y nombre requeridos" });
@@ -348,6 +348,22 @@ router.post("/phone-signup", async (req, res) => {
       });
     }
 
+    // Check if email already exists (if provided)
+    if (email && email.trim()) {
+      const existingEmailUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.trim()))
+        .limit(1);
+
+      if (existingEmailUser.length > 0) {
+        return res.status(400).json({ 
+          error: "Email ya registrado",
+          userExists: true
+        });
+      }
+    }
+
     const validRoles = ['customer', 'business_owner'];
     const userRole = validRoles.includes(role) ? role : 'customer';
     const requiresApproval = false;
@@ -357,6 +373,7 @@ router.post("/phone-signup", async (req, res) => {
       .values({
         phone: normalizedPhone,
         name: name,
+        email: email && email.trim() ? email.trim() : null,
         role: userRole,
         phoneVerified: false,
         isActive: true,
