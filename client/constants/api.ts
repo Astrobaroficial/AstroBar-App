@@ -22,10 +22,10 @@ export const getApiBaseUrl = (): string => {
     return trimmed;
   }
 
-  // Development mode - use localhost
+  // Development mode - use Render backend
   if (__DEV__) {
     
-    return "http://localhost:5000";
+    return "https://astrobar-backend.onrender.com";
   }
 
   // For web in production, use current origin (same domain)
@@ -35,7 +35,7 @@ export const getApiBaseUrl = (): string => {
 
   // Production fallback
   
-  return "https://AstroBar-app.replit.app";
+  return "https://astrobar-backend.onrender.com";
 };
 
 export const API_CONFIG = {
