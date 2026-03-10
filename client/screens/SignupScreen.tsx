@@ -838,12 +838,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "100%",
     fontSize: 16,
-    color: "#000000",
-<<<<<<< HEAD
     letterSpacing: 0.5,
-=======
-    letterSpacing: 1,
->>>>>>> 6c26480b12c9609c7a9194c9c0fe1c6bdfefbff1
   },
   inputError: {
     color: AstroBarColors.error,
