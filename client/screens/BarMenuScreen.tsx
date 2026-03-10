@@ -43,6 +43,7 @@ interface MenuData {
 export default function BarMenuScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const route = useRoute();
   const navigation = useNavigation();
   const { businessId } = route.params as { businessId: string };
@@ -124,27 +125,27 @@ export default function BarMenuScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ActivityIndicator size="large" color={AstroBarColors.primary} />
           <ThemedText style={{ marginTop: Spacing.md }}>Cargando menú...</ThemedText>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   if (!menuData) {
     return (
-      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ThemedText>No se pudo cargar el menú</ThemedText>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.text} />
@@ -266,11 +267,11 @@ export default function BarMenuScreen() {
           </ThemedText>
         </View>
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
