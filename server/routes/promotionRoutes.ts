@@ -156,21 +156,13 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Ya aceptaste esta promoción" });
     }
 
-    // Calculate amounts - Get commission from business_commissions table
-    const { sql: sqlImport } = await import("drizzle-orm");
-    const commissionResult = await db.execute(sqlImport`
-      SELECT COALESCE(bc.platform_commission, 0.30) as commission
-      FROM businesses b
-      LEFT JOIN business_commissions bc ON b.id = bc.business_id
-      WHERE b.id = ${promotion.businessId}
-      LIMIT 1
-    `);
-    const commissionRate = Array.isArray(commissionResult[0]) ? commissionResult[0][0]?.commission : commissionResult[0]?.commission;
-    const platformCommissionRate = Number(commissionRate || 0.30);
+    // Calculate amounts using progressive commission system
+    const { ProgressiveCommissionService } = await import("../progressiveCommissionService");
+    const split = await ProgressiveCommissionService.calculateProgressiveSplit(promotion.businessId, promotion.promoPrice);
     
     const promoPrice = promotion.promoPrice; // Bar receives this (en centavos)
-    const platformCommission = Math.round(promoPrice * platformCommissionRate); // Commission based on bar config
-    const totalAmount = promoPrice + platformCommission; // User pays this (en centavos)
+    const platformCommission = split.platform; // Progressive commission
+    const totalAmount = split.total; // User pays this (en centavos)
 
     // Generate unique QR code
     const qrCode = `ASTRO-${uuidv4().substring(0, 8).toUpperCase()}`;
@@ -431,8 +423,8 @@ router.post("/", authenticateToken, requireRole("business_owner"), async (req, r
     // Enviar notificaciones push para promociones flash
     if (type === 'flash') {
       try {
-        const { sendFlashPromotionNotifications } = await import("../services/promotionNotificationService");
-        await sendFlashPromotionNotifications(promotionId);
+        const { ProximityNotificationService } = await import("../proximityNotificationService");
+        await ProximityNotificationService.sendFlashPromoNotifications(promotionId);
       } catch (error) {
         console.error('Error sending flash promotion notifications:', error);
         // No fallar la creación de la promoción por errores de notificación

@@ -55,7 +55,7 @@ export default function TermsScreen() {
         <Section title="1. Aceptación de los Términos">
           <Paragraph>
             Al acceder y utilizar AstroBar, usted acepta estar legalmente vinculado por estos Términos y Condiciones. 
-            AstroBar es una plataforma tecnológica que conecta usuarios, negocios locales y repartidores en Autlán, Argentina.
+            AstroBar es una plataforma tecnológica que conecta usuarios con bares nocturnos mediante promociones flash y comunes en Buenos Aires, Argentina.
           </Paragraph>
         </Section>
 
@@ -63,52 +63,54 @@ export default function TermsScreen() {
           <ThemedText type="body" style={[styles.subsectionTitle, { color: theme.text }]}>
             Para Usuarios/Clientes:
           </ThemedText>
-          <BulletPoint>Explorar negocios y productos locales</BulletPoint>
-          <BulletPoint>Realizar pedidos con entrega a domicilio</BulletPoint>
-          <BulletPoint>Seguimiento en tiempo real</BulletPoint>
-          <BulletPoint>Sistema de calificaciones y reseñas</BulletPoint>
+          <BulletPoint>Explorar bares nocturnos en Buenos Aires</BulletPoint>
+          <BulletPoint>Acceder a promociones flash (5-15 minutos)</BulletPoint>
+          <BulletPoint>Aceptar promociones comunes programadas</BulletPoint>
+          <BulletPoint>Sistema de puntos y niveles (Copper → Platinum)</BulletPoint>
+          <BulletPoint>Códigos QR únicos para canjear en el bar</BulletPoint>
 
           <ThemedText type="body" style={[styles.subsectionTitle, { color: theme.text }]}>
-            Para Negocios:
+            Para Bares:
           </ThemedText>
-          <BulletPoint>Panel de gestión de productos</BulletPoint>
-          <BulletPoint>Control de inventario</BulletPoint>
-          <BulletPoint>Estadísticas de ventas</BulletPoint>
-          <BulletPoint>Comisión: markup 15% solo sobre productos (el negocio recibe 100% del precio base)</BulletPoint>
-
-          <ThemedText type="body" style={[styles.subsectionTitle, { color: theme.text }]}>
-            Para Repartidores:
-          </ThemedText>
-          <BulletPoint>Aceptar/rechazar pedidos libremente</BulletPoint>
-          <BulletPoint>Navegación GPS integrada</BulletPoint>
-          <BulletPoint>Ganancias: 100% de la tarifa de entrega</BulletPoint>
-          <BulletPoint>Retiros via Stripe Connect</BulletPoint>
+          <BulletPoint>Panel de gestión de promociones</BulletPoint>
+          <BulletPoint>Control de menú y productos</BulletPoint>
+          <BulletPoint>Estadísticas de ventas y canjes</BulletPoint>
+          <BulletPoint>Comisión progresiva: Mes 1 gratis, Mes 2: 5%, Mes 3: 10%, Mes 4+: 15%</BulletPoint>
+          <BulletPoint>El bar recibe 100% del precio del producto</BulletPoint>
         </Section>
 
         <Section title="3. Sistema de Pagos y Comisiones">
           <Paragraph>
-            Por cada pedido, la distribución es:
+            Por cada promoción aceptada, la distribución es:
           </Paragraph>
-          <BulletPoint>Negocio: 100% del precio base de productos</BulletPoint>
-          <BulletPoint>Repartidor: 100% de la tarifa de entrega</BulletPoint>
-          <BulletPoint>AstroBar: 15% de markup sobre productos</BulletPoint>
+          <BulletPoint>Bar: 100% del precio del producto promocional</BulletPoint>
+          <BulletPoint>AstroBar: Comisión progresiva adicional que paga el usuario</BulletPoint>
+          <BulletPoint>Primer mes: 0% (gratis para nuevos bares)</BulletPoint>
+          <BulletPoint>Segundo mes: 5% adicional</BulletPoint>
+          <BulletPoint>Tercer mes: 10% adicional</BulletPoint>
+          <BulletPoint>Cuarto mes en adelante: 15% adicional</BulletPoint>
           <Paragraph>
-            Los pagos se procesan de forma segura mediante Stripe. Fondos disponibles después de entrega confirmada.
+            Los pagos se procesan de forma segura mediante Stripe. El usuario tiene 60 segundos para cancelar después de aceptar.
           </Paragraph>
         </Section>
 
-        <Section title="4. Cancelaciones y Reembolsos">
-          <BulletPoint>Antes de aceptación: Reembolso 100%</BulletPoint>
-          <BulletPoint>Después de aceptación: Cargo del 20%</BulletPoint>
-          <BulletPoint>Durante preparación: Cargo del 50%</BulletPoint>
-          <BulletPoint>Pedido listo/recogido: Sin reembolso</BulletPoint>
+        <Section title="4. Cancelaciones y Política de Uso">
+          <BulletPoint>Cancelación dentro de 60 segundos: Reembolso 100%</BulletPoint>
+          <BulletPoint>Después de 60 segundos: Sin reembolso</BulletPoint>
+          <BulletPoint>QR codes son únicos y de un solo uso</BulletPoint>
+          <BulletPoint>Las promociones flash tienen duración limitada (5-15 minutos)</BulletPoint>
+          <BulletPoint>Stock limitado por promoción</BulletPoint>
         </Section>
 
-        <Section title="5. Calificaciones y Reseñas">
+        <Section title="5. Sistema de Puntos y Niveles">
           <Paragraph>
-            Sistema de 1 a 5 estrellas. No se permiten reseñas con contenido ofensivo, discriminatorio, 
-            falso o que contenga información personal. AstroBar se reserva el derecho de eliminar reseñas inapropiadas.
+            Los usuarios ganan 10 puntos por cada promoción canjeada exitosamente. Los niveles son:
           </Paragraph>
+          <BulletPoint>Copper: 0-99 puntos</BulletPoint>
+          <BulletPoint>Bronze: 100-249 puntos</BulletPoint>
+          <BulletPoint>Silver: 250-499 puntos</BulletPoint>
+          <BulletPoint>Gold: 500-999 puntos</BulletPoint>
+          <BulletPoint>Platinum: 1000+ puntos</BulletPoint>
         </Section>
 
         <Section title="6. Privacidad y Datos">
@@ -120,16 +122,17 @@ export default function TermsScreen() {
 
         <Section title="7. Limitación de Responsabilidad">
           <Paragraph>
-            AstroBar es una plataforma tecnológica intermediaria. No somos responsables de la calidad de productos 
-            o acciones de negocios y repartidores. El servicio se proporciona "tal cual" sin garantías de 
-            disponibilidad ininterrumpida.
+            AstroBar es una plataforma tecnológica intermediaria entre usuarios y bares. No somos responsables de la calidad de productos, 
+            servicios o acciones de los bares participantes. El servicio se proporciona "tal cual" sin garantías de 
+            disponibilidad ininterrumpida. Los usuarios deben ser mayores de 18 años.
           </Paragraph>
         </Section>
 
         <Section title="8. Conducta Prohibida">
           <Paragraph>
-            Está prohibido: usar la plataforma para actividades ilegales, manipular calificaciones, 
-            realizar pedidos fraudulentos, acosar a otros usuarios. Consecuencia: suspensión permanente.
+            Está prohibido: usar la plataforma para actividades ilegales, crear múltiples cuentas para abusar de promociones, 
+            revender códigos QR, acosar a otros usuarios o personal de bares. Consecuencia: suspensión permanente.
+            Solo usuarios mayores de 18 años pueden usar la plataforma.
           </Paragraph>
         </Section>
 
@@ -142,15 +145,15 @@ export default function TermsScreen() {
 
         <Section title="10. Contacto">
           <Paragraph>
-            Email: support@AstroBar.app{'\n'}
-            Ubicación: Autlán, Argentina, México{'\n'}
+            Email: support@astrobar.app{'\n'}
+            Ubicación: Buenos Aires, Argentina{'\n'}
             Soporte disponible en la app
           </Paragraph>
         </Section>
 
         <View style={[styles.footer, { backgroundColor: theme.card }]}>
           <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: 'center' }}>
-            Del náhuatl "vivir" - Conectando negocios locales con la comunidad
+            🌙 AstroBar - Conectando bares con usuarios en Buenos Aires
           </ThemedText>
           <ThemedText type="caption" style={{ color: theme.textSecondary, textAlign: 'center', marginTop: Spacing.xs }}>
             © 2025 AstroBar. Todos los derechos reservados.

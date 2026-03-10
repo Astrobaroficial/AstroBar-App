@@ -529,7 +529,36 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
   }
 });
 
-// Get current user's business (PROTECTED - debe ir antes de /:id)
+// Get commission info for business
+router.get("/commission-info", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const { ProgressiveCommissionService } = await import("../progressiveCommissionService");
+    const commissionInfo = await ProgressiveCommissionService.getCommissionInfo(business.id);
+    
+    // Calculate months since registration
+    const registrationDate = new Date(business.createdAt);
+    const now = new Date();
+    const monthsDiff = Math.floor((now.getTime() - registrationDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    res.json({ 
+      success: true, 
+      commission: commissionInfo,
+      businessAge: {
+        months: monthsDiff,
+        registrationDate: business.createdAt
+      }
+    });
+  } catch (error: any) {
+    console.error('Commission info error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 router.get("/", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);

@@ -52,9 +52,20 @@ export default function ReferralScreen() {
 
   const shareReferral = async () => {
     try {
+      const shareMessage = `🌙 ¡Únete a AstroBar!
+
+🍻 Descubre promociones exclusivas en bares de Buenos Aires
+⚡ Promociones flash de 5-15 minutos
+🏆 Sistema de puntos y niveles
+
+Usa mi código: ${referralCode}
+
+📱 Descarga AstroBar:
+${referralLink}`;
+
       await Share.share({
-        message: `¡Unite a AstroDrinks con mi código ${referralCode}! Descargá la app y usá mi link: ${referralLink}`,
-        url: referralLink,
+        message: shareMessage,
+        title: 'AstroBar - Promociones Nocturnas',
       });
     } catch (error) {
       console.error('Error sharing:', error);

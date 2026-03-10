@@ -125,6 +125,11 @@ app.use('/api/mp', mercadopagoRoutes);
 
 // Development routes removed
 
+// Geolocation routes
+import geolocationRoutes from './routes/geolocationRoutes';
+
+app.use('/api/geolocation', geolocationRoutes);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

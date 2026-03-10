@@ -45,7 +45,7 @@ export default function CreateCommonPromotionScreen({ route }: any) {
   useEffect(() => {
     loadProducts();
     if (isEditing && editPromotion) {
-      setDiscountedPrice(editPromotion.promoPrice.toString());
+      setDiscountedPrice((editPromotion.promoPrice / 100).toString());
       setStock(editPromotion.stock.toString());
       setStartDate(new Date(editPromotion.startTime).toISOString().slice(0, 16));
       setEndDate(new Date(editPromotion.endTime).toISOString().slice(0, 16));
@@ -82,7 +82,7 @@ export default function CreateCommonPromotionScreen({ route }: any) {
       return;
     }
 
-    const discountPrice = parseFloat(discountedPrice);
+    const discountPrice = parseFloat(discountedPrice) * 100; // Convertir a centavos
     if (discountPrice >= selectedProduct.price) {
       Alert.alert("Error", "El precio promocional debe ser menor al precio original");
       return;
@@ -144,7 +144,7 @@ export default function CreateCommonPromotionScreen({ route }: any) {
       <View style={{ flex: 1, marginLeft: 12 }}>
         <ThemedText type="small" style={{ fontWeight: "600" }}>{item.name}</ThemedText>
         <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.category}</ThemedText>
-        <ThemedText type="small" style={{ color: "#FFD700", fontWeight: "700" }}>${item.price.toFixed(0)}</ThemedText>
+        <ThemedText type="small" style={{ color: "#FFD700", fontWeight: "700" }}>${(item.price / 100).toFixed(0)}</ThemedText>
       </View>
     </Pressable>
   );
@@ -196,7 +196,7 @@ export default function CreateCommonPromotionScreen({ route }: any) {
                   <ThemedText type="small" style={{ fontWeight: "600" }}>{selectedProduct.name}</ThemedText>
                   <ThemedText type="caption" style={{ color: theme.textSecondary }}>{selectedProduct.category}</ThemedText>
                   <ThemedText type="small" style={{ color: "#FFD700", fontWeight: "700" }}>
-                    Precio original: ${selectedProduct.price.toFixed(0)}
+                    Precio original: ${(selectedProduct.price / 100).toFixed(0)}
                   </ThemedText>
                 </View>
               </View>
@@ -213,7 +213,7 @@ export default function CreateCommonPromotionScreen({ route }: any) {
             style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
             value={discountedPrice}
             onChangeText={setDiscountedPrice}
-            placeholder={selectedProduct ? `Menor a ${selectedProduct.price.toFixed(0)}` : "0"}
+            placeholder={selectedProduct ? `Menor a ${(selectedProduct.price / 100).toFixed(0)}` : "0"}
             placeholderTextColor={theme.textSecondary}
             keyboardType="numeric"
           />

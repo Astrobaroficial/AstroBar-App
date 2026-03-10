@@ -316,7 +316,7 @@ router.post("/signup", async (req, res) => {
 // Signup
 router.post("/phone-signup", async (req, res) => {
   try {
-    const { phone, name, role } = req.body;
+    const { phone, name, role, email } = req.body;
     
     if (!phone || !name) {
       return res.status(400).json({ error: "Tel�fono y nombre requeridos" });
@@ -357,6 +357,7 @@ router.post("/phone-signup", async (req, res) => {
       .values({
         phone: normalizedPhone,
         name: name,
+        email: email || null,
         role: userRole,
         phoneVerified: false,
         isActive: true,

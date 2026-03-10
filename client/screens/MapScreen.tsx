@@ -16,6 +16,7 @@ import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
@@ -30,6 +31,11 @@ export default function MapScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
+  const { location: userLocation, startTracking, stopTracking } = useGeolocation({
+    autoStart: true,
+    updateInterval: 30000, // Update every 30 seconds
+  });
+  
   const [isLoading, setIsLoading] = useState(true);
   const [location, setLocation] = useState<any>(null);
   const [bars, setBars] = useState<any[]>([]);
@@ -40,6 +46,14 @@ export default function MapScreen() {
 
   useEffect(() => {
     loadMapData();
+    
+    // Refresh businesses status every 30 seconds
+    const interval = setInterval(loadBusinessesStatus, 30000);
+    
+    return () => {
+      clearInterval(interval);
+      stopTracking();
+    };
   }, []);
 
   const loadMapData = async () => {
@@ -54,18 +68,25 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const response = await apiRequest('GET', `/api/public/businesses`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const activeBars = (data.businesses || []).filter((b: any) => b.latitude && b.longitude);
-        setBars(activeBars);
-      }
+      await loadBusinessesStatus();
     } catch (err: any) {
       console.error('Error loading map:', err);
       setError(err.message || 'Error al cargar el mapa');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadBusinessesStatus = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/geolocation/businesses-status');
+      const data = await response.json();
+      
+      if (data.success) {
+        setBars(data.businesses || []);
+      }
+    } catch (err: any) {
+      console.error('Error loading businesses status:', err);
     }
   };
 
@@ -142,10 +163,20 @@ export default function MapScreen() {
   };
 
   const getMarkerColor = (bar: any) => {
-    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700';
-    if (bar.isOpen) return '#4CAF50';
-    if (bar.openingSoon) return '#FFB800';
-    return '#EF4444';
+    if (!bar.isOpen) return '#EF4444'; // Rojo: cerrado
+    if (bar.hasFlashPromo) return '#FFD700'; // Dorado: flash promo activa
+    return '#4CAF50'; // Verde: abierto normal
+  };
+
+  const getMarkerIcon = (bar: any) => {
+    if (bar.hasFlashPromo && bar.isOpen) return 'zap';
+    return 'home';
+  };
+
+  const getStatusText = (bar: any) => {
+    if (!bar.isOpen) return 'Cerrado';
+    if (bar.hasFlashPromo) return `⚡ ${bar.flashPromoCount || 1} Flash Activo`;
+    return 'Abierto';
   };
 
   const handleMarkerPress = (bar: any) => {
@@ -226,10 +257,10 @@ export default function MapScreen() {
             pinColor={getMarkerColor(bar)}
           >
             <View style={[styles.customMarker, { backgroundColor: getMarkerColor(bar) }]}>
-              <Feather name="home" size={20} color="#FFF" />
-              {bar.hasFlashPromo && (
-                <View style={styles.flashBadge}>
-                  <Feather name="zap" size={10} color="#FFD700" />
+              <Feather name={getMarkerIcon(bar)} size={20} color="#FFF" />
+              {bar.nearbyUsers > 0 && (
+                <View style={styles.demandBadge}>
+                  <ThemedText style={styles.demandText}>{bar.nearbyUsers}</ThemedText>
                 </View>
               )}
             </View>
@@ -256,9 +287,13 @@ export default function MapScreen() {
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedBar) }]} />
                 <ThemedText type="small" style={{ color: getMarkerColor(selectedBar), fontWeight: '600' }}>
-                  {selectedBar.hasFlashPromo ? `⚡ ${selectedBar.flashPromoCount} Flash Activo` :
-                   selectedBar.isOpen ? 'Abierto' : 'Cerrado'}
+                  {getStatusText(selectedBar)}
                 </ThemedText>
+                {selectedBar.nearbyUsers > 0 && (
+                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 8 }}>
+                    👥 {selectedBar.nearbyUsers} usuarios cerca
+                  </ThemedText>
+                )}
               </View>
             </View>
             <Pressable onPress={() => setSelectedBar(null)} style={styles.closeButton}>
@@ -343,18 +378,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  flashBadge: {
+  demandBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: -8,
+    right: -8,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#FF4444',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
+    paddingHorizontal: 4,
+  },
+  demandText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   bottomSheet: {
     position: 'absolute',
