@@ -21,6 +21,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type PinStatus = 'closed' | 'opening_soon' | 'open' | 'hot_promo';
 
 const { width, height } = Dimensions.get('window');
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -29,7 +30,6 @@ export default function MapScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
-  
   const [isLoading, setIsLoading] = useState(true);
   const [location, setLocation] = useState<any>(null);
   const [bars, setBars] = useState<any[]>([]);
@@ -54,17 +54,6 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      await loadBusinessesStatus();
-    } catch (err: any) {
-      console.error('Error loading map:', err);
-      setError(err.message || 'Error al cargar el mapa');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadBusinessesStatus = async () => {
-    try {
       const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
@@ -73,7 +62,10 @@ export default function MapScreen() {
         setBars(activeBars);
       }
     } catch (err: any) {
-      console.error('Error loading businesses:', err);
+      console.error('Error loading map:', err);
+      setError(err.message || 'Error al cargar el mapa');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,20 +142,10 @@ export default function MapScreen() {
   };
 
   const getMarkerColor = (bar: any) => {
-    if (!bar.isOpen) return '#EF4444'; // Rojo: cerrado
-    if (bar.hasFlashPromo) return '#FFD700'; // Dorado: flash promo activa
-    return '#4CAF50'; // Verde: abierto normal
-  };
-
-  const getMarkerIcon = (bar: any) => {
-    if (bar.hasFlashPromo && bar.isOpen) return 'zap';
-    return 'home';
-  };
-
-  const getStatusText = (bar: any) => {
-    if (!bar.isOpen) return 'Cerrado';
-    if (bar.hasFlashPromo) return `⚡ ${bar.flashPromoCount || 1} Flash Activo`;
-    return 'Abierto';
+    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700';
+    if (bar.isOpen) return '#4CAF50';
+    if (bar.openingSoon) return '#FFB800';
+    return '#EF4444';
   };
 
   const handleMarkerPress = (bar: any) => {
@@ -244,10 +226,10 @@ export default function MapScreen() {
             pinColor={getMarkerColor(bar)}
           >
             <View style={[styles.customMarker, { backgroundColor: getMarkerColor(bar) }]}>
-              <Feather name={getMarkerIcon(bar)} size={20} color="#FFF" />
-              {bar.nearbyUsers > 0 && (
-                <View style={styles.demandBadge}>
-                  <ThemedText style={styles.demandText}>{bar.nearbyUsers}</ThemedText>
+              <Feather name="home" size={20} color="#FFF" />
+              {bar.hasFlashPromo && (
+                <View style={styles.flashBadge}>
+                  <Feather name="zap" size={10} color="#FFD700" />
                 </View>
               )}
             </View>
@@ -274,13 +256,9 @@ export default function MapScreen() {
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedBar) }]} />
                 <ThemedText type="small" style={{ color: getMarkerColor(selectedBar), fontWeight: '600' }}>
-                  {getStatusText(selectedBar)}
+                  {selectedBar.hasFlashPromo ? `⚡ ${selectedBar.flashPromoCount} Flash Activo` :
+                   selectedBar.isOpen ? 'Abierto' : 'Cerrado'}
                 </ThemedText>
-                {selectedBar.nearbyUsers > 0 && (
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 8 }}>
-                    👥 {selectedBar.nearbyUsers} usuarios cerca
-                  </ThemedText>
-                )}
               </View>
             </View>
             <Pressable onPress={() => setSelectedBar(null)} style={styles.closeButton}>
@@ -365,24 +343,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  demandBadge: {
+  flashBadge: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: '#FF4444',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
-    paddingHorizontal: 4,
-  },
-  demandText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFF',
   },
   bottomSheet: {
     position: 'absolute',
