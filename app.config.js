@@ -43,12 +43,6 @@ export default {
           locationAlwaysAndWhenInUsePermission: "Necesitamos tu ubicación para mostrarte bares cercanos y calcular rutas."
         }
       ],
-      [
-        "react-native-maps",
-        {
-          googleMapsApiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
-        }
-      ],
 
     ],
     experiments: {
