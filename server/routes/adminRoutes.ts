@@ -16,14 +16,15 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const allPromotions = await db.select().from(promotions);
     const allTransactions = await db.select().from(promotionTransactions);
 
-    const activePromotions = allPromotions.filter(p => p.isActive).length;
+    const totalPromotions = allPromotions.length;
     const pausedBusinesses = allBusinesses.filter(b => !b.isActive).length;
     const totalBars = allBusinesses.length;
     const totalUsers = allUsers.filter(u => u.role === 'customer').length;
 
     res.json({
+      success: true,
       totalBars,
-      activePromotions,
+      activePromotions: totalPromotions,
       totalUsers,
       pausedBusinesses,
       totalBusinesses: totalBars,
