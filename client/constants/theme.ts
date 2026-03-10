@@ -126,16 +126,16 @@ export const useTheme = () => {
   };
 };
 
-// Tema por defecto (oscuro para compatibilidad)
+// Tema por defecto (claro)
 export const theme = {
   ...baseTheme,
-  colors: darkColors,
+  colors: lightColors,
 };
 
 export type Theme = typeof theme;
 
 // Export individual objects for easier imports
-export const AstroBarColors = theme.colors;
+export const AstroBarColors = lightColors;
 export const Spacing = baseTheme.spacing;
 export const BorderRadius = baseTheme.borderRadius;
 export const Typography = baseTheme.typography;

@@ -33,6 +33,7 @@ import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { ThemedScreenWrapper } from "@/components/ThemedScreenWrapper";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Conditional import for LocationPickerScreen
 let LocationPickerScreen: any = null;
