@@ -22,7 +22,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.astrobar.app"
+      "package": "com.astrobar.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
+        }
+      }
     },
     "web": {
       "output": "single",

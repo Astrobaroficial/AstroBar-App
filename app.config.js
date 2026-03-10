@@ -48,7 +48,13 @@ export default {
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-maps",
+        {
+          googleMapsApiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
+        }
+      ]
     ],
     experiments: {
       reactCompiler: true
