@@ -1,28 +1,28 @@
 export default {
   expo: {
-    name: "NEMY",
-    slug: "nemy-app",
+    name: "AstroBar",
+    slug: "astrobar-app",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
-    scheme: "nemy",
+    icon: "./assets/astrobarlogo.jpg",
+    scheme: "astrobar",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.nemy.app",
+      bundleIdentifier: "com.astrobar.app",
       infoPlist: {
-        NSLocationWhenInUseUsageDescription: "Necesitamos tu ubicacion para asignarte pedidos y mostrar tu posicion en tiempo real."
+        NSLocationWhenInUseUsageDescription: "Necesitamos tu ubicación para mostrarte bares cercanos y promociones disponibles."
       }
     },
     android: {
       adaptiveIcon: {
-        backgroundColor: "#FF8C00",
-        foregroundImage: "./assets/images/icon.png"
+        backgroundColor: "#8B5CF6",
+        foregroundImage: "./assets/astrobarlogo.jpg"
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: "com.nemy.app",
+      package: "com.astrobar.app",
       config: {
         googleMaps: {
           apiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
@@ -31,28 +31,36 @@ export default {
     },
     web: {
       output: "single",
-      favicon: "./assets/images/icon.png"
+      favicon: "./assets/astrobarlogo.jpg"
     },
     plugins: [
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/splash-icon.png",
+          image: "./assets/astrobarlogo.jpg",
           imageWidth: 200,
           resizeMode: "contain",
-          backgroundColor: "#FF8C00",
+          backgroundColor: "#8B5CF6",
           dark: {
-            backgroundColor: "#1A1A1A",
-            image: "./assets/images/splash-icon.png"
+            backgroundColor: "#6D28D9",
+            image: "./assets/astrobarlogo.jpg"
           }
         }
       ],
       "expo-web-browser",
       "expo-secure-store",
+      "@react-native-community/datetimepicker",
       [
-        "react-native-maps",
+        "@stripe/stripe-react-native",
         {
-          googleMapsApiKey: "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
+          merchantIdentifier: "merchant.com.astrobar.app",
+          enableGooglePay: true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission: "Necesitamos tu ubicación para mostrarte bares cercanos y calcular rutas."
         }
       ]
     ],
@@ -63,8 +71,7 @@ export default {
       eas: {
         projectId: "8c58541f-bf02-4e36-bcf9-a2e64b126a5b"
       },
-      // CRITICAL: Backend URL for production builds
-      EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || "https://nemy-app.replit.app"
+      EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-backend.onrender.com"
     },
     owner: "caskiuzs-organization"
   }

@@ -225,7 +225,7 @@ export default function HomeScreen() {
 
   return (
     <LinearGradient
-      colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+      colors={['#8B5CF6', '#6D28D9']}
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -452,7 +452,7 @@ export default function HomeScreen() {
               ]}
             >
               <LinearGradient
-                colors={[AstroBarColors.carnival.pink, "#7B1FA2", "#6A1B9A"]}
+                colors={["#E91E63", "#7B1FA2", "#6A1B9A"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.carnivalGradient}

@@ -58,20 +58,53 @@ export default function MapScreen() {
 
   const loadMapData = async () => {
     try {
+      setError(null);
+      
+      // Try to get location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setError('Permiso de ubicación denegado');
+        setError('Permiso de ubicación denegado. Puedes usar el mapa sin ubicación.');
+        // Continue loading businesses without location
+        await loadBusinessesStatus();
         setIsLoading(false);
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
+      // Try to get current location with timeout
+      try {
+        const currentLocation = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeout: 10000,
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Location timeout')), 10000)
+          )
+        ]);
+        setLocation(currentLocation);
+      } catch (locationError) {
+        console.warn('Could not get location:', locationError);
+        // Set default location to Buenos Aires center
+        setLocation({
+          coords: {
+            latitude: -34.6037,
+            longitude: -58.3816,
+          }
+        });
+        setError('No se pudo obtener tu ubicación exacta.');
+      }
 
       await loadBusinessesStatus();
     } catch (err: any) {
       console.error('Error loading map:', err);
-      setError(err.message || 'Error al cargar el mapa');
+      setError('Error al cargar el mapa. Intenta nuevamente.');
+      // Set fallback location
+      setLocation({
+        coords: {
+          latitude: -34.6037,
+          longitude: -58.3816,
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -84,9 +117,12 @@ export default function MapScreen() {
       
       if (data.success) {
         setBars(data.businesses || []);
+      } else {
+        setBars([]);
       }
     } catch (err: any) {
-      console.error('Error loading businesses status:', err);
+      console.warn('Error loading businesses status:', err);
+      setBars([]);
     }
   };
 
