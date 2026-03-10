@@ -16,13 +16,11 @@ import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useGeolocation } from "@/hooks/useGeolocation";
 import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type PinStatus = 'closed' | 'opening_soon' | 'open' | 'hot_promo';
 
 const { width, height } = Dimensions.get('window');
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -31,10 +29,6 @@ export default function MapScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
-  const { location: userLocation, startTracking, stopTracking } = useGeolocation({
-    autoStart: true,
-    updateInterval: 30000, // Update every 30 seconds
-  });
   
   const [isLoading, setIsLoading] = useState(true);
   const [location, setLocation] = useState<any>(null);
@@ -46,59 +40,45 @@ export default function MapScreen() {
 
   useEffect(() => {
     loadMapData();
-    
-    // Refresh businesses status every 30 seconds
-    const interval = setInterval(loadBusinessesStatus, 30000);
-    
-    return () => {
-      clearInterval(interval);
-      stopTracking();
-    };
   }, []);
 
   const loadMapData = async () => {
     try {
       setError(null);
       
-      // Try to get location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setError('Permiso de ubicación denegado. Puedes usar el mapa sin ubicación.');
-        // Continue loading businesses without location
-        await loadBusinessesStatus();
-        setIsLoading(false);
-        return;
-      }
-
-      // Try to get current location with timeout
-      try {
-        const currentLocation = await Promise.race([
-          Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-            timeout: 10000,
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Location timeout')), 10000)
-          )
-        ]);
-        setLocation(currentLocation);
-      } catch (locationError) {
-        console.warn('Could not get location:', locationError);
-        // Set default location to Buenos Aires center
+        setError('Permiso de ubicación denegado');
         setLocation({
           coords: {
             latitude: -34.6037,
             longitude: -58.3816,
           }
         });
-        setError('No se pudo obtener tu ubicación exacta.');
+        await loadBusinessesStatus();
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setLocation(currentLocation);
+      } catch (locationError) {
+        console.warn('Could not get location:', locationError);
+        setLocation({
+          coords: {
+            latitude: -34.6037,
+            longitude: -58.3816,
+          }
+        });
       }
 
       await loadBusinessesStatus();
     } catch (err: any) {
       console.error('Error loading map:', err);
-      setError('Error al cargar el mapa. Intenta nuevamente.');
-      // Set fallback location
+      setError('Error al cargar el mapa');
       setLocation({
         coords: {
           latitude: -34.6037,
@@ -112,16 +92,26 @@ export default function MapScreen() {
 
   const loadBusinessesStatus = async () => {
     try {
-      const response = await apiRequest('GET', '/api/geolocation/businesses-status');
+      const response = await apiRequest('GET', '/api/public/businesses');
       const data = await response.json();
       
-      if (data.success) {
-        setBars(data.businesses || []);
+      if (data.success && data.businesses) {
+        const businessList = data.businesses.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          latitude: b.latitude || '-34.6037',
+          longitude: b.longitude || '-58.3816',
+          isOpen: b.isOpen || false,
+          hasFlashPromo: false,
+          address: b.address || 'Buenos Aires',
+          nearbyUsers: 0
+        }));
+        setBars(businessList);
       } else {
         setBars([]);
       }
     } catch (err: any) {
-      console.warn('Error loading businesses status:', err);
+      console.warn('Error loading businesses:', err);
       setBars([]);
     }
   };
