@@ -118,12 +118,25 @@ const baseTheme = {
 // Hook to get current theme based on system preference
 export const useTheme = () => {
   const colorScheme = useColorScheme();
+  console.log('Current color scheme:', colorScheme); // Debug log
   const isDark = colorScheme === 'dark';
   
-  return {
+  const currentTheme = {
     ...baseTheme,
     colors: isDark ? darkTheme.colors : lightTheme.colors,
     isDark,
+  };
+  
+  console.log('Using theme:', isDark ? 'dark' : 'light'); // Debug log
+  return currentTheme;
+};
+
+// Force light theme for testing
+export const useLightTheme = () => {
+  return {
+    ...baseTheme,
+    colors: lightTheme.colors,
+    isDark: false,
   };
 };
 

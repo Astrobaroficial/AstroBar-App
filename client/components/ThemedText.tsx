@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "react-native";
 
-import { useTheme } from "@/constants/theme";
+import { useLightTheme } from "@/constants/theme";
 import { Typography } from "@/constants/theme";
 
 export type ThemedTextProps = TextProps & {
@@ -25,7 +25,7 @@ export function ThemedText({
   type = "body",
   ...rest
 }: ThemedTextProps) {
-  const theme = useTheme();
+  const theme = useLightTheme(); // Force light theme for testing
 
   const getColor = () => {
     if (theme.isDark && darkColor) {
