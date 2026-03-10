@@ -46,7 +46,7 @@ export function ThemedText({
   const getTypeStyle = () => {
     switch (type) {
       case "hero":
-        return Typography.h1;
+        return Typography.hero;
       case "h1":
         return Typography.h1;
       case "h2":
@@ -58,11 +58,11 @@ export function ThemedText({
       case "body":
         return Typography.body;
       case "small":
-        return Typography.bodySmall;
+        return Typography.small;
       case "caption":
         return Typography.caption;
       case "link":
-        return Typography.body;
+        return Typography.link;
       default:
         return Typography.body;
     }
