@@ -37,7 +37,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
 import { CartButton } from "@/components/CartButton";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
@@ -61,7 +61,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { theme, isDark } = useTheme();
+  const theme = useTheme();
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto
@@ -224,11 +224,8 @@ export default function HomeScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={['#8B5CF6', '#6D28D9']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
         style={styles.scrollView}
@@ -244,7 +241,7 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={AstroBarColors.primary}
+            tintColor={theme.colors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -353,14 +350,14 @@ export default function HomeScreen() {
         <View
           style={[
             styles.searchContainer,
-            { backgroundColor: theme.backgroundSecondary },
+            { backgroundColor: theme.colors.backgroundSecondary },
           ]}
         >
-          <Feather name="search" size={20} color={theme.textSecondary} />
+          <Feather name="search" size={20} color={theme.colors.text.secondary} />
           <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
+            style={[styles.searchInput, { color: theme.colors.text.primary }]}
             placeholder="Buscar bar o promociï¿½n..."
-            placeholderTextColor={theme.textSecondary}
+            placeholderTextColor={theme.colors.text.secondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -384,7 +381,7 @@ export default function HomeScreen() {
               style={({ pressed }) => [
                 styles.filterChip,
                 {
-                  backgroundColor: theme.backgroundSecondary,
+                  backgroundColor: theme.colors.backgroundSecondary,
                   borderWidth: 1,
                   borderColor: "#F44336",
                   opacity: pressed ? 0.8 : 1,
@@ -410,8 +407,8 @@ export default function HomeScreen() {
               style={({ pressed }) => [
                 styles.filterChip,
                 activeFilter === filter.id
-                  ? { backgroundColor: AstroBarColors.primary }
-                  : { backgroundColor: theme.backgroundSecondary },
+                  ? { backgroundColor: theme.colors.primary }
+                  : { backgroundColor: theme.colors.backgroundSecondary },
                 {
                   opacity: pressed ? 0.8 : 1,
                   transform: [{ scale: pressed ? 0.95 : 1 }],
@@ -422,7 +419,7 @@ export default function HomeScreen() {
                 name={filter.icon as any}
                 size={14}
                 color={
-                  activeFilter === filter.id ? "#FFFFFF" : AstroBarColors.primary
+                  activeFilter === filter.id ? "#FFFFFF" : theme.colors.primary
                 }
               />
               <ThemedText
@@ -521,17 +518,17 @@ export default function HomeScreen() {
             <View
               style={[
                 styles.emptyStateIcon,
-                { backgroundColor: theme.backgroundSecondary },
+                { backgroundColor: theme.colors.backgroundSecondary },
               ]}
             >
-              <Feather name="search" size={40} color={theme.textSecondary} />
+              <Feather name="search" size={40} color={theme.colors.text.secondary} />
             </View>
             <ThemedText type="h3" style={styles.emptyStateTitle}>
               Sin resultados
             </ThemedText>
             <ThemedText
               type="body"
-              style={[styles.emptyStateText, { color: theme.textSecondary }]}
+              style={[styles.emptyStateText, { color: theme.colors.text.secondary }]}
             >
               No encontramos negocios con esos filtros.
               {"\n"}Intenta con otra busqueda o categoria.
@@ -545,7 +542,7 @@ export default function HomeScreen() {
               }}
               style={[
                 styles.emptyStateClearButton,
-                { backgroundColor: AstroBarColors.primary },
+                { backgroundColor: theme.colors.primary },
               ]}
             >
               <Feather name="x" size={16} color="#FFFFFF" />
@@ -579,7 +576,7 @@ export default function HomeScreen() {
                     style={({ pressed }) => [
                       styles.featuredCard,
                       {
-                        backgroundColor: theme.card,
+                        backgroundColor: theme.colors.surface,
                         opacity: pressed ? 0.9 : 1,
                       },
                     ]}
@@ -606,12 +603,12 @@ export default function HomeScreen() {
                           <Feather
                             name="map-pin"
                             size={12}
-                            color={theme.textSecondary}
+                            color={theme.colors.text.secondary}
                           />
                           <ThemedText
                             type="small"
                             style={{
-                              color: theme.textSecondary,
+                              color: theme.colors.text.secondary,
                               marginLeft: 4,
                             }}
                           >
@@ -644,7 +641,7 @@ export default function HomeScreen() {
                   style={({ pressed }) => [
                     styles.gridCard,
                     {
-                      backgroundColor: theme.card,
+                      backgroundColor: theme.colors.surface,
                       opacity: pressed ? 0.9 : 1,
                     },
                   ]}
@@ -677,8 +674,8 @@ export default function HomeScreen() {
                     </View>
                     {getDistanceText(business) && (
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                        <Feather name="map-pin" size={10} color={theme.textSecondary} />
-                        <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 2 }}>
+                        <Feather name="map-pin" size={10} color={theme.colors.text.secondary} />
+                        <ThemedText type="caption" style={{ color: theme.colors.text.secondary, marginLeft: 2 }}>
                           {getDistanceText(business)}
                         </ThemedText>
                       </View>
@@ -701,7 +698,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.mapBanner,
                   {
-                    backgroundColor: AstroBarColors.primary,
+                    backgroundColor: theme.colors.primary,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
@@ -838,7 +835,7 @@ export default function HomeScreen() {
                   <ThemedText type="h3" style={styles.sectionTitle}>
                     Resultados ({filteredBusinesses.length})
                   </ThemedText>
-                  <Feather name="filter" size={20} color={AstroBarColors.primary} />
+                  <Feather name="filter" size={20} color={theme.colors.primary} />
                 </View>
                 {filteredBusinesses.map((business) => (
                   <BusinessCard
@@ -861,7 +858,7 @@ export default function HomeScreen() {
         onPress={() => navigation.navigate("Cart")}
         bottomOffset={tabBarHeight}
       />
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -1058,7 +1055,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Spacing.md,
     right: Spacing.md,
-    backgroundColor: AstroBarColors.primary,
+    backgroundColor: '#8B5CF6',
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
