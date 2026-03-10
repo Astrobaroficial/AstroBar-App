@@ -373,11 +373,7 @@ router.post("/phone-signup", async (req, res) => {
       .values({
         phone: normalizedPhone,
         name: name,
-<<<<<<< HEAD
-        email: email || null,
-=======
         email: email && email.trim() ? email.trim() : null,
->>>>>>> 6c26480b12c9609c7a9194c9c0fe1c6bdfefbff1
         role: userRole,
         phoneVerified: false,
         isActive: true,
