@@ -54,7 +54,7 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const response = await apiRequest('GET', `/api/businesses/featured`);
+      const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
       if (data.success) {
