@@ -32,7 +32,8 @@ import {
   checkOnboardingCompleted,
 } from "@/components/OnboardingOverlay";
 import { NotificationPermissionModal } from "@/components/NotificationPermissionModal";
-import { useTheme } from "@/hooks/useTheme";
+import { ThemedScreenWrapper } from "@/components/ThemedScreenWrapper";
+import { useTheme } from "@/constants/theme";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -47,6 +48,7 @@ Notifications.setNotificationHandler({
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const theme = useTheme();
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -143,9 +145,11 @@ export default function App() {
                       <CartProvider>
                         <OrderCartProvider>
                           <ToastProvider>
-                            <AppThemedShell>
-                              <RootStackNavigator />
-                            </AppThemedShell>
+                            <ThemedScreenWrapper>
+                              <AppThemedShell>
+                                <RootStackNavigator />
+                              </AppThemedShell>
+                            </ThemedScreenWrapper>
                             {showOnboarding && (
                               <OnboardingOverlay
                                 onComplete={() => setShowOnboarding(false)}
@@ -173,15 +177,15 @@ export default function App() {
 }
 
 function AppThemedShell({ children }: { children: React.ReactNode }) {
-  const { isDark } = useTheme();
+  const theme = useTheme();
 
   return (
-    <>
-      <NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <NavigationContainer theme={theme.isDark ? DarkTheme : DefaultTheme}>
         {children}
       </NavigationContainer>
-      <StatusBar style={isDark ? "light" : "dark"} />
-    </>
+      <StatusBar style={theme.isDark ? "light" : "dark"} />
+    </View>
   );
 }
 

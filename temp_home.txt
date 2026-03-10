@@ -37,10 +37,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
 import { CartButton } from "@/components/CartButton";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
-import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { Business } from "@/types";
 import { apiRequest } from "@/lib/query-client";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -61,7 +61,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { theme, isDark } = useTheme();
+  const theme = useTheme();
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto
@@ -198,8 +198,6 @@ export default function HomeScreen() {
 
   const hasActiveFilters = searchQuery.trim() || activeCategory || activeFilter;
 
-  const styles = getStyles(theme);
-
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radio de la Tierra en km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -226,7 +224,9 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -745,7 +745,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.marketsBanner,
                   {
-                    backgroundColor: theme.colors.warning,
+                    backgroundColor: "#FFD700",
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
@@ -792,7 +792,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.marketsBanner,
                   {
-                    backgroundColor: theme.colors.success,
+                    backgroundColor: "#4CAF50",
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
@@ -862,10 +862,9 @@ export default function HomeScreen() {
   );
 }
 
-const getStyles = (theme: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
@@ -906,7 +905,6 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   questionText: {
     fontSize: 26,
-    color: theme.colors.text.primary,
   },
   quickAccessContainer: {
     marginBottom: Spacing.md,
@@ -930,7 +928,6 @@ const getStyles = (theme: any) => StyleSheet.create({
   quickAccessLabel: {
     textAlign: "center",
     fontWeight: "500",
-    color: theme.colors.text.primary,
   },
   searchContainer: {
     flexDirection: "row",
@@ -1024,8 +1021,8 @@ const getStyles = (theme: any) => StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   carnivalBadgeText: {
-    color: '#FFD700',
-    fontWeight: '600',
+    color: "#FFD700",
+    fontWeight: "600",
     marginLeft: 4,
     fontSize: 10,
   },
@@ -1045,7 +1042,6 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: Spacing.md,
-    color: theme.colors.text.primary,
   },
   featuredCard: {
     borderRadius: BorderRadius.lg,
@@ -1103,7 +1099,6 @@ const getStyles = (theme: any) => StyleSheet.create({
   gridName: {
     fontWeight: "600",
     marginBottom: Spacing.xs,
-    color: theme.colors.text.primary,
   },
   gridMeta: {
     flexDirection: "row",
@@ -1149,11 +1144,11 @@ const getStyles = (theme: any) => StyleSheet.create({
     flex: 1,
   },
   marketsTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginBottom: Spacing.xs,
   },
   marketsSubtitle: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: "rgba(255, 255, 255, 0.85)",
   },
   marketsGradient: {
     borderRadius: BorderRadius.xl,
@@ -1188,7 +1183,6 @@ const getStyles = (theme: any) => StyleSheet.create({
   emptyStateTitle: {
     textAlign: "center",
     marginBottom: Spacing.sm,
-    color: theme.colors.text.primary,
   },
   emptyStateText: {
     textAlign: "center",
@@ -1203,3 +1197,9 @@ const getStyles = (theme: any) => StyleSheet.create({
     borderRadius: BorderRadius.full,
   },
 });
+
+
+
+
+
+
