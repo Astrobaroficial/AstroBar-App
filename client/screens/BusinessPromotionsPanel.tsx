@@ -86,6 +86,35 @@ export default function BusinessPromotionsPanel() {
     }
   };
 
+  const deletePromotion = async (id: string, title: string) => {
+    Alert.alert(
+      'Eliminar promoción',
+      `¿Estás seguro de eliminar "${title}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await apiRequest('DELETE', `/api/promotions/${id}`);
+              const result = await response.json();
+              
+              if (result.success) {
+                loadPromotions();
+                Alert.alert('Éxito', 'Promoción eliminada');
+              } else {
+                Alert.alert('Error', result.error || 'Error al eliminar');
+              }
+            } catch (error: any) {
+              Alert.alert('Error', 'Error al eliminar promoción');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderPromotion = ({ item }: { item: Promotion }) => {
     const stockPercentage = (item.stockRemaining / item.stock) * 100;
     const isLowStock = stockPercentage < 20;
@@ -117,23 +146,34 @@ export default function BusinessPromotionsPanel() {
             )}
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(item.type === 'flash' ? 'CreateFlashPromotion' : 'CreateCommonPromotion', { editPromotion: item })}
-              style={[styles.statusBtn, { backgroundColor: '#2196F3' }]}
-            >
-              <Ionicons name="pencil" size={16} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => togglePromotion(item.id, item.isActive)}
-              style={[styles.statusBtn, !item.isActive && styles.inactiveBtn]}
-              disabled={isExpired}
-            >
-              <Ionicons
-                name={item.isActive ? 'pause' : 'play'}
-                size={16}
-                color="#FFF"
-              />
-            </TouchableOpacity>
+            {!isExpired && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate(item.type === 'flash' ? 'CreateFlashPromotion' : 'CreateCommonPromotion', { editPromotion: item })}
+                style={[styles.statusBtn, { backgroundColor: '#2196F3' }]}
+              >
+                <Ionicons name="pencil" size={16} color="#FFF" />
+              </TouchableOpacity>
+            )}
+            {!isExpired && (
+              <TouchableOpacity
+                onPress={() => togglePromotion(item.id, item.isActive)}
+                style={[styles.statusBtn, !item.isActive && styles.inactiveBtn]}
+              >
+                <Ionicons
+                  name={item.isActive ? 'pause' : 'play'}
+                  size={16}
+                  color="#FFF"
+                />
+              </TouchableOpacity>
+            )}
+            {isExpired && (
+              <TouchableOpacity
+                onPress={() => deletePromotion(item.id, item.title)}
+                style={[styles.statusBtn, { backgroundColor: '#EF4444' }]}
+              >
+                <Ionicons name="trash" size={16} color="#FFF" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 

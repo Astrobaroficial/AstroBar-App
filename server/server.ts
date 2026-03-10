@@ -130,6 +130,11 @@ import geolocationRoutes from './routes/geolocationRoutes';
 
 app.use('/api/geolocation', geolocationRoutes);
 
+// Directions routes
+import directionsRoutes from './routes/directionsRoutes';
+
+app.use('/api/directions', directionsRoutes);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -180,6 +185,10 @@ app.listen(PORT, async () => {
   // Initialize audit logs table
   const { createAuditTable } = await import('./routes/auditRoutes');
   await createAuditTable();
+  
+  // Start business hours cron job
+  const { startBusinessHoursCron } = await import('./businessHoursCron');
+  startBusinessHoursCron();
   
   if (!process.env.STRIPE_SECRET_KEY) {
     

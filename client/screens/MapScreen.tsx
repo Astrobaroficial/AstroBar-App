@@ -5,6 +5,7 @@ import {
   Pressable,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -70,33 +71,51 @@ export default function MapScreen() {
   };
 
   const getDirections = async (bar: any) => {
-    if (!location) return;
+    if (!location) {
+      console.log('No location available');
+      return;
+    }
 
     try {
+      console.log('Getting directions from:', location.coords.latitude, location.coords.longitude);
+      console.log('To:', bar.latitude, bar.longitude);
+      
       const origin = `${location.coords.latitude},${location.coords.longitude}`;
       const destination = `${bar.latitude},${bar.longitude}`;
-      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`;
 
-      const response = await fetch(url);
+      console.log('Fetching directions from backend...');
+      const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
       const data = await response.json();
 
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        const points = decodePolyline(route.overview_polyline.points);
+      console.log('Directions response:', data);
+
+      if (data.success && data.route) {
+        const points = decodePolyline(data.route.polyline);
+        console.log('Route points:', points.length);
+        
         setRouteCoords(points);
         setRouteInfo({
-          distance: route.legs[0].distance.text,
-          duration: route.legs[0].duration.text,
+          distance: data.route.distance,
+          duration: data.route.duration,
         });
 
+        console.log('Distance:', data.route.distance);
+        console.log('Duration:', data.route.duration);
+
         // Fit map to route
-        mapRef.current?.fitToCoordinates(points, {
-          edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
-          animated: true,
-        });
+        setTimeout(() => {
+          mapRef.current?.fitToCoordinates(points, {
+            edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
+            animated: true,
+          });
+        }, 100);
+      } else {
+        console.log('No routes found');
+        Alert.alert('Error', 'No se pudo encontrar una ruta');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error getting directions:', err);
+      Alert.alert('Error', 'Error al obtener direcciones: ' + err.message);
     }
   };
 
@@ -142,10 +161,10 @@ export default function MapScreen() {
   };
 
   const getMarkerColor = (bar: any) => {
-    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700';
-    if (bar.isOpen) return '#4CAF50';
-    if (bar.openingSoon) return '#FFB800';
-    return '#EF4444';
+    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700'; // Dorado para flash promo
+    if (bar.isOpen) return '#4CAF50'; // Verde para abierto
+    if (bar.openingSoon) return '#FFB800'; // Amarillo para próximo a abrir
+    return '#EF4444'; // Rojo para cerrado
   };
 
   const handleMarkerPress = (bar: any) => {
@@ -223,10 +242,9 @@ export default function MapScreen() {
               longitude: parseFloat(bar.longitude),
             }}
             onPress={() => handleMarkerPress(bar)}
-            pinColor={getMarkerColor(bar)}
           >
             <View style={[styles.customMarker, { backgroundColor: getMarkerColor(bar) }]}>
-              <Feather name="home" size={20} color="#FFF" />
+              <Feather name="map-pin" size={24} color="#FFF" />
               {bar.hasFlashPromo && (
                 <View style={styles.flashBadge}>
                   <Feather name="zap" size={10} color="#FFD700" />

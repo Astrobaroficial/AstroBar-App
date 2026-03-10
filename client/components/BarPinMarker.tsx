@@ -22,31 +22,31 @@ export function BarPinMarker({ status, businessName, onPress, timeUntilOpen, hot
       case 'closed':
         return {
           color: '#EF4444',
-          icon: 'x-circle' as const,
+          icon: 'map-pin' as const,
           label: 'Cerrado',
         };
       case 'opening_soon':
         return {
-          color: '#F59E0B',
-          icon: 'clock' as const,
+          color: '#FFB800',
+          icon: 'map-pin' as const,
           label: timeUntilOpen || 'Próximo',
         };
       case 'hot_promo':
         return {
-          color: '#10B981',
-          icon: 'home' as const,
+          color: '#FFD700',
+          icon: 'map-pin' as const,
           label: `⚡ ${hotPromoCount} FLASH`,
         };
       case 'open':
         return {
-          color: '#10B981',
-          icon: 'home' as const,
+          color: '#4CAF50',
+          icon: 'map-pin' as const,
           label: 'Abierto',
         };
       default:
         return {
           color: '#999999',
-          icon: 'home' as const,
+          icon: 'map-pin' as const,
           label: 'Bar',
         };
     }

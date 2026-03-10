@@ -557,14 +557,15 @@ router.put("/:id", authenticateToken, requireRole("business_owner"), async (req,
   }
 });
 
-// Delete promotion (admin only)
-router.delete("/:id", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+// Delete promotion (business owner can delete expired, admin can delete any)
+router.delete("/:id", authenticateToken, async (req, res) => {
   try {
-    const { promotions } = await import("@shared/schema-mysql");
+    const { promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { eq, and } = await import("drizzle-orm");
 
     const promotionId = req.params.id;
+    const userRole = req.user!.role;
 
     const [promotion] = await db
       .select()
@@ -576,11 +577,44 @@ router.delete("/:id", authenticateToken, requireRole("admin", "super_admin"), as
       return res.status(404).json({ error: "Promoción no encontrada" });
     }
 
-    await db
-      .delete(promotions)
-      .where(eq(promotions.id, promotionId));
+    // Admin can delete any promotion
+    if (userRole === 'admin' || userRole === 'super_admin') {
+      await db
+        .delete(promotions)
+        .where(eq(promotions.id, promotionId));
+      return res.json({ success: true, message: "Promoción eliminada" });
+    }
 
-    res.json({ success: true, message: "Promoción eliminada" });
+    // Business owner can only delete their own expired promotions
+    if (userRole === 'business_owner') {
+      const [business] = await db
+        .select()
+        .from(businesses)
+        .where(
+          and(
+            eq(businesses.id, promotion.businessId),
+            eq(businesses.ownerId, req.user!.id)
+          )
+        )
+        .limit(1);
+
+      if (!business) {
+        return res.status(403).json({ error: "No tienes acceso a esta promoción" });
+      }
+
+      // Check if promotion is expired
+      const now = new Date();
+      if (promotion.endTime > now) {
+        return res.status(400).json({ error: "Solo puedes eliminar promociones expiradas" });
+      }
+
+      await db
+        .delete(promotions)
+        .where(eq(promotions.id, promotionId));
+      return res.json({ success: true, message: "Promoción eliminada" });
+    }
+
+    return res.status(403).json({ error: "No tienes permiso para eliminar promociones" });
   } catch (error: any) {
     console.error("Error deleting promotion:", error);
     res.status(500).json({ error: error.message });

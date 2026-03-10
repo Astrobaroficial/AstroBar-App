@@ -65,13 +65,16 @@ router.get("/businesses", async (req, res) => {
             )
           );
 
+        // Use database isOpen field (updated by cron) and calculate openingSoon
         const hoursStatus = checkBusinessHours(business);
 
         return {
           ...business,
+          isOpen: business.isOpen, // Use DB value updated by cron
           hasFlashPromo: activeFlashPromos.length > 0,
           flashPromoCount: activeFlashPromos.length,
-          ...hoursStatus
+          openingSoon: hoursStatus.openingSoon,
+          timeUntilOpen: hoursStatus.timeUntilOpen
         };
       })
     );
