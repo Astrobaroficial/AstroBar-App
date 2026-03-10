@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -89,7 +89,7 @@ export default function TicketDetailScreen() {
         >
           <Feather name="arrow-left" size={24} color={theme.text} />
         </Pressable>
-        <ThemedText type="h3">Conversación</ThemedText>
+        <ThemedText type="h3">Conversaci�n</ThemedText>
         <View style={{ width: 44 }} />
       </View>
 

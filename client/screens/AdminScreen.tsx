@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -54,7 +54,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
-    subtitle: "Métricas y pedidos activos",
+    subtitle: "M�tricas y pedidos activos",
     icon: "bar-chart-2",
     tab: "dashboard",
     color: AstroBarColors.primary,
@@ -68,7 +68,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Repartidores",
-    subtitle: "Estado y ubicación",
+    subtitle: "Estado y ubicaci�n",
     icon: "truck",
     tab: "drivers",
     color: "#9C27B0",
@@ -89,7 +89,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Zonas",
-    subtitle: "Áreas de entrega",
+    subtitle: "�reas de entrega",
     icon: "map-pin",
     tab: "zones",
     color: "#E91E63",
@@ -109,7 +109,7 @@ const menuItems: MenuItem[] = [
     color: "#FF5722",
   },
   {
-    title: "Configuración",
+    title: "Configuraci�n",
     subtitle: "Ajustes del sistema",
     icon: "sliders",
     tab: "settings",
@@ -206,7 +206,7 @@ export default function AdminMenuScreen() {
 
   const handleMenuPress = (tab: string) => {
     Haptics.selectionAsync();
-    // Cerrar modales antes de cambiar de pestaña
+    // Cerrar modales antes de cambiar de pesta�a
     setUserModalVisible(false);
     setOrderModalVisible(false);
     setSelectedUser(null);
@@ -215,7 +215,7 @@ export default function AdminMenuScreen() {
   };
 
   const handleBack = () => {
-    // Cerrar modales antes de cambiar de pestaña
+    // Cerrar modales antes de cambiar de pesta�a
     setUserModalVisible(false);
     setOrderModalVisible(false);
     setSelectedUser(null);
@@ -240,7 +240,7 @@ export default function AdminMenuScreen() {
   const handleUserAction = (action: string, user: AdminUser) => {
     Alert.alert(
       `${action} Usuario`,
-      `¿Estás seguro de ${action.toLowerCase()} a ${user.name}?`,
+      `�Est�s seguro de ${action.toLowerCase()} a ${user.name}?`,
       [
         { text: "Cancelar", style: "cancel" },
         { 
@@ -257,7 +257,7 @@ export default function AdminMenuScreen() {
   const handleOrderAction = (action: string, order: AdminOrder) => {
     Alert.alert(
       `${action} Pedido`,
-      `¿Cambiar estado del pedido #${order.id.slice(0, 8)}?`,
+      `�Cambiar estado del pedido #${order.id.slice(0, 8)}?`,
       [
         { text: "Cancelar", style: "cancel" },
         { 
@@ -336,7 +336,7 @@ export default function AdminMenuScreen() {
           <View style={styles.emptyState}>
             <Feather name="settings" size={48} color={theme.textSecondary} />
             <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.md }}>
-              Sección en desarrollo
+              Secci�n en desarrollo
             </ThemedText>
           </View>
         );
@@ -376,7 +376,7 @@ export default function AdminMenuScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
-        <ThemedText type="h1">🔧 Panel Admin - EDITADO</ThemedText>
+        <ThemedText type="h1">?? Panel Admin - EDITADO</ThemedText>
         <ThemedText type="small" style={{ color: theme.textSecondary }}>
           Bienvenido, {user?.name} - ARCHIVO CORRECTO
         </ThemedText>

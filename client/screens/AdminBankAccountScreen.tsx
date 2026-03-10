@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, Pressable, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -55,7 +55,7 @@ export default function AdminBankAccountScreen() {
     }
 
     if (clabe.length !== 18) {
-      showToast("La CLABE debe tener 18 dÃ­gitos", "error");
+      showToast("La CLABE debe tener 18 dígitos", "error");
       return;
     }
 
@@ -74,7 +74,7 @@ export default function AdminBankAccountScreen() {
       <View style={styles.header}>
         <ThemedText type="h2">Cuenta Bancaria</ThemedText>
         <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
-          Los drivers depositarÃ¡n aquÃ­ sus liquidaciones
+          Los drivers depositarán aquí sus liquidaciones
         </ThemedText>
       </View>
 
@@ -99,7 +99,7 @@ export default function AdminBankAccountScreen() {
             </ThemedText>
             <TextInput
               style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-              placeholder="Nombre completo o razÃ³n social"
+              placeholder="Nombre completo o razón social"
               placeholderTextColor={theme.textSecondary}
               value={accountHolder}
               onChangeText={setAccountHolder}
@@ -108,7 +108,7 @@ export default function AdminBankAccountScreen() {
 
           <View style={styles.inputGroup}>
             <ThemedText type="body" style={{ fontWeight: "600", marginBottom: 8 }}>
-              CLABE Interbancaria * (18 dÃ­gitos)
+              CLABE Interbancaria * (18 dígitos)
             </ThemedText>
             <TextInput
               style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text, fontFamily: "monospace" }]}
@@ -123,11 +123,11 @@ export default function AdminBankAccountScreen() {
 
           <View style={styles.inputGroup}>
             <ThemedText type="body" style={{ fontWeight: "600", marginBottom: 8 }}>
-              NÃºmero de cuenta (opcional)
+              Número de cuenta (opcional)
             </ThemedText>
             <TextInput
               style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-              placeholder="NÃºmero de cuenta"
+              placeholder="Número de cuenta"
               placeholderTextColor={theme.textSecondary}
               value={accountNumber}
               onChangeText={setAccountNumber}
@@ -140,7 +140,7 @@ export default function AdminBankAccountScreen() {
             </ThemedText>
             <TextInput
               style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
-              placeholder="InformaciÃ³n adicional"
+              placeholder="Información adicional"
               placeholderTextColor={theme.textSecondary}
               value={notes}
               onChangeText={setNotes}
@@ -169,7 +169,7 @@ export default function AdminBankAccountScreen() {
                 Cuenta activa
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Los drivers verÃ¡n esta informaciÃ³n para depositar
+                Los drivers verán esta información para depositar
               </ThemedText>
             </View>
           </View>

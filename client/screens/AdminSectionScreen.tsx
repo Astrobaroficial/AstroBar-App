@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -47,9 +47,9 @@ const sectionConfig = {
   coupons: { icon: "tag", title: "Cupones" },
   support: { icon: "message-circle", title: "Soporte" },
   zones: { icon: "map-pin", title: "Zonas de Entrega" },
-  settings: { icon: "sliders", title: "ConfiguraciÃ³n" },
+  settings: { icon: "sliders", title: "Configuración" },
   finance: { icon: "trending-up", title: "Finanzas" },
-  logs: { icon: "file-text", title: "Logs de AuditorÃ­a" },
+  logs: { icon: "file-text", title: "Logs de Auditoría" },
 };
 
 export default function AdminSectionScreen({ section, title }: AdminSectionScreenProps) {
@@ -131,7 +131,7 @@ export default function AdminSectionScreen({ section, title }: AdminSectionScree
           <View style={styles.emptyState}>
             <Feather name={config.icon as any} size={48} color={theme.textSecondary} />
             <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.md }}>
-              SecciÃ³n en desarrollo
+              Sección en desarrollo
             </ThemedText>
           </View>
         );

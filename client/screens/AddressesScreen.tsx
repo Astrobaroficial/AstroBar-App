@@ -1,4 +1,4 @@
-Ôªøimport React, { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -95,11 +95,11 @@ export default function AddressesScreen() {
         zipCode: "",
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast("Direcci√≥n agregada correctamente", "success");
+      showToast("DirecciÛn agregada correctamente", "success");
     },
     onError: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast("No se pudo agregar la direcci√≥n", "error");
+      showToast("No se pudo agregar la direcciÛn", "error");
     },
   });
 
@@ -117,10 +117,10 @@ export default function AddressesScreen() {
         queryKey: ["/api/users", user?.id, "addresses"],
       });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      showToast("Direcci√≥n predeterminada actualizada", "success");
+      showToast("DirecciÛn predeterminada actualizada", "success");
     },
     onError: () => {
-      showToast("No se pudo actualizar la direcci√≥n", "error");
+      showToast("No se pudo actualizar la direcciÛn", "error");
     },
   });
 
@@ -140,11 +140,11 @@ export default function AddressesScreen() {
       setShowDeleteModal(false);
       setSelectedAddress(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast("Direcci√≥n eliminada", "success");
+      showToast("DirecciÛn eliminada", "success");
     },
     onError: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast("No se pudo eliminar la direcci√≥n", "error");
+      showToast("No se pudo eliminar la direcciÛn", "error");
     },
   });
 
@@ -223,7 +223,7 @@ export default function AddressesScreen() {
       </ThemedText>
       <ThemedText type="small" style={{ color: theme.textSecondary }}>
         {address.city}, {address.state}{" "}
-        {address.zipCode ? `‚Ä¢ ${address.zipCode}` : ""}
+        {address.zipCode ? `ï ${address.zipCode}` : ""}
       </ThemedText>
 
       <View style={styles.addressActions}>
@@ -305,7 +305,7 @@ export default function AddressesScreen() {
                 marginTop: Spacing.sm,
               }}
             >
-              Agrega una direcci√≥n para recibir tus pedidos m√°s r√°pido
+              Agrega una direcciÛn para recibir tus pedidos m·s r·pido
             </ThemedText>
           </View>
         ) : (
@@ -333,7 +333,7 @@ export default function AddressesScreen() {
                 fontWeight: "600",
               }}
             >
-              Agregar direcci√≥n
+              Agregar direcciÛn
             </ThemedText>
           </View>
         </Button>
@@ -355,7 +355,7 @@ export default function AddressesScreen() {
             >
               <Feather name="x" size={24} color={theme.text} />
             </Pressable>
-            <ThemedText type="h3">Nueva direcci√≥n</ThemedText>
+            <ThemedText type="h3">Nueva direcciÛn</ThemedText>
             <View style={{ width: 40 }} />
           </View>
 
@@ -378,13 +378,13 @@ export default function AddressesScreen() {
             />
 
             <Input
-              label="Calle y n√∫mero"
+              label="Calle y n˙mero"
               leftIcon="map"
               value={newAddress.street}
               onChangeText={(text) =>
                 setNewAddress({ ...newAddress, street: text })
               }
-              placeholder="Calle, n√∫mero, colonia"
+              placeholder="Calle, n˙mero, colonia"
             />
 
             <Input
@@ -408,13 +408,13 @@ export default function AddressesScreen() {
             />
 
             <Input
-              label="C√≥digo postal (opcional)"
+              label="CÛdigo postal (opcional)"
               leftIcon="hash"
               value={newAddress.zipCode}
               onChangeText={(text) =>
                 setNewAddress({ ...newAddress, zipCode: text })
               }
-              placeholder="C√≥digo postal"
+              placeholder="CÛdigo postal"
               keyboardType="number-pad"
             />
           </ScrollView>
@@ -433,7 +433,7 @@ export default function AddressesScreen() {
               loading={createAddressMutation.isPending}
               disabled={createAddressMutation.isPending}
             >
-              Guardar direcci√≥n
+              Guardar direcciÛn
             </Button>
           </View>
         </ThemedView>
@@ -441,8 +441,8 @@ export default function AddressesScreen() {
 
       <ConfirmModal
         visible={showDeleteModal}
-        title="Eliminar direcci√≥n"
-        message={`¬øEst√°s seguro que deseas eliminar "${selectedAddress?.label}"?`}
+        title="Eliminar direcciÛn"
+        message={`øEst·s seguro que deseas eliminar "${selectedAddress?.label}"?`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         onConfirm={confirmDelete}

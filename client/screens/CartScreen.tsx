@@ -1,4 +1,4 @@
-ï»¿import React from "react";
+import React from "react";
 import { View, StyleSheet, ScrollView, Pressable, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -129,7 +129,7 @@ export default function CartScreen() {
         </View>
         <EmptyState
           image={require("../../assets/astrobarlogo.jpg")}
-          title="Tu carrito estÃ¡ vacÃ­o"
+          title="Tu carrito está vacío"
           description="Agrega productos de tus bares y promociones favoritos"
           actionLabel="Explorar negocios"
           onAction={() => navigation.goBack()}
@@ -174,7 +174,7 @@ export default function CartScreen() {
           <ThemedText type="h4">{cart.businessName}</ThemedText>
           {!canProceed ? (
             <Badge
-              text={`MÃ­n. $${minimumOrder} (faltan $${(minimumOrder - subtotal).toFixed(0)})`}
+              text={`Mín. $${minimumOrder} (faltan $${(minimumOrder - subtotal).toFixed(0)})`}
               variant="warning"
             />
           ) : null}
@@ -303,7 +303,7 @@ export default function CartScreen() {
         </View>
         <View style={styles.summaryRow}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            EnvÃ­o
+            Envío
           </ThemedText>
           <ThemedText type="body">${deliveryFee.toFixed(2)}</ThemedText>
         </View>
@@ -318,7 +318,7 @@ export default function CartScreen() {
           disabled={!canProceed}
           style={styles.checkoutButton}
         >
-          {canProceed ? "Continuar al pago" : `MÃ­nimo $${minimumOrder}`}
+          {canProceed ? "Continuar al pago" : `Mínimo $${minimumOrder}`}
         </Button>
       </View>
     </View>

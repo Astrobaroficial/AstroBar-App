@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -96,7 +96,7 @@ export default function ProductDetailScreen() {
     if (product.requiresNote && !note.trim()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       showToast(
-        "Por favor agrega una especificaciÃ³n para este producto.",
+        "Por favor agrega una especificación para este producto.",
         "warning",
       );
       return;
@@ -259,7 +259,7 @@ export default function ProductDetailScreen() {
             <View style={styles.noteLabelRow}>
               <ThemedText type="h4">
                 {product.requiresNote
-                  ? "EspecificaciÃ³n (requerida)"
+                  ? "Especificación (requerida)"
                   : "Nota (opcional)"}
               </ThemedText>
               {product.requiresNote ? (
@@ -353,8 +353,8 @@ export default function ProductDetailScreen() {
 
       <ConfirmModal
         visible={showBusinessChangeModal}
-        title="Â¿Cambiar de negocio?"
-        message="Ya tienes productos de otro negocio en tu carrito. Â¿Deseas vaciar el carrito y agregar este producto?"
+        title="¿Cambiar de negocio?"
+        message="Ya tienes productos de otro negocio en tu carrito. ¿Deseas vaciar el carrito y agregar este producto?"
         confirmText="Cambiar"
         cancelText="Cancelar"
         confirmColor={AstroBarColors.error}

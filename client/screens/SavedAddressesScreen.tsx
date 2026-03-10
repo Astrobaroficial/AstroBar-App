@@ -1,4 +1,4 @@
-Ôªøimport React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -64,9 +64,9 @@ export default function SavedAddressesScreen() {
     try {
       await apiRequest("PUT", `/api/users/${user?.id}/addresses/${addressId}/default`);
       await loadAddresses();
-      showToast("Direcci√≥n predeterminada actualizada", "success");
+      showToast("DirecciÛn predeterminada actualizada", "success");
     } catch (error) {
-      showToast("Error al actualizar direcci√≥n", "error");
+      showToast("Error al actualizar direcciÛn", "error");
     }
   };
 
@@ -74,7 +74,7 @@ export default function SavedAddressesScreen() {
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
   const handleDelete = (addressId: string) => {
-    console.log('üóëÔ∏è Delete button pressed for:', addressId);
+    console.log('??? Delete button pressed for:', addressId);
     setAddressToDelete(addressId);
     setShowDeleteModal(true);
   };
@@ -85,9 +85,9 @@ export default function SavedAddressesScreen() {
     try {
       await apiRequest("DELETE", `/api/users/${user?.id}/addresses/${addressToDelete}`);
       await loadAddresses();
-      showToast("Direcci√≥n eliminada", "success");
+      showToast("DirecciÛn eliminada", "success");
     } catch (error) {
-      showToast("Error al eliminar direcci√≥n", "error");
+      showToast("Error al eliminar direcciÛn", "error");
     } finally {
       setShowDeleteModal(false);
       setAddressToDelete(null);
@@ -125,7 +125,7 @@ export default function SavedAddressesScreen() {
               type="body"
               style={{ color: theme.textSecondary, marginTop: Spacing.sm }}
             >
-              Agrega una direcci√≥n para hacer tus pedidos m√°s r√°pido
+              Agrega una direcciÛn para hacer tus pedidos m·s r·pido
             </ThemedText>
           </View>
         ) : (
@@ -248,15 +248,15 @@ export default function SavedAddressesScreen() {
             type="body"
             style={{ color: "#FFFFFF", marginLeft: Spacing.sm }}
           >
-            Agregar direcci√≥n
+            Agregar direcciÛn
           </ThemedText>
         </Button>
       </View>
 
       <ConfirmModal
         visible={showDeleteModal}
-        title="Eliminar direcci√≥n"
-        message="¬øEst√°s seguro de eliminar esta direcci√≥n?"
+        title="Eliminar direcciÛn"
+        message="øEst·s seguro de eliminar esta direcciÛn?"
         onConfirm={confirmDelete}
         onCancel={() => {
           setShowDeleteModal(false);

@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -35,7 +35,7 @@ export default function AdminScreenMobile() {
       setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
-      showToast("Error al cargar estadÃ­sticas", "error");
+      showToast("Error al cargar estadísticas", "error");
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -127,7 +127,7 @@ export default function AdminScreenMobile() {
           <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
             <Feather name="alert-circle" size={48} color={theme.textSecondary} />
             <ThemedText style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
-              No se pudieron cargar las estadÃ­sticas
+              No se pudieron cargar las estadísticas
             </ThemedText>
           </View>
         )}
@@ -135,7 +135,7 @@ export default function AdminScreenMobile() {
         <View style={[styles.infoCard, { backgroundColor: theme.card }, Shadows.sm]}>
           <Feather name="info" size={20} color={AstroBarColors.primary} />
           <ThemedText type="body" style={{ marginLeft: Spacing.sm, flex: 1 }}>
-            Para acceder al panel completo, usa la versiÃ³n web en tu computadora
+            Para acceder al panel completo, usa la versión web en tu computadora
           </ThemedText>
         </View>
       </ScrollView>

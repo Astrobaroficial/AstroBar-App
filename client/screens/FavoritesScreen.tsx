@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   View,
   StyleSheet,
@@ -127,7 +127,7 @@ export default function FavoritesScreen() {
   // TEST DIRECTO
   React.useEffect(() => {
     if (user?.id) {
-      console.log('🧪 TEST: Haciendo petición directa a /api/favorites/' + user.id);
+      console.log('?? TEST: Haciendo petici�n directa a /api/favorites/' + user.id);
       fetch(`http://localhost:5000/api/favorites/${user.id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -135,16 +135,16 @@ export default function FavoritesScreen() {
       })
         .then(r => r.json())
         .then(data => {
-          console.log('🧪 TEST: Respuesta recibida:', data);
+          console.log('?? TEST: Respuesta recibida:', data);
           setTestData(data);
         })
-        .catch(err => console.error('🧪 TEST: Error:', err));
+        .catch(err => console.error('?? TEST: Error:', err));
     }
   }, [user?.id]);
 
   console.log('FavoritesScreen - user:', user?.id);
   console.log('FavoritesScreen - user exists:', !!user?.id);
-  console.log('🧪 TEST DATA:', testData);
+  console.log('?? TEST DATA:', testData);
 
   const {
     data: favoritesResponse,
@@ -156,17 +156,17 @@ export default function FavoritesScreen() {
     queryKey: ["/api/favorites", user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        console.log('❌ No user ID, returning empty array');
+        console.log('? No user ID, returning empty array');
         return [];
       }
-      console.log('🔍 Fetching favorites for user:', user?.id);
+      console.log('?? Fetching favorites for user:', user?.id);
       const response = await apiRequest("GET", `/api/favorites/${user?.id}`);
       if (!response.ok) {
-        console.error('❌ Favorites request failed:', response.status);
+        console.error('? Favorites request failed:', response.status);
         throw new Error('Failed to fetch favorites');
       }
       const data = await response.json();
-      console.log('✅ Favorites data received:', data);
+      console.log('? Favorites data received:', data);
       return Array.isArray(data) ? data : [];
     },
     enabled: !!user?.id,
@@ -219,8 +219,8 @@ export default function FavoritesScreen() {
       >
         <EmptyState
           image={require("../../assets/astrobarlogo.jpg")}
-          title="🔴 PRUEBA - Sin favoritos aún"
-          description="SI VES ESTO EL ARCHIVO ES CORRECTO - Guarda tus negocios y productos favoritos para acceder rápidamente"
+          title="?? PRUEBA - Sin favoritos a�n"
+          description="SI VES ESTO EL ARCHIVO ES CORRECTO - Guarda tus negocios y productos favoritos para acceder r�pidamente"
         />
       </LinearGradient>
     );

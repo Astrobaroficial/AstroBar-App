@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -73,7 +73,7 @@ export default function BusinessDetailScreen() {
             minimumOrder: (data.business.minOrder || 5000) / 100,
             isOpen: data.business.isOpen || false,
             openingHours: [],
-            address: data.business.address || 'AutlÃ¡n, Argentina',
+            address: data.business.address || 'Autlán, Argentina',
             phone: data.business.phone || '',
             categories: data.business.categories ? data.business.categories.split(',') : [],
             acceptsCash: true,
@@ -216,7 +216,7 @@ export default function BusinessDetailScreen() {
                     type="small"
                     style={{ color: theme.textSecondary }}
                   >
-                    ({business.reviewCount} reseÃ±as)
+                    ({business.reviewCount} reseñas)
                   </ThemedText>
                 </View>
                 <View style={styles.badgeRow}>
@@ -254,7 +254,7 @@ export default function BusinessDetailScreen() {
                 </ThemedText>
                 <View style={styles.dividerDot} />
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  EnvÃ­o ${business.deliveryFee}
+                  Envío ${business.deliveryFee}
                 </ThemedText>
                 <View style={styles.dividerDot} />
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
@@ -309,7 +309,7 @@ export default function BusinessDetailScreen() {
             >
               <Feather name="book-open" size={20} color="#FFFFFF" />
               <ThemedText type="body" style={styles.menuButtonText}>
-                Ver MenÃº Completo
+                Ver Menú Completo
               </ThemedText>
               <Feather name="chevron-right" size={20} color="#FFFFFF" />
             </Pressable>
@@ -318,7 +318,7 @@ export default function BusinessDetailScreen() {
             {promotions.length > 0 && (
               <View style={styles.promotionsSection}>
                 <ThemedText type="h3" style={styles.sectionTitle}>
-                  Promociones Activas âš¡
+                  Promociones Activas ?
                 </ThemedText>
                 <ScrollView
                   horizontal
@@ -397,7 +397,7 @@ export default function BusinessDetailScreen() {
             {futurePromotions.length > 0 && (
               <View style={styles.promotionsSection}>
                 <ThemedText type="h3" style={styles.sectionTitle}>
-                  PrÃ³ximas Promociones ðŸ“…
+                  Próximas Promociones ??
                 </ThemedText>
                 <ScrollView
                   horizontal
@@ -421,7 +421,7 @@ export default function BusinessDetailScreen() {
                         <View style={styles.futureBadge}>
                           <Feather name="clock" size={12} color="#FFFFFF" />
                           <ThemedText type="caption" style={styles.futureBadgeText}>
-                            PRÃ“XIMAMENTE
+                            PRÓXIMAMENTE
                           </ThemedText>
                         </View>
                         <View style={styles.discountBadge}>
@@ -521,7 +521,7 @@ export default function BusinessDetailScreen() {
 
             <View style={styles.productsSection}>
               <ThemedText type="h3" style={styles.productsSectionTitle}>
-                {business.type === "market" ? "Productos" : "MenÃº"}
+                {business.type === "market" ? "Productos" : "Menú"}
               </ThemedText>
               {isLoading ? (
                 <>

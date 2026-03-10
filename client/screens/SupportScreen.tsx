@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -139,10 +139,10 @@ export default function SupportScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <ThemedText type="h4" style={{ color: AstroBarColors.primary }}>
-                  Â¿Necesitas ayuda rÃ¡pida?
+                  ¿Necesitas ayuda rápida?
                 </ThemedText>
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  Prueba nuestro chat con IA para respuestas instantÃ¡neas.
+                  Prueba nuestro chat con IA para respuestas instantáneas.
                 </ThemedText>
               </View>
               <Feather name="chevron-right" size={20} color={AstroBarColors.primary} />

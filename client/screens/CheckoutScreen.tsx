@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -57,7 +57,7 @@ export default function CheckoutScreen({ route }: any) {
   const [dynamicDeliveryFee, setDynamicDeliveryFee] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
 
-  // Preferencias de sustituciÃ³n
+  // Preferencias de sustitución
   const [globalSubstitution, setGlobalSubstitution] =
     useState<SubstitutionOption>("refund");
   const [itemSubstitutions, setItemSubstitutions] = useState<
@@ -69,7 +69,7 @@ export default function CheckoutScreen({ route }: any) {
   const [cashPaymentAmount, setCashPaymentAmount] = useState("");
   const [cashError, setCashError] = useState("");
 
-  // CupÃ³n
+  // Cupón
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -81,7 +81,7 @@ export default function CheckoutScreen({ route }: any) {
     try {
       const response = await apiRequest("GET", `/api/users/${user.id}/addresses`);
       const data = await response.json();
-      console.log('ðŸ“ Addresses loaded:', data.addresses?.length || 0, data.addresses);
+      console.log('?? Addresses loaded:', data.addresses?.length || 0, data.addresses);
       const fetchedAddresses = data.addresses || [];
       setAddresses(fetchedAddresses);
       setSelectedAddress((current: any) => {
@@ -142,7 +142,7 @@ export default function CheckoutScreen({ route }: any) {
   const AstroBarCommission = subtotal * 0.15;
   const total = subtotal + AstroBarCommission + deliveryFee - couponDiscount;
 
-  // Calcular delivery fee dinÃ¡mico cuando cambia la direcciÃ³n
+  // Calcular delivery fee dinámico cuando cambia la dirección
   useEffect(() => {
     if (business && selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
       calculateFee();
@@ -167,7 +167,7 @@ export default function CheckoutScreen({ route }: any) {
   // Calcular cambio para efectivo
   const cashAmountNumber = parseFloat(cashPaymentAmount) || 0;
   const changeAmount = cashAmountNumber - total;
-  // Para efectivo no bloqueamos el botÃ³n por monto: si es menor, se ajusta al total en el momento de crear pedido
+  // Para efectivo no bloqueamos el botón por monto: si es menor, se ajusta al total en el momento de crear pedido
   const isCashAmountValid = paymentMethod === "cash" ? true : true;
 
   // Si se elige efectivo y no hay monto, prellenar con el total para no bloquear el flujo
@@ -283,11 +283,11 @@ export default function CheckoutScreen({ route }: any) {
     }
 
     if (!selectedAddress) {
-      showToast("Selecciona una direcciÃ³n de entrega", "error");
+      showToast("Selecciona una dirección de entrega", "error");
       return;
     }
 
-    // Ajustar monto de efectivo si el usuario ingresÃ³ menos que el total
+    // Ajustar monto de efectivo si el usuario ingresó menos que el total
     let effectiveCashAmount = cashAmountNumber;
     if (paymentMethod === "cash" && cashAmountNumber < total) {
       effectiveCashAmount = total;
@@ -299,7 +299,7 @@ export default function CheckoutScreen({ route }: any) {
 
     try {
       if (paymentMethod === "card" && Platform.OS !== "web" && stripeModule) {
-        // Si la hoja no estÃ¡ lista, intenta re-prepararla antes de presentar
+        // Si la hoja no está lista, intenta re-prepararla antes de presentar
         if (!isPaymentReady) {
           await initializePaymentSheet();
         }
@@ -322,12 +322,12 @@ export default function CheckoutScreen({ route }: any) {
         }
       }
 
-      // Preparar preferencias de sustituciÃ³n
+      // Preparar preferencias de sustitución
       const finalItemSubstitutions = showItemSubstitutions
         ? itemSubstitutions
         : {};
 
-      // Calcular el perÃ­odo de arrepentimiento (60 segundos desde ahora)
+      // Calcular el período de arrepentimiento (60 segundos desde ahora)
       const regretPeriodEndsAt = new Date(Date.now() + 60 * 1000).toISOString();
 
       // Calcular valores para backend (subtotal es precio base)
@@ -365,13 +365,13 @@ export default function CheckoutScreen({ route }: any) {
       });
 
       const order = await orderResponse.json();
-      console.log('ðŸ“¦ Order response:', order);
+      console.log('?? Order response:', order);
 
       await clearCart();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsLoading(false);
 
-      // Navegar a la pantalla de confirmaciÃ³n con cronÃ³metro de arrepentimiento
+      // Navegar a la pantalla de confirmación con cronómetro de arrepentimiento
       navigation.reset({
         index: 0,
         routes: [
@@ -406,7 +406,7 @@ export default function CheckoutScreen({ route }: any) {
       ? isCashAmountValid // No Stripe needed for cash
       : isWeb || !!stripeModule;
 
-  // Helper para obtener el icono y texto de sustituciÃ³n
+  // Helper para obtener el icono y texto de sustitución
   const getSubstitutionInfo = (option: SubstitutionOption) => {
     switch (option) {
       case "refund":
@@ -419,7 +419,7 @@ export default function CheckoutScreen({ route }: any) {
         return {
           icon: "phone" as const,
           label: "Llamarme",
-          desc: "El negocio te contactarÃ¡",
+          desc: "El negocio te contactará",
         };
       case "substitute":
         return {
@@ -432,7 +432,7 @@ export default function CheckoutScreen({ route }: any) {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      showToast("Ingresa un cÃ³digo de cupÃ³n", "error");
+      showToast("Ingresa un código de cupón", "error");
       return;
     }
 
@@ -455,14 +455,14 @@ export default function CheckoutScreen({ route }: any) {
 
         setAppliedCoupon(data.coupon);
         setCouponDiscount(finalDiscount);
-        showToast(`Â¡CupÃ³n aplicado! Ahorras $${finalDiscount.toFixed(2)}`, "success");
+        showToast(`¡Cupón aplicado! Ahorras $${finalDiscount.toFixed(2)}`, "success");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        showToast(data.error || "CupÃ³n invÃ¡lido", "error");
+        showToast(data.error || "Cupón inválido", "error");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } catch (error) {
-      showToast("Error al validar cupÃ³n", "error");
+      showToast("Error al validar cupón", "error");
     } finally {
       setCouponLoading(false);
     }
@@ -498,7 +498,7 @@ export default function CheckoutScreen({ route }: any) {
             ]}
           >
             <View style={styles.modalHeader}>
-              <ThemedText type="h4">Selecciona una direcciÃ³n</ThemedText>
+              <ThemedText type="h4">Selecciona una dirección</ThemedText>
               <Pressable onPress={() => setAddressPickerVisible(false)}>
                 <Feather name="x" size={20} color={theme.text} />
               </Pressable>
@@ -561,7 +561,7 @@ export default function CheckoutScreen({ route }: any) {
                   type="small"
                   style={{ color: AstroBarColors.primary, marginLeft: Spacing.xs }}
                 >
-                  Nueva direcciÃ³n
+                  Nueva dirección
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -610,7 +610,7 @@ export default function CheckoutScreen({ route }: any) {
             <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
               <Feather name="map-pin" size={20} color={AstroBarColors.primary} />
               <ThemedText type="h4" style={styles.sectionTitle}>
-                DirecciÃ³n de entrega
+                Dirección de entrega
               </ThemedText>
             </View>
             <Pressable
@@ -644,7 +644,7 @@ export default function CheckoutScreen({ route }: any) {
                   type="body"
                   style={{ color: AstroBarColors.primary, marginLeft: Spacing.sm }}
                 >
-                  Agregar direcciÃ³n
+                  Agregar dirección
                 </ThemedText>
               </View>
             </Pressable>
@@ -666,8 +666,8 @@ export default function CheckoutScreen({ route }: any) {
                         : "transparent",
                   },
                 ]}
-                accessibilityLabel={`DirecciÃ³n ${addr.label}: ${addr.street}, ${addr.city}`}
-                accessibilityHint={selectedAddress?.id === addr.id ? 'DirecciÃ³n seleccionada' : 'Toca para seleccionar esta direcciÃ³n'}
+                accessibilityLabel={`Dirección ${addr.label}: ${addr.street}, ${addr.city}`}
+                accessibilityHint={selectedAddress?.id === addr.id ? 'Dirección seleccionada' : 'Toca para seleccionar esta dirección'}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: selectedAddress?.id === addr.id }}
               >
@@ -720,7 +720,7 @@ export default function CheckoutScreen({ route }: any) {
           <View style={styles.sectionHeader}>
             <Feather name="credit-card" size={20} color={AstroBarColors.primary} />
             <ThemedText type="h4" style={styles.sectionTitle}>
-              MÃ©todo de pago
+              Método de pago
             </ThemedText>
           </View>
           <Pressable
@@ -738,7 +738,7 @@ export default function CheckoutScreen({ route }: any) {
               },
             ]}
             accessibilityLabel="Pago con tarjeta"
-            accessibilityHint={paymentMethod === "card" ? 'MÃ©todo seleccionado' : 'Toca para pagar con tarjeta'}
+            accessibilityHint={paymentMethod === "card" ? 'Método seleccionado' : 'Toca para pagar con tarjeta'}
             accessibilityRole="radio"
             accessibilityState={{ checked: paymentMethod === "card" }}
           >
@@ -784,7 +784,7 @@ export default function CheckoutScreen({ route }: any) {
               },
             ]}
             accessibilityLabel="Pago en efectivo"
-            accessibilityHint={paymentMethod === "cash" ? 'MÃ©todo seleccionado' : 'Toca para pagar en efectivo'}
+            accessibilityHint={paymentMethod === "cash" ? 'Método seleccionado' : 'Toca para pagar en efectivo'}
             accessibilityRole="radio"
             accessibilityState={{ checked: paymentMethod === "cash" }}
           >
@@ -823,7 +823,7 @@ export default function CheckoutScreen({ route }: any) {
                 type="body"
                 style={{ fontWeight: "600", marginBottom: Spacing.sm }}
               >
-                Â¿Con cuÃ¡nto vas a pagar?
+                ¿Con cuánto vas a pagar?
               </ThemedText>
               <View style={styles.cashInputContainer}>
                 <ThemedText type="h3" style={{ color: theme.textSecondary }}>
@@ -847,7 +847,7 @@ export default function CheckoutScreen({ route }: any) {
                   keyboardType="decimal-pad"
                   testID="input-cash-amount"
                   accessibilityLabel="Monto en efectivo"
-                  accessibilityHint="Ingresa con cuÃ¡nto dinero vas a pagar"
+                  accessibilityHint="Ingresa con cuánto dinero vas a pagar"
                 />
               </View>
               {cashAmountNumber > 0 && cashAmountNumber >= total ? (
@@ -865,7 +865,7 @@ export default function CheckoutScreen({ route }: any) {
                       marginLeft: Spacing.sm,
                     }}
                   >
-                    El repartidor te darÃ¡ ${changeAmount.toFixed(2)} de cambio
+                    El repartidor te dará ${changeAmount.toFixed(2)} de cambio
                   </ThemedText>
                 </View>
               ) : cashAmountNumber > 0 ? (
@@ -892,14 +892,14 @@ export default function CheckoutScreen({ route }: any) {
           ) : null}
         </View>
 
-        {/* SecciÃ³n de cupÃ³n */}
+        {/* Sección de cupón */}
         <View
           style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
         >
           <View style={styles.sectionHeader}>
             <Feather name="tag" size={20} color={AstroBarColors.primary} />
             <ThemedText type="h4" style={styles.sectionTitle}>
-              CupÃ³n de descuento
+              Cupón de descuento
             </ThemedText>
           </View>
           
@@ -923,7 +923,7 @@ export default function CheckoutScreen({ route }: any) {
                 style={[styles.couponInput, { color: theme.text, backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
                 value={couponCode}
                 onChangeText={setCouponCode}
-                placeholder="Ingresa tu cÃ³digo"
+                placeholder="Ingresa tu código"
                 placeholderTextColor={theme.textSecondary}
                 autoCapitalize="characters"
                 editable={!couponLoading}
@@ -945,21 +945,21 @@ export default function CheckoutScreen({ route }: any) {
           )}
         </View>
 
-        {/* SecciÃ³n de sustituciones */}
+        {/* Sección de sustituciones */}
         <View
           style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}
         >
           <View style={styles.sectionHeader}>
             <Feather name="refresh-cw" size={20} color={AstroBarColors.primary} />
             <ThemedText type="h4" style={styles.sectionTitle}>
-              Si algo no estÃ¡ disponible...
+              Si algo no está disponible...
             </ThemedText>
           </View>
           <ThemedText
             type="small"
             style={{ color: theme.textSecondary, marginBottom: Spacing.md }}
           >
-            Elige quÃ© hacer si un producto estÃ¡ agotado
+            Elige qué hacer si un producto está agotado
           </ThemedText>
 
           {/* Opciones globales */}
@@ -1011,7 +1011,7 @@ export default function CheckoutScreen({ route }: any) {
             )}
           </View>
 
-          {/* Toggle para preferencias por Ã­tem */}
+          {/* Toggle para preferencias por ítem */}
           <Pressable
             onPress={() => {
               Haptics.selectionAsync();
@@ -1021,7 +1021,7 @@ export default function CheckoutScreen({ route }: any) {
           >
             <ThemedText type="small" style={{ color: AstroBarColors.primary }}>
               {showItemSubstitutions
-                ? "Usar misma opciÃ³n para todos"
+                ? "Usar misma opción para todos"
                 : "Elegir por producto"}
             </ThemedText>
             <Feather
@@ -1031,7 +1031,7 @@ export default function CheckoutScreen({ route }: any) {
             />
           </Pressable>
 
-          {/* Preferencias por Ã­tem */}
+          {/* Preferencias por ítem */}
           {showItemSubstitutions && cart ? (
             <View style={styles.itemSubstitutionList}>
               {cart.items.map((item) => (
@@ -1143,14 +1143,14 @@ export default function CheckoutScreen({ route }: any) {
         </View>
         <View style={styles.totalRow}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            EnvÃ­o {estimatedTime ? `(~${estimatedTime} min)` : ''}
+            Envío {estimatedTime ? `(~${estimatedTime} min)` : ''}
           </ThemedText>
           <ThemedText type="body">${deliveryFee.toFixed(2)}</ThemedText>
         </View>
         {couponDiscount > 0 && (
           <View style={styles.totalRow}>
             <ThemedText type="body" style={{ color: AstroBarColors.success }}>
-              CupÃ³n ({couponCode})
+              Cupón ({couponCode})
             </ThemedText>
             <ThemedText type="body" style={{ color: AstroBarColors.success }}>
               -${couponDiscount.toFixed(2)}
@@ -1355,7 +1355,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // Estilos para cupÃ³n
+  // Estilos para cupón
   couponInputContainer: {
     flexDirection: "row",
     gap: Spacing.sm,

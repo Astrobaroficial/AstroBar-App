@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -93,7 +93,7 @@ export default function VerifyPhoneScreen({
   const handleVerify = async () => {
     const fullCode = code.join("");
     if (fullCode.length !== 6) {
-      setError("Ingresa el cÃ³digo completo");
+      setError("Ingresa el código completo");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -131,7 +131,7 @@ export default function VerifyPhoneScreen({
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setError(error.message || "CÃ³digo incorrecto");
+      setError(error.message || "Código incorrecto");
       setCode(["", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -197,7 +197,7 @@ export default function VerifyPhoneScreen({
           type="body"
           style={[styles.subtitle, { color: theme.textSecondary }]}
         >
-          Enviamos un cÃ³digo de 6 dÃ­gitos a{"\n"}
+          Enviamos un código de 6 dígitos a{"\n"}
           <ThemedText type="body" style={{ fontWeight: "600" }}>
             {formatPhone(phone)}
           </ThemedText>
@@ -258,7 +258,7 @@ export default function VerifyPhoneScreen({
 
         <View style={styles.resendContainer}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            Â¿No recibiste el codigo?{" "}
+            ¿No recibiste el codigo?{" "}
           </ThemedText>
           {canResend ? (
             <Pressable onPress={handleResend} disabled={isResending}>

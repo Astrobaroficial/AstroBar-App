@@ -17,19 +17,19 @@ export function useScreenOptions({
     headerTitleAlign: "center",
     headerTransparent: transparent,
     headerBlurEffect: isDark ? "dark" : "light",
-    headerTintColor: theme.text,
+    headerTintColor: theme.colors.text.primary,
     headerStyle: {
       backgroundColor: Platform.select({
         ios: undefined,
-        android: theme.backgroundRoot,
-        web: theme.backgroundRoot,
+        android: theme.colors.background,
+        web: theme.colors.background,
       }),
     },
     gestureEnabled: true,
     gestureDirection: "horizontal",
     fullScreenGestureEnabled: isLiquidGlassAvailable() ? false : true,
     contentStyle: {
-      backgroundColor: theme.backgroundRoot,
+      backgroundColor: theme.colors.background,
     },
   };
 }

@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -194,7 +194,7 @@ export default function BusinessProductsScreen() {
 
   const handleDelete = async (productId: string) => {
     if (typeof window !== 'undefined' && window.confirm) {
-      if (!window.confirm('Â¿Eliminar este producto?')) return;
+      if (!window.confirm('¿Eliminar este producto?')) return;
     }
     
     try {
@@ -333,7 +333,7 @@ export default function BusinessProductsScreen() {
                 placeholderTextColor={theme.textSecondary}
               />
 
-              <ThemedText type="small" style={{ marginBottom: Spacing.xs, marginTop: Spacing.md }}>DescripciÃ³n</ThemedText>
+              <ThemedText type="small" style={{ marginBottom: Spacing.xs, marginTop: Spacing.md }}>Descripción</ThemedText>
               <TextInput
                 value={form.description}
                 onChangeText={(text) => setForm({ ...form, description: text })}
@@ -361,14 +361,14 @@ export default function BusinessProductsScreen() {
                   style={[styles.imageButton, { backgroundColor: theme.background }]}
                 >
                   <Feather name="camera" size={20} color={theme.text} />
-                  <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>CÃ¡mara</ThemedText>
+                  <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>Cámara</ThemedText>
                 </Pressable>
                 <Pressable
                   onPress={() => pickImage(false)}
                   style={[styles.imageButton, { backgroundColor: theme.background }]}
                 >
                   <Feather name="image" size={20} color={theme.text} />
-                  <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>GalerÃ­a</ThemedText>
+                  <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>Galería</ThemedText>
                 </Pressable>
               </View>
               {isUploadingImage ? (

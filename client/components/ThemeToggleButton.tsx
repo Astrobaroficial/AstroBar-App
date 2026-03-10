@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";

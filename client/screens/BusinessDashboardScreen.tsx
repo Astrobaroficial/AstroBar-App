@@ -282,17 +282,17 @@ export default function BusinessDashboardScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ActivityIndicator size="large" color={AstroBarColors.primary} />
           <ThemedText style={{ marginTop: Spacing.md }}>Cargando dashboard...</ThemedText>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + Spacing.md, paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
@@ -385,7 +385,7 @@ export default function BusinessDashboardScreen() {
             icon="check-circle"
             label="Completados"
             value={stats.orders.completed}
-            subtext={`${completionRate}% éxito`}
+            subtext={`${completionRate}% ï¿½xito`}
             color="#4CAF50"
             delay={50}
           />
@@ -420,7 +420,7 @@ export default function BusinessDashboardScreen() {
         <View style={[styles.commissionCard, { backgroundColor: theme.card }, Shadows.sm]}>
           <Feather name="percent" size={20} color="#FF9800" />
           <View style={{ marginLeft: Spacing.md, flex: 1 }}>
-            <ThemedText type="caption" style={{ color: theme.textSecondary }}>Comisión de plataforma</ThemedText>
+            <ThemedText type="caption" style={{ color: theme.textSecondary }}>Comisiï¿½n de plataforma</ThemedText>
             <ThemedText type="h3" style={{ color: "#FF9800" }}>{dashboard.platformCommission?.toFixed(1)}%</ThemedText>
           </View>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>adicional al precio</ThemedText>
@@ -460,7 +460,7 @@ export default function BusinessDashboardScreen() {
           <View style={[styles.limitsCard, { backgroundColor: theme.card }, Shadows.sm]}>
             <View style={styles.limitsHeader}>
               <Feather name="alert-circle" size={20} color={AstroBarColors.warning} />
-              <ThemedText type="h4" style={{ marginLeft: 8 }}>Límites del Sistema</ThemedText>
+              <ThemedText type="h4" style={{ marginLeft: 8 }}>Lï¿½mites del Sistema</ThemedText>
             </View>
             
             <View style={styles.limitItem}>
@@ -475,7 +475,7 @@ export default function BusinessDashboardScreen() {
                 }]} />
               </View>
               {dashboard.limits.products.percentage >= 90 && (
-                <ThemedText type="small" style={{ color: AstroBarColors.error, marginTop: 4 }}>¡Casi al límite!</ThemedText>
+                <ThemedText type="small" style={{ color: AstroBarColors.error, marginTop: 4 }}>ï¿½Casi al lï¿½mite!</ThemedText>
               )}
             </View>
 
@@ -510,7 +510,7 @@ export default function BusinessDashboardScreen() {
         {stats.topProducts.length > 0 ? (
           <>
             <ThemedText type="h3" style={{ marginTop: Spacing.lg, marginBottom: Spacing.sm }}>
-              Productos Más Vendidos
+              Productos Mï¿½s Vendidos
             </ThemedText>
             {stats.topProducts.map((product, index) => (
               <TopProductRow key={index} product={product} index={index} />
@@ -555,7 +555,7 @@ export default function BusinessDashboardScreen() {
         ) : null}
 
         <View style={styles.quickActions}>
-          <ThemedText type="h3" style={{ marginBottom: Spacing.sm }}>Acciones Rápidas</ThemedText>
+          <ThemedText type="h3" style={{ marginBottom: Spacing.sm }}>Acciones Rï¿½pidas</ThemedText>
           <View style={styles.actionsRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: theme.card }]}
@@ -574,7 +574,7 @@ export default function BusinessDashboardScreen() {
           </View>
         </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 

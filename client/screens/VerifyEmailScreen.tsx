@@ -1,4 +1,4 @@
-锘縤mport React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -78,7 +78,7 @@ export default function VerifyEmailScreen({
   const handleVerify = async () => {
     const fullCode = code.join("");
     if (fullCode.length !== 6) {
-      setError("Ingresa el c贸digo completo");
+      setError("Ingresa el c骴igo completo");
       return;
     }
 
@@ -90,7 +90,7 @@ export default function VerifyEmailScreen({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setError(error.message || "C贸digo inv谩lido o expirado");
+      setError(error.message || "C骴igo inv醠ido o expirado");
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -108,7 +108,7 @@ export default function VerifyEmailScreen({
       setCountdown(60);
       setError("");
     } catch (error) {
-      setError("Error al reenviar el c贸digo");
+      setError("Error al reenviar el c骴igo");
     } finally {
       setIsResending(false);
     }
@@ -148,7 +148,7 @@ export default function VerifyEmailScreen({
             type="body"
             style={{ color: theme.textSecondary, textAlign: "center" }}
           >
-            Enviamos un c贸digo de 6 d铆gitos a{"\n"}
+            Enviamos un c骴igo de 6 d韌itos a{"\n"}
             <ThemedText type="body" style={{ fontWeight: "600" }}>
               {pendingVerificationEmail || user?.email}
             </ThemedText>
@@ -208,7 +208,7 @@ export default function VerifyEmailScreen({
 
         <View style={styles.resendContainer}>
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            驴No recibiste el c贸digo?{" "}
+            縉o recibiste el c骴igo?{" "}
           </ThemedText>
           {countdown > 0 ? (
             <ThemedText type="body" style={{ color: theme.textSecondary }}>
@@ -234,7 +234,7 @@ export default function VerifyEmailScreen({
           type="caption"
           style={[styles.expiryNote, { color: theme.textSecondary }]}
         >
-          El c贸digo expira en 10 minutos
+          El c骴igo expira en 10 minutos
         </ThemedText>
       </View>
     </ThemedView>

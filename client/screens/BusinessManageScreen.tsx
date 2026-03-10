@@ -287,26 +287,26 @@ export default function BusinessManageScreen() {
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header con navegación */}
-      <View style={styles.topNav}>
+      <View style={[styles.topNav, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <Pressable
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessPromotions')}
         >
-          <Feather name="megaphone" size={20} color="#999" />
-          <ThemedText style={[styles.navButtonText, { color: '#999' }]}>Promociones</ThemedText>
+          <Feather name="megaphone" size={20} color={theme.colors.text.secondary} />
+          <ThemedText style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Promociones</ThemedText>
         </Pressable>
         <Pressable
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessMenu')}
         >
-          <Feather name="restaurant" size={20} color="#999" />
-          <ThemedText style={[styles.navButtonText, { color: '#999' }]}>Menú</ThemedText>
+          <Feather name="restaurant" size={20} color={theme.colors.text.secondary} />
+          <ThemedText style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Menú</ThemedText>
         </Pressable>
         <Pressable
           style={[styles.navButton, styles.navButtonActive]}
           onPress={() => {}}
         >
-          <Feather name="settings" size={20} color="#FFD700" />
+          <Feather name="settings" size={20} color={AstroBarColors.primary} />
           <ThemedText style={styles.navButtonText}>Ajustes</ThemedText>
         </Pressable>
       </View>
@@ -510,10 +510,8 @@ const styles = StyleSheet.create({
   },
   topNav: {
     flexDirection: 'row',
-    backgroundColor: '#1A1F3A',
     paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#2A2F4A',
   },
   navButton: {
     flex: 1,
@@ -525,12 +523,12 @@ const styles = StyleSheet.create({
   },
   navButtonActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#FFD700',
+    borderBottomColor: AstroBarColors.primary,
   },
   navButtonText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: AstroBarColors.primary,
   },
   header: {
     flexDirection: "row",

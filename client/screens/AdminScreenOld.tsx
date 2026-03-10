@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -304,11 +304,11 @@ export default function AdminScreen() {
   };
 
   useEffect(() => {
-    // Solo cargar datos básicos al inicio
+    // Solo cargar datos b�sicos al inicio
     setIsLoading(false);
   }, []);
 
-  // Cargar datos cuando cambia la pestaña activa
+  // Cargar datos cuando cambia la pesta�a activa
   useEffect(() => {
     const loadTabData = async () => {
       try {
@@ -970,7 +970,7 @@ export default function AdminScreen() {
         {activeTab === "logs" && (
           <View style={styles.listContainer}>
             <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>
-              Logs de auditoría ({adminLogs.length})
+              Logs de auditor�a ({adminLogs.length})
             </ThemedText>
             {adminLogs.length === 0 ? (
               <View
@@ -984,7 +984,7 @@ export default function AdminScreen() {
                 <ThemedText
                   style={{ marginTop: Spacing.md, color: theme.textSecondary }}
                 >
-                  No hay registros de auditoría
+                  No hay registros de auditor�a
                 </ThemedText>
               </View>
             ) : (
@@ -1625,7 +1625,7 @@ export default function AdminScreen() {
                   </View>
                   <View style={{ marginTop: Spacing.lg }}>
                     <ThemedText type="body" style={{ fontWeight: "600", marginBottom: Spacing.sm }}>
-                      Estado de verificación
+                      Estado de verificaci�n
                     </ThemedText>
                     <View style={{ flexDirection: "row", gap: Spacing.md }}>
                       <View style={styles.infoChip}>
@@ -1749,7 +1749,7 @@ export default function AdminScreen() {
                     <View style={styles.detailRow}>
                       <Feather name="map-pin" size={16} color={theme.textSecondary} />
                       <View style={{ marginLeft: Spacing.sm, flex: 1 }}>
-                        <ThemedText type="small" style={{ color: theme.textSecondary }}>Dirección de entrega</ThemedText>
+                        <ThemedText type="small" style={{ color: theme.textSecondary }}>Direcci�n de entrega</ThemedText>
                         <ThemedText type="body">{selectedOrder.deliveryAddress}</ThemedText>
                       </View>
                     </View>
@@ -1796,7 +1796,7 @@ export default function AdminScreen() {
                       <ThemedText type="body">${(selectedOrder.subtotal / 100).toFixed(2)}</ThemedText>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.xs }}>
-                      <ThemedText type="body" style={{ color: theme.textSecondary }}>Envío</ThemedText>
+                      <ThemedText type="body" style={{ color: theme.textSecondary }}>Env�o</ThemedText>
                       <ThemedText type="body">${(selectedOrder.deliveryFee / 100).toFixed(2)}</ThemedText>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: theme.border }}>
@@ -1806,7 +1806,7 @@ export default function AdminScreen() {
                       </ThemedText>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                      <ThemedText type="body" style={{ color: theme.textSecondary }}>Método de pago</ThemedText>
+                      <ThemedText type="body" style={{ color: theme.textSecondary }}>M�todo de pago</ThemedText>
                       <ThemedText type="body">{selectedOrder.paymentMethod === "card" ? "Tarjeta" : "Efectivo"}</ThemedText>
                     </View>
                   </View>
@@ -1814,7 +1814,7 @@ export default function AdminScreen() {
                   {selectedOrder.platformFee || selectedOrder.businessEarnings || selectedOrder.deliveryEarnings ? (
                     <View style={{ marginTop: Spacing.lg }}>
                       <ThemedText type="body" style={{ fontWeight: "600", marginBottom: Spacing.sm }}>
-                        Distribución de Comisiones
+                        Distribuci�n de Comisiones
                       </ThemedText>
                       <View style={[styles.detailSection, { backgroundColor: theme.backgroundSecondary }]}>
                         {selectedOrder.platformFee ? (

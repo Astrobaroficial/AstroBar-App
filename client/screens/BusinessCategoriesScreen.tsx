@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -71,7 +71,7 @@ export default function BusinessCategoriesScreen() {
       loadCategories();
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("Error al guardar categorÃ­a");
+      alert("Error al guardar categoría");
     }
   };
 
@@ -109,7 +109,7 @@ export default function BusinessCategoriesScreen() {
       end={{ x: 1, y: 1 }}
     >
       <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
-        <ThemedText type="h2">CategorÃ­as</ThemedText>
+        <ThemedText type="h2">Categorías</ThemedText>
         <Pressable
           onPress={openAddModal}
           style={[styles.addButton, { backgroundColor: AstroBarColors.primary }]}
@@ -130,7 +130,7 @@ export default function BusinessCategoriesScreen() {
               type="h4"
               style={{ color: theme.textSecondary, marginTop: Spacing.lg }}
             >
-              No hay categorÃ­as
+              No hay categorías
             </ThemedText>
           </View>
         }
@@ -141,7 +141,7 @@ export default function BusinessCategoriesScreen() {
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <View style={styles.modalHeader}>
               <ThemedText type="h3">
-                {editingCategory ? "Editar CategorÃ­a" : "Nueva CategorÃ­a"}
+                {editingCategory ? "Editar Categoría" : "Nueva Categoría"}
               </ThemedText>
               <Pressable onPress={() => setShowModal(false)}>
                 <Feather name="x" size={24} color={theme.text} />
@@ -164,7 +164,7 @@ export default function BusinessCategoriesScreen() {
                 type="small"
                 style={{ marginBottom: Spacing.xs, marginTop: Spacing.md }}
               >
-                DescripciÃ³n
+                Descripción
               </ThemedText>
               <TextInput
                 value={form.description}
@@ -174,7 +174,7 @@ export default function BusinessCategoriesScreen() {
                   styles.textArea,
                   { backgroundColor: theme.background, color: theme.text },
                 ]}
-                placeholder="DescripciÃ³n de la categorÃ­a..."
+                placeholder="Descripción de la categoría..."
                 placeholderTextColor={theme.textSecondary}
                 multiline
                 numberOfLines={3}

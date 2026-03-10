@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { apiRequest } from '../lib/query-client';
 import { useAuth } from '../contexts/AuthContext';
 
+import { useTheme } from '@/hooks/useTheme';
+
 interface Promotion {
   id: string;
   title: string;
@@ -21,6 +23,7 @@ interface Promotion {
 }
 
 export default function BusinessPromotionsPanel() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation<any>();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -176,16 +179,16 @@ export default function BusinessPromotionsPanel() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.loadingText}>Cargando promociones...</Text>
+      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.loadingText, { color: theme.colors.text.primary }]}>Cargando promociones...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header con navegación */}
-      <View style={styles.topNav}>
+      <View style={[styles.topNav, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           style={[styles.navButton, styles.navButtonActive]}
           onPress={() => {}}
@@ -197,19 +200,19 @@ export default function BusinessPromotionsPanel() {
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessMenu')}
         >
-          <Ionicons name="restaurant" size={20} color="#999" />
-          <Text style={[styles.navButtonText, { color: '#999' }]}>Menú</Text>
+          <Ionicons name="restaurant" size={20} color={theme.colors.text.secondary} />
+          <Text style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Menú</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('PromotionTransactions')}
         >
-          <Ionicons name="list" size={20} color="#999" />
-          <Text style={[styles.navButtonText, { color: '#999' }]}>Historial</Text>
+          <Ionicons name="list" size={20} color={theme.colors.text.secondary} />
+          <Text style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Historial</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.summary}>
+      <View style={[styles.summary, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{promotions.filter(p => p.isActive).length || 0}</Text>
           <Text style={styles.summaryLabel}>Activas</Text>

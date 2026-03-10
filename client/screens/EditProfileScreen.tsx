@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, ActivityIndicator, Pressable, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -48,13 +48,13 @@ export default function EditProfileScreen() {
     }
 
     if (!phone.trim()) {
-      newErrors.phone = "El telÃ©fono es requerido";
+      newErrors.phone = "El teléfono es requerido";
     } else if (phone.trim().length < 10) {
-      newErrors.phone = "Ingresa un nÃºmero de telÃ©fono vÃ¡lido";
+      newErrors.phone = "Ingresa un número de teléfono válido";
     }
 
     if (email.trim() && !email.includes("@")) {
-      newErrors.email = "Ingresa un correo vÃ¡lido";
+      newErrors.email = "Ingresa un correo válido";
     }
 
     setErrors(newErrors);
@@ -223,7 +223,7 @@ export default function EditProfileScreen() {
           />
 
           <Input
-            label="TelÃ©fono"
+            label="Teléfono"
             leftIcon="phone"
             value={phone}
             onChangeText={setPhone}
@@ -234,7 +234,7 @@ export default function EditProfileScreen() {
           />
 
           <Input
-            label="Correo electrÃ³nico (opcional)"
+            label="Correo electrónico (opcional)"
             leftIcon="mail"
             value={email}
             onChangeText={setEmail}
@@ -261,7 +261,7 @@ export default function EditProfileScreen() {
               marginLeft: Spacing.sm,
             }}
           >
-            El telÃ©fono es tu identificador principal. El correo es opcional
+            El teléfono es tu identificador principal. El correo es opcional
             para recibir recibos y notificaciones.
           </ThemedText>
         </View>

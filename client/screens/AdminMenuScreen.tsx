@@ -1,4 +1,4 @@
-ï»¿import React from "react";
+import React from "react";
 import {
   View,
   StyleSheet,
@@ -38,7 +38,7 @@ const menuSections: MenuSection[] = [
     items: [
       {
         title: "Dashboard",
-        subtitle: "MÃ©tricas y pedidos activos",
+        subtitle: "Métricas y pedidos activos",
         icon: "bar-chart-2",
         route: "/admin/dashboard",
         color: AstroBarColors.primary,
@@ -52,7 +52,7 @@ const menuSections: MenuSection[] = [
       },
       {
         title: "Repartidores",
-        subtitle: "Estado y ubicaciÃ³n en tiempo real",
+        subtitle: "Estado y ubicación en tiempo real",
         icon: "truck",
         route: "/admin/drivers",
         color: "#9C27B0",
@@ -60,7 +60,7 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    title: "GestiÃ³n",
+    title: "Gestión",
     icon: "briefcase",
     items: [
       {
@@ -79,7 +79,7 @@ const menuSections: MenuSection[] = [
       },
       {
         title: "Zonas de Entrega",
-        subtitle: "Configurar Ã¡reas y tarifas",
+        subtitle: "Configurar áreas y tarifas",
         icon: "map-pin",
         route: "/admin/zones",
         color: "#E91E63",
@@ -111,7 +111,7 @@ const menuSections: MenuSection[] = [
     icon: "settings",
     items: [
       {
-        title: "ConfiguraciÃ³n",
+        title: "Configuración",
         subtitle: "Ajustes del sistema",
         icon: "sliders",
         route: "/admin/settings",
@@ -125,7 +125,7 @@ const menuSections: MenuSection[] = [
         color: "#795548",
       },
       {
-        title: "Logs de AuditorÃ­a",
+        title: "Logs de Auditoría",
         subtitle: "Registro de actividades",
         icon: "file-text",
         route: "/admin/logs",

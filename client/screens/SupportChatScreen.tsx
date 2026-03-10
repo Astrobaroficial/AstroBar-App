@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -33,7 +33,7 @@ const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
   content:
-    "Â¡Hola! Soy el asistente virtual de AstroBar. Estoy aquÃ­ para ayudarte con:\n\nâ€¢ InformaciÃ³n sobre tus pedidos\nâ€¢ Consultas sobre productos\nâ€¢ Tiempos de entrega\nâ€¢ Negocios disponibles\nâ€¢ Cualquier otra duda\n\nÂ¿En quÃ© puedo ayudarte hoy?",
+    "¡Hola! Soy el asistente virtual de AstroBar. Estoy aquí para ayudarte con:\n\n• Información sobre tus pedidos\n• Consultas sobre productos\n• Tiempos de entrega\n• Negocios disponibles\n• Cualquier otra duda\n\n¿En qué puedo ayudarte hoy?",
   timestamp: new Date(),
 };
 
@@ -125,7 +125,7 @@ function EmptyState() {
           marginTop: Spacing.sm,
         }}
       >
-        Estamos aquÃ­ para ayudarte
+        Estamos aquí para ayudarte
       </ThemedText>
     </View>
   );
@@ -150,7 +150,7 @@ function TypingIndicator() {
         type="caption"
         style={{ color: theme.textSecondary, marginLeft: Spacing.sm }}
       >
-        AstroBar estÃ¡ escribiendo...
+        AstroBar está escribiendo...
       </ThemedText>
     </View>
   );
@@ -191,7 +191,7 @@ export default function SupportChatScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
-        throw new Error("No hay sesiÃ³n activa (token requerido)");
+        throw new Error("No hay sesión activa (token requerido)");
       }
 
       const response = await fetch(
@@ -239,8 +239,8 @@ export default function SupportChatScreen() {
         role: "assistant",
         content:
           error?.message?.includes("401") || error?.message?.includes("session")
-            ? "No pudimos autenticarte. Cierra sesiÃ³n y vuelve a entrar, luego intenta de nuevo."
-            : "Lo siento, hubo un problema al procesar tu mensaje. Intenta de nuevo o contÃ¡ctanos por WhatsApp.",
+            ? "No pudimos autenticarte. Cierra sesión y vuelve a entrar, luego intenta de nuevo."
+            : "Lo siento, hubo un problema al procesar tu mensaje. Intenta de nuevo o contáctanos por WhatsApp.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { apiRequest } from '../lib/query-client';
 import { useBusiness } from '../contexts/BusinessContext';
 
+import { useTheme } from '@/hooks/useTheme';
+
 interface Transaction {
   id: string;
   promotionTitle: string;
@@ -18,6 +20,7 @@ interface Transaction {
 }
 
 export default function PromotionTransactionsScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation<any>();
   const { selectedBusiness, businesses, setSelectedBusiness } = useBusiness();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -117,21 +120,21 @@ export default function PromotionTransactionsScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.topNav}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.topNav, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessPromotions')}
         >
-          <Ionicons name="megaphone" size={20} color="#999" />
-          <Text style={[styles.navButtonText, { color: '#999' }]}>Promociones</Text>
+          <Ionicons name="megaphone" size={20} color={theme.colors.text.secondary} />
+          <Text style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Promociones</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('BusinessMenu')}
         >
-          <Ionicons name="restaurant" size={20} color="#999" />
-          <Text style={[styles.navButtonText, { color: '#999' }]}>Menú</Text>
+          <Ionicons name="restaurant" size={20} color={theme.colors.text.secondary} />
+          <Text style={[styles.navButtonText, { color: theme.colors.text.secondary }]}>Menú</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.navButton, styles.navButtonActive]}
@@ -143,7 +146,7 @@ export default function PromotionTransactionsScreen() {
       </View>
 
       {businesses.length > 1 && (
-        <View style={styles.businessSelector}>
+        <View style={[styles.businessSelector, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
           <TouchableOpacity
             style={styles.businessButton}
             onPress={() => setShowBusinessSelector(!showBusinessSelector)}
@@ -179,7 +182,7 @@ export default function PromotionTransactionsScreen() {
         </View>
       )}
 
-      <View style={styles.filterContainer}>
+      <View style={[styles.filterContainer, { backgroundColor: theme.colors.surface }]}>
         {(['all', 'pending', 'redeemed', 'cancelled'] as const).map((f) => (
           <TouchableOpacity
             key={f}
@@ -193,7 +196,7 @@ export default function PromotionTransactionsScreen() {
         ))}
       </View>
 
-      <View style={styles.summary}>
+      <View style={[styles.summary, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{transactions.length}</Text>
           <Text style={styles.summaryLabel}>Total</Text>

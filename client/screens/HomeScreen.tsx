@@ -37,10 +37,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
 import { CartButton } from "@/components/CartButton";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
-import { useTheme } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
-import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import { Business } from "@/types";
 import { apiRequest } from "@/lib/query-client";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -61,7 +61,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const theme = useTheme();
+  const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto

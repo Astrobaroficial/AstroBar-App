@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -27,11 +27,11 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 type RouteParams = RouteProp<RootStackParamList, "ReportIssue">;
 
 const ISSUE_TYPES = [
-  { id: "missing_items", label: "ArtÃ­culos faltantes", icon: "package" },
-  { id: "wrong_items", label: "ArtÃ­culos incorrectos", icon: "alert-circle" },
-  { id: "damaged", label: "Producto daÃ±ado", icon: "alert-triangle" },
+  { id: "missing_items", label: "Artículos faltantes", icon: "package" },
+  { id: "wrong_items", label: "Artículos incorrectos", icon: "alert-circle" },
+  { id: "damaged", label: "Producto dañado", icon: "alert-triangle" },
   { id: "quality", label: "Mala calidad", icon: "thumbs-down" },
-  { id: "late_delivery", label: "Entrega tardÃ­a", icon: "clock" },
+  { id: "late_delivery", label: "Entrega tardía", icon: "clock" },
   { id: "driver_issue", label: "Problema con repartidor", icon: "user-x" },
   { id: "other", label: "Otro problema", icon: "help-circle" },
 ];
@@ -269,7 +269,7 @@ export default function ReportIssueScreen() {
               styles.textArea,
               { backgroundColor: theme.card, color: theme.text },
             ]}
-            placeholder="CuÃ©ntanos quÃ© pasÃ³ con tu pedido..."
+            placeholder="Cuéntanos qué pasó con tu pedido..."
             placeholderTextColor={theme.textSecondary}
             value={description}
             onChangeText={setDescription}

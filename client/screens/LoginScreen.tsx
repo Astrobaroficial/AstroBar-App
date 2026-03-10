@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -61,7 +61,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
 
-  // Default to SMS to avoid "cÃ³digo invÃ¡lido" before sending code
+  // Default to SMS to avoid "código inválido" before sending code
   const [loginMode, setLoginMode] = useState<"sms" | "password">("sms");
   const [phone, setPhone] = useState("");
   const [identifier, setIdentifier] = useState("");
@@ -118,16 +118,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     if (loginMode === "sms") {
       if (!phone) {
-        newErrors.phone = "El telÃ©fono es requerido";
+        newErrors.phone = "El teléfono es requerido";
       } else if (phone.length < 10) {
-        newErrors.phone = "Ingresa 10 dÃ­gitos";
+        newErrors.phone = "Ingresa 10 dígitos";
       }
     } else {
       if (!identifier) {
-        newErrors.identifier = "Correo o telÃ©fono es requerido";
+        newErrors.identifier = "Correo o teléfono es requerido";
       }
       if (!password) {
-        newErrors.password = "La contraseÃ±a es requerida";
+        newErrors.password = "La contraseña es requerida";
       }
     }
 
@@ -149,12 +149,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       const result = await loginWithPassword(identifier, password);
 
       if (result?.requiresVerification) {
-        showToast("Verifica tu telÃ©fono para continuar", "info");
+        showToast("Verifica tu teléfono para continuar", "info");
         navigation.navigate("VerifyPhone", { phone: normalizedPhone });
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(error.message || "Error al iniciar sesiÃ³n", "error");
+      showToast(error.message || "Error al iniciar sesión", "error");
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +172,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       const result = await requestPhoneLogin(normalizedPhone);
 
       if (result?.userNotFound) {
-        showToast("No encontramos tu cuenta. RegÃ­strate primero.", "info");
+        showToast("No encontramos tu cuenta. Regístrate primero.", "info");
         navigation.navigate("Signup", { phone: normalizedPhone });
         return;
       }
@@ -182,7 +182,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(error.message || "Error al enviar cÃ³digo", "error");
+      showToast(error.message || "Error al enviar código", "error");
     } finally {
       setIsLoading(false);
     }
@@ -198,7 +198,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         showToast("No se pudo verificar tu identidad", "error");
       }
     } catch (error) {
-      showToast("Error con autenticaciÃ³n biomÃ©trica", "error");
+      showToast("Error con autenticación biométrica", "error");
     } finally {
       setIsBiometricLoading(false);
     }
@@ -274,15 +274,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             </ThemedText>
             <ThemedText type="body" style={styles.formSubtitle}>
               {loginMode === "password" 
-                ? "Usa tu correo o telÃ©fono con contraseÃ±a" 
-                : "Te enviaremos un cÃ³digo SMS para verificar"}
+                ? "Usa tu correo o teléfono con contraseña" 
+                : "Te enviaremos un código SMS para verificar"}
             </ThemedText>
 
             {loginMode === "password" ? (
               <>
                 <View style={styles.inputWrapper}>
                   <ThemedText type="small" style={styles.inputLabel}>
-                    Correo o telÃ©fono
+                    Correo o teléfono
                   </ThemedText>
                   <View style={[styles.inputBox, errors.identifier ? styles.inputBoxError : null]}>
                     <Feather
@@ -316,7 +316,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
                 <View style={styles.inputWrapper}>
                   <ThemedText type="small" style={styles.inputLabel}>
-                    ContraseÃ±a
+                    Contraseña
                   </ThemedText>
                   <View style={[styles.inputBox, errors.password ? styles.inputBoxError : null]}>
                     <Feather
@@ -326,7 +326,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                       style={styles.inputBoxIcon}
                     />
                     <TextInput
-                      placeholder="Tu contraseÃ±a"
+                      placeholder="Tu contraseña"
                       value={password}
                       onChangeText={(text) => {
                         setPassword(text);
@@ -356,7 +356,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             ) : (
               <View style={styles.inputWrapper}>
                 <ThemedText type="small" style={styles.inputLabel}>
-                  NÃºmero de telÃ©fono
+                  Número de teléfono
                 </ThemedText>
                 <View style={styles.phoneInputContainer}>
                   <View style={styles.countryCode}>
@@ -401,7 +401,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                loginMode === "password" ? "Iniciar sesiÃ³n" : "Enviar cÃ³digo SMS"
+                loginMode === "password" ? "Iniciar sesión" : "Enviar código SMS"
               )}
             </Button>
 
@@ -419,8 +419,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               />
               <ThemedText type="small" style={styles.switchModeText}>
                 {loginMode === "password" 
-                  ? "Iniciar con cÃ³digo SMS" 
-                  : "Iniciar con contraseÃ±a"}
+                  ? "Iniciar con código SMS" 
+                  : "Iniciar con contraseña"}
               </ThemedText>
             </Pressable>
 
@@ -542,18 +542,18 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
           <View style={styles.footer}>
             <ThemedText type="body" style={styles.footerText}>
-              Â¿No tienes cuenta?{" "}
+              ¿No tienes cuenta?{" "}
             </ThemedText>
             <Pressable onPress={() => navigation.navigate("Signup")}>
               <ThemedText type="body" style={styles.signupLink}>
-                RegÃ­strate
+                Regístrate
               </ThemedText>
             </Pressable>
           </View>
 
           <View style={styles.contactInfo}>
             <ThemedText type="caption" style={styles.contactText}>
-              Â¿Problemas para entrar? LlÃ¡manos o escrÃ­benos:
+              ¿Problemas para entrar? Llámanos o escríbenos:
             </ThemedText>
             <View style={styles.contactButtons}>
               <Pressable style={styles.contactButton}>
