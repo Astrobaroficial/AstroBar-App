@@ -61,7 +61,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const theme = useLightTheme(); // Force light theme for testing
+  console.log('Theme colors:', theme.colors.background, theme.colors.text.primary);
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto

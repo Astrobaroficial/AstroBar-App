@@ -1,68 +1,32 @@
-import { useColorScheme } from 'react-native';
-
-// AstroBar Design System - Adaptive Theme
-const lightTheme = {
-  colors: {
-    primary: '#8B5CF6',
-    primaryDark: '#7C3AED',
-    primaryLight: '#A78BFA',
-    secondary: '#3B82F6',
-    background: '#FFFFFF',
-    backgroundSecondary: '#F8FAFC',
-    surface: '#FFFFFF',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    success: '#10B981',
-    info: '#3B82F6',
-    text: {
-      primary: '#0F172A',
-      secondary: '#475569',
-      disabled: '#94A3B8',
-      inverse: '#FFFFFF',
-    },
-    border: '#E2E8F0',
-    divider: '#F1F5F9',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-    astrobar: {
-      purple: '#8B5CF6',
-      blue: '#3B82F6',
-      gold: '#FFD700',
-    },
+// Force light theme - direct colors
+export const lightThemeColors = {
+  primary: '#8B5CF6',
+  primaryDark: '#7C3AED',
+  primaryLight: '#A78BFA',
+  secondary: '#3B82F6',
+  background: '#FFFFFF',
+  backgroundSecondary: '#F8FAFC',
+  surface: '#FFFFFF',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  success: '#10B981',
+  info: '#3B82F6',
+  text: {
+    primary: '#0F172A',
+    secondary: '#475569',
+    disabled: '#94A3B8',
+    inverse: '#FFFFFF',
+  },
+  border: '#E2E8F0',
+  divider: '#F1F5F9',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  astrobar: {
+    purple: '#8B5CF6',
+    blue: '#3B82F6',
+    gold: '#FFD700',
   },
 };
-
-const darkTheme = {
-  colors: {
-    primary: '#8B5CF6',
-    primaryDark: '#7C3AED',
-    primaryLight: '#A78BFA',
-    secondary: '#3B82F6',
-    background: '#0F172A',
-    backgroundSecondary: '#1E293B',
-    surface: '#1E293B',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    success: '#10B981',
-    info: '#3B82F6',
-    text: {
-      primary: '#F1F5F9',
-      secondary: '#94A3B8',
-      disabled: '#475569',
-      inverse: '#0F172A',
-    },
-    border: '#334155',
-    divider: '#1E293B',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-    astrobar: {
-      purple: '#8B5CF6',
-      blue: '#3B82F6',
-      gold: '#FFD700',
-    },
-  },
-};
-
 const baseTheme = {
-  spacing: {
     xs: 4,
     sm: 8,
     md: 16,
@@ -115,35 +79,23 @@ const baseTheme = {
   },
 };
 
-// Hook to get current theme based on system preference
-export const useTheme = () => {
-  const colorScheme = useColorScheme();
-  console.log('Current color scheme:', colorScheme); // Debug log
-  const isDark = colorScheme === 'dark';
-  
-  const currentTheme = {
-    ...baseTheme,
-    colors: isDark ? darkTheme.colors : lightTheme.colors,
-    isDark,
-  };
-  
-  console.log('Using theme:', isDark ? 'dark' : 'light'); // Debug log
-  return currentTheme;
-};
-
-// Force light theme for testing
+// Simple light theme for testing
 export const useLightTheme = () => {
   return {
     ...baseTheme,
-    colors: lightTheme.colors,
+    colors: lightThemeColors,
     isDark: false,
   };
 };
 
-// Default export for backward compatibility (dark theme)
+// Default export (keep existing)
 export const theme = {
   ...baseTheme,
-  colors: darkTheme.colors,
+  colors: {
+    primary: '#8B5CF6',
+    background: '#0F172A',
+    text: { primary: '#F1F5F9' }
+  },
 };
 
 export type Theme = typeof theme;
