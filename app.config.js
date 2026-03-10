@@ -37,14 +37,9 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/astrobarlogo.jpg",
-          imageWidth: 200,
-          resizeMode: "contain",
-          backgroundColor: "#8B5CF6",
-          dark: {
-            backgroundColor: "#6D28D9",
-            image: "./assets/astrobarlogo.jpg"
-          }
+          "image": "./assets/astrobarlogo.jpg",
+          "resizeMode": "contain",
+          "backgroundColor": "#8B5CF6"
         }
       ],
       "expo-web-browser",
