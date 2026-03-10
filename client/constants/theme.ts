@@ -1,5 +1,36 @@
-// Force light theme - direct colors
-export const lightThemeColors = {
+import { useColorScheme } from 'react-native';
+
+// Tema que funciona (oscuro)
+const darkColors = {
+  primary: '#8B5CF6',
+  primaryDark: '#7C3AED',
+  primaryLight: '#A78BFA',
+  secondary: '#3B82F6',
+  background: '#0F172A',
+  backgroundSecondary: '#1E293B',
+  surface: '#1E293B',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  success: '#10B981',
+  info: '#3B82F6',
+  text: {
+    primary: '#F1F5F9',
+    secondary: '#94A3B8',
+    disabled: '#475569',
+    inverse: '#0F172A',
+  },
+  border: '#334155',
+  divider: '#1E293B',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+  astrobar: {
+    purple: '#8B5CF6',
+    blue: '#3B82F6',
+    gold: '#FFD700',
+  },
+};
+
+// Mismo tema pero con colores claros
+const lightColors = {
   primary: '#8B5CF6',
   primaryDark: '#7C3AED',
   primaryLight: '#A78BFA',
@@ -79,23 +110,22 @@ const baseTheme = {
   },
 };
 
-// Simple light theme for testing
-export const useLightTheme = () => {
+// Hook que detecta el tema del sistema
+export const useTheme = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return {
     ...baseTheme,
-    colors: lightThemeColors,
-    isDark: false,
+    colors: isDark ? darkColors : lightColors,
+    isDark,
   };
 };
 
-// Default export (keep existing)
+// Tema por defecto (oscuro)
 export const theme = {
   ...baseTheme,
-  colors: {
-    primary: '#8B5CF6',
-    background: '#0F172A',
-    text: { primary: '#F1F5F9' }
-  },
+  colors: darkColors,
 };
 
 export type Theme = typeof theme;

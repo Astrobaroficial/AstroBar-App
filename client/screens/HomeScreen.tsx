@@ -37,7 +37,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
 import { CartButton } from "@/components/CartButton";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
-import { useLightTheme } from "@/constants/theme";
+import { useTheme } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
@@ -61,7 +61,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  console.log('Theme colors:', theme.colors.background, theme.colors.text.primary);
+  const theme = useTheme();
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto
