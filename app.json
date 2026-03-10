@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#8B5CF6",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/astrobarlogo.jpg"
       },
       "edgeToEdgeEnabled": true,
@@ -37,9 +37,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#8B5CF6",
+          "backgroundColor": "#FFFFFF",
           "dark": {
-            "backgroundColor": "#6D28D9"
+            "backgroundColor": "#0F172A"
           }
         }
       ],
