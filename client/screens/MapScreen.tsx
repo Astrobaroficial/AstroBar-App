@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
+// @ts-ignore - react-native-maps solo funciona en build nativo
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -53,7 +54,7 @@ export default function MapScreen() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const response = await apiRequest('GET', `/api/public/businesses`);
+      const response = await apiRequest('GET', `/api/businesses/featured`);
       const data = await response.json();
       
       if (data.success) {
