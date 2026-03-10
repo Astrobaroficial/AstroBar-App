@@ -13,7 +13,7 @@ import { api } from "@/lib/api";
 
 export default function PromotionCartScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme } = useTheme();`n  const styles = getStyles(theme);
   const navigation = useNavigation<any>();
   
   const [items, setItems] = useState<any[]>([]);
@@ -191,7 +191,7 @@ export default function PromotionCartScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: "row",

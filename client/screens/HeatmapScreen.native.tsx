@@ -259,7 +259,7 @@ export default function HeatmapScreen() {
 
 
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0E27',
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   barMarker: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: theme.colors.primary,
     width: 36,
     height: 36,
     borderRadius: 18,

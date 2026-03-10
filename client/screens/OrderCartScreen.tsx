@@ -21,6 +21,7 @@ import { useOrderCart } from '@/contexts/OrderCartContext';
 export default function OrderCartScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation();
   const { items, removeItem, updateQuantity, updateNotes, getTotal, clearCart } = useOrderCart();
 
@@ -40,7 +41,7 @@ export default function OrderCartScreen() {
 
   if (items.length === 0) {
     return (
-      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
             <Feather name="arrow-left" size={24} color={theme.text} />
@@ -63,12 +64,12 @@ export default function OrderCartScreen() {
             </ThemedText>
           </Pressable>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.text} />
@@ -172,11 +173,11 @@ export default function OrderCartScreen() {
           </ThemedText>
         </Pressable>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

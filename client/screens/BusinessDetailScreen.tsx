@@ -39,6 +39,7 @@ export default function BusinessDetailScreen() {
   const route = useRoute<BusinessDetailRouteProp>();
   const navigation = useNavigation<BusinessDetailNavigationProp>();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -73,7 +74,7 @@ export default function BusinessDetailScreen() {
             minimumOrder: (data.business.minOrder || 5000) / 100,
             isOpen: data.business.isOpen || false,
             openingHours: [],
-            address: data.business.address || 'Autlán, Argentina',
+            address: data.business.address || 'Autlï¿½n, Argentina',
             phone: data.business.phone || '',
             categories: data.business.categories ? data.business.categories.split(',') : [],
             acceptsCash: true,
@@ -216,7 +217,7 @@ export default function BusinessDetailScreen() {
                     type="small"
                     style={{ color: theme.textSecondary }}
                   >
-                    ({business.reviewCount} reseñas)
+                    ({business.reviewCount} reseï¿½as)
                   </ThemedText>
                 </View>
                 <View style={styles.badgeRow}>
@@ -254,7 +255,7 @@ export default function BusinessDetailScreen() {
                 </ThemedText>
                 <View style={styles.dividerDot} />
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  Envío ${business.deliveryFee}
+                  Envï¿½o ${business.deliveryFee}
                 </ThemedText>
                 <View style={styles.dividerDot} />
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
@@ -309,7 +310,7 @@ export default function BusinessDetailScreen() {
             >
               <Feather name="book-open" size={20} color="#FFFFFF" />
               <ThemedText type="body" style={styles.menuButtonText}>
-                Ver Menú Completo
+                Ver Menï¿½ Completo
               </ThemedText>
               <Feather name="chevron-right" size={20} color="#FFFFFF" />
             </Pressable>
@@ -397,7 +398,7 @@ export default function BusinessDetailScreen() {
             {futurePromotions.length > 0 && (
               <View style={styles.promotionsSection}>
                 <ThemedText type="h3" style={styles.sectionTitle}>
-                  Próximas Promociones ??
+                  Prï¿½ximas Promociones ??
                 </ThemedText>
                 <ScrollView
                   horizontal
@@ -421,7 +422,7 @@ export default function BusinessDetailScreen() {
                         <View style={styles.futureBadge}>
                           <Feather name="clock" size={12} color="#FFFFFF" />
                           <ThemedText type="caption" style={styles.futureBadgeText}>
-                            PRÓXIMAMENTE
+                            PRï¿½XIMAMENTE
                           </ThemedText>
                         </View>
                         <View style={styles.discountBadge}>
@@ -521,7 +522,7 @@ export default function BusinessDetailScreen() {
 
             <View style={styles.productsSection}>
               <ThemedText type="h3" style={styles.productsSectionTitle}>
-                {business.type === "market" ? "Productos" : "Menú"}
+                {business.type === "market" ? "Productos" : "Menï¿½"}
               </ThemedText>
               {isLoading ? (
                 <>
@@ -554,7 +555,7 @@ export default function BusinessDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -780,7 +781,7 @@ const styles = StyleSheet.create({
     right: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#9C27B0',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     borderRadius: BorderRadius.sm,

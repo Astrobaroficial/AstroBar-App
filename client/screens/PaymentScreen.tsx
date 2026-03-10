@@ -16,6 +16,7 @@ import { Linking } from "react-native";
 export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { userPromotionId, amount, promoName } = route.params;
@@ -83,8 +84,8 @@ export default function PaymentScreen() {
           </View>
         </View>
 
-        <View style={[styles.infoCard, { backgroundColor: "#8B5CF620" }]}>
-          <Feather name="info" size={20} color="#8B5CF6" />
+        <View style={[styles.infoCard, { backgroundColor: theme.colors.primary + "20" }]}>
+          <Feather name="info" size={20} color={theme.colors.primary} />
           <ThemedText type="small" style={{ marginLeft: Spacing.sm, flex: 1 }}>
             Tienes 60 segundos para cancelar después de confirmar
           </ThemedText>
@@ -93,7 +94,7 @@ export default function PaymentScreen() {
         <Pressable
           onPress={handlePayment}
           disabled={loading}
-          style={[styles.payButton, { backgroundColor: "#8B5CF6", opacity: loading ? 0.6 : 1 }]}
+          style={[styles.payButton, { backgroundColor: theme.colors.primary, opacity: loading ? 0.6 : 1 }]}
         >
           <Feather name="credit-card" size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />
           <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
@@ -105,7 +106,7 @@ export default function PaymentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1, paddingHorizontal: Spacing.lg },
   backButton: { marginBottom: Spacing.md },

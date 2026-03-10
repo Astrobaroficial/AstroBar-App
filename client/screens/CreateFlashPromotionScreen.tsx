@@ -311,7 +311,7 @@ export default function CreateFlashPromotionScreen({ route }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.lg },
   backButton: { marginBottom: Spacing.lg },

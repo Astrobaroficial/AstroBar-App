@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 
 export default function BusinessStatsScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme } = useTheme();`n  const styles = getStyles(theme);
   const navigation = useNavigation<any>();
   
   const [stats, setStats] = useState<any>(null);
@@ -134,7 +134,7 @@ export default function BusinessStatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: "row",

@@ -15,6 +15,7 @@ import { useOrderCart } from '@/contexts/OrderCartContext';
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation();
   const route = useRoute();
   const { total, items } = route.params as { total: number; items: any[] };
@@ -67,7 +68,7 @@ export default function OrderPaymentScreen() {
   };
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton} disabled={loading}>
           <Feather name="arrow-left" size={24} color={theme.text} />
@@ -159,11 +160,11 @@ export default function OrderPaymentScreen() {
           )}
         </Pressable>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

@@ -24,6 +24,7 @@ interface Promotion {
 
 export default function BusinessPromotionsPanel() {
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { user } = useAuth();
   const navigation = useNavigation<any>();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -273,7 +274,7 @@ export default function BusinessPromotionsPanel() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0E27' },
   topNav: {
     flexDirection: 'row',
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   flashFab: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: theme.colors.primary,
   },
   commonFab: {
     backgroundColor: '#FFD700',

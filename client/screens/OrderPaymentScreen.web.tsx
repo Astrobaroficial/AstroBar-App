@@ -12,10 +12,11 @@ import { Spacing, BorderRadius, AstroBarColors } from '@/constants/theme';
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation();
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.text} />
@@ -34,11 +35,11 @@ export default function OrderPaymentScreen() {
           Descarga la app para realizar pagos con tarjeta de forma segura
         </ThemedText>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

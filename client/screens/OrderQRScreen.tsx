@@ -14,6 +14,7 @@ import { apiRequest } from '@/lib/query-client';
 export default function OrderQRScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation();
   const route = useRoute();
   const { order } = route.params as { order: any };
@@ -69,7 +70,7 @@ export default function OrderQRScreen() {
   };
 
   return (
-    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.navigate('Main' as never)} style={styles.closeButton}>
           <Feather name="x" size={24} color={theme.text} />
@@ -128,11 +129,11 @@ export default function OrderQRScreen() {
           </ThemedText>
         </Pressable>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
