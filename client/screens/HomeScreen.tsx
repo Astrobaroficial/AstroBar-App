@@ -62,6 +62,7 @@ export default function HomeScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const theme = useTheme();
+  const styles = getStyles(theme);
   const { user } = useAuth();
   const { settings } = useApp();
   const showCarnivalBanner = false; // Carnaval terminado - mantener oculto
@@ -224,9 +225,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -745,7 +744,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.marketsBanner,
                   {
-                    backgroundColor: "#FFD700",
+                    backgroundColor: theme.colors.warning,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
@@ -792,7 +791,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.marketsBanner,
                   {
-                    backgroundColor: "#4CAF50",
+                    backgroundColor: theme.colors.success,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                   Shadows.md,
@@ -862,9 +861,10 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
@@ -905,6 +905,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 26,
+    color: theme.colors.text.primary,
   },
   quickAccessContainer: {
     marginBottom: Spacing.md,
@@ -928,6 +929,7 @@ const styles = StyleSheet.create({
   quickAccessLabel: {
     textAlign: "center",
     fontWeight: "500",
+    color: theme.colors.text.primary,
   },
   searchContainer: {
     flexDirection: "row",
@@ -1021,8 +1023,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   carnivalBadgeText: {
-    color: "#FFD700",
-    fontWeight: "600",
+    color: '#FFD700',
+    fontWeight: '600',
     marginLeft: 4,
     fontSize: 10,
   },
@@ -1042,6 +1044,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: Spacing.md,
+    color: theme.colors.text.primary,
   },
   featuredCard: {
     borderRadius: BorderRadius.lg,
@@ -1099,6 +1102,7 @@ const styles = StyleSheet.create({
   gridName: {
     fontWeight: "600",
     marginBottom: Spacing.xs,
+    color: theme.colors.text.primary,
   },
   gridMeta: {
     flexDirection: "row",
@@ -1144,11 +1148,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   marketsTitle: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     marginBottom: Spacing.xs,
   },
   marketsSubtitle: {
-    color: "rgba(255, 255, 255, 0.85)",
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   marketsGradient: {
     borderRadius: BorderRadius.xl,
@@ -1183,6 +1187,7 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     textAlign: "center",
     marginBottom: Spacing.sm,
+    color: theme.colors.text.primary,
   },
   emptyStateText: {
     textAlign: "center",
@@ -1197,9 +1202,3 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
   },
 });
-
-
-
-
-
-

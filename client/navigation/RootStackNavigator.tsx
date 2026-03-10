@@ -32,7 +32,7 @@ import OrderPaymentScreen from "@/screens/OrderPaymentScreen";
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
-import { useAuth } from "@/contexts/AuthContext";
+import { ThemedScreenWrapper } from "@/components/ThemedScreenWrapper";
 
 // Conditional import for LocationPickerScreen
 let LocationPickerScreen: any = null;

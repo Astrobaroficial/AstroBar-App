@@ -115,7 +115,9 @@ const baseTheme = {
 // Hook que detecta el tema del sistema
 export const useTheme = () => {
   const colorScheme = useColorScheme();
+  console.log('🎨 Color scheme detected:', colorScheme);
   const isDark = colorScheme === 'dark';
+  console.log('🌙 Is dark mode:', isDark);
   
   return {
     ...baseTheme,
