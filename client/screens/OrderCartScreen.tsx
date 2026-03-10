@@ -40,7 +40,7 @@ export default function OrderCartScreen() {
 
   if (items.length === 0) {
     return (
-      <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
             <Feather name="arrow-left" size={24} color={theme.text} />
@@ -68,7 +68,7 @@ export default function OrderCartScreen() {
   }
 
   return (
-    <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.text} />

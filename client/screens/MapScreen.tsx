@@ -44,47 +44,20 @@ export default function MapScreen() {
 
   const loadMapData = async () => {
     try {
-      setError(null);
-      
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setError('Permiso de ubicación denegado');
-        setLocation({
-          coords: {
-            latitude: -34.6037,
-            longitude: -58.3816,
-          }
-        });
-        await loadBusinessesStatus();
         setIsLoading(false);
         return;
       }
 
-      try {
-        const currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setLocation(currentLocation);
-      } catch (locationError) {
-        console.warn('Could not get location:', locationError);
-        setLocation({
-          coords: {
-            latitude: -34.6037,
-            longitude: -58.3816,
-          }
-        });
-      }
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
 
       await loadBusinessesStatus();
     } catch (err: any) {
       console.error('Error loading map:', err);
-      setError('Error al cargar el mapa');
-      setLocation({
-        coords: {
-          latitude: -34.6037,
-          longitude: -58.3816,
-        }
-      });
+      setError(err.message || 'Error al cargar el mapa');
     } finally {
       setIsLoading(false);
     }
@@ -92,27 +65,15 @@ export default function MapScreen() {
 
   const loadBusinessesStatus = async () => {
     try {
-      const response = await apiRequest('GET', '/api/public/businesses');
+      const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
-      if (data.success && data.businesses) {
-        const businessList = data.businesses.map((b: any) => ({
-          id: b.id,
-          name: b.name,
-          latitude: b.latitude || '-34.6037',
-          longitude: b.longitude || '-58.3816',
-          isOpen: b.isOpen || false,
-          hasFlashPromo: false,
-          address: b.address || 'Buenos Aires',
-          nearbyUsers: 0
-        }));
-        setBars(businessList);
-      } else {
-        setBars([]);
+      if (data.success) {
+        const activeBars = (data.businesses || []).filter((b: any) => b.latitude && b.longitude);
+        setBars(activeBars);
       }
     } catch (err: any) {
-      console.warn('Error loading businesses:', err);
-      setBars([]);
+      console.error('Error loading businesses:', err);
     }
   };
 

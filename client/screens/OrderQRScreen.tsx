@@ -69,7 +69,7 @@ export default function OrderQRScreen() {
   };
 
   return (
-    <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.navigate('Main' as never)} style={styles.closeButton}>
           <Feather name="x" size={24} color={theme.text} />

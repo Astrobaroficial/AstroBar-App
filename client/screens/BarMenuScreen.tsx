@@ -124,7 +124,7 @@ export default function BarMenuScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ActivityIndicator size="large" color={AstroBarColors.primary} />
           <ThemedText style={{ marginTop: Spacing.md }}>Cargando menú...</ThemedText>
@@ -135,7 +135,7 @@ export default function BarMenuScreen() {
 
   if (!menuData) {
     return (
-      <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+      <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ThemedText>No se pudo cargar el menú</ThemedText>
         </View>
@@ -144,7 +144,7 @@ export default function BarMenuScreen() {
   }
 
   return (
-    <LinearGradient colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']} style={styles.container}>
+    <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.text} />
