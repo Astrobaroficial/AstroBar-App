@@ -82,7 +82,11 @@ export default function CreateCommonPromotionScreen({ route }: any) {
       return;
     }
 
+<<<<<<< HEAD
     const discountPrice = parseFloat(discountedPrice) * 100; // Convertir a centavos
+=======
+    const discountPrice = Math.round(parseFloat(discountedPrice));
+>>>>>>> 6c26480b12c9609c7a9194c9c0fe1c6bdfefbff1
     if (discountPrice >= selectedProduct.price) {
       Alert.alert("Error", "El precio promocional debe ser menor al precio original");
       return;
@@ -102,8 +106,8 @@ export default function CreateCommonPromotionScreen({ route }: any) {
         title: `${selectedProduct.name} - Promoción`,
         description: selectedProduct.description || `Promoción de ${selectedProduct.name}`,
         type: "common",
-        originalPrice: selectedProduct.price,
-        promoPrice: discountPrice,
+        originalPrice: Math.round(selectedProduct.price),
+        promoPrice: Math.round(discountPrice),
         stock: parseInt(stock),
         startTime: start.toISOString(),
         endTime: end.toISOString(),

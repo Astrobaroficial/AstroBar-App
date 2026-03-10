@@ -348,6 +348,22 @@ router.post("/phone-signup", async (req, res) => {
       });
     }
 
+    // Check if email already exists (if provided)
+    if (email && email.trim()) {
+      const existingEmailUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.trim()))
+        .limit(1);
+
+      if (existingEmailUser.length > 0) {
+        return res.status(400).json({ 
+          error: "Email ya registrado",
+          userExists: true
+        });
+      }
+    }
+
     const validRoles = ['customer', 'business_owner'];
     const userRole = validRoles.includes(role) ? role : 'customer';
     const requiresApproval = false;
@@ -357,7 +373,11 @@ router.post("/phone-signup", async (req, res) => {
       .values({
         phone: normalizedPhone,
         name: name,
+<<<<<<< HEAD
         email: email || null,
+=======
+        email: email && email.trim() ? email.trim() : null,
+>>>>>>> 6c26480b12c9609c7a9194c9c0fe1c6bdfefbff1
         role: userRole,
         phoneVerified: false,
         isActive: true,

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 // Generar código de referido único
 export const generateReferralCode = async (userId: string): Promise<string> => {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const link = `${process.env.FRONTEND_URL}/register?ref=${code}`;
+  const link = `astrobar://referral?code=${code}`;
 
   await db.execute(sql`
     INSERT INTO referral_codes (id, user_id, code, link)
