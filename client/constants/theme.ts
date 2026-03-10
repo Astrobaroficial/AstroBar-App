@@ -115,9 +115,7 @@ const baseTheme = {
 // Hook que detecta el tema del sistema
 export const useTheme = () => {
   const colorScheme = useColorScheme();
-  console.log('🎨 Color scheme detected:', colorScheme);
   const isDark = colorScheme === 'dark';
-  console.log('🌙 Is dark mode:', isDark);
   
   return {
     ...baseTheme,
@@ -126,16 +124,16 @@ export const useTheme = () => {
   };
 };
 
-// Tema por defecto (claro)
+// Tema por defecto (oscuro para compatibilidad)
 export const theme = {
   ...baseTheme,
-  colors: lightColors,
+  colors: darkColors,
 };
 
 export type Theme = typeof theme;
 
 // Export individual objects for easier imports
-export const AstroBarColors = lightColors;
+export const AstroBarColors = theme.colors;
 export const Spacing = baseTheme.spacing;
 export const BorderRadius = baseTheme.borderRadius;
 export const Typography = baseTheme.typography;
