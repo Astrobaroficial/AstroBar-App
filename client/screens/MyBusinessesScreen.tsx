@@ -114,12 +114,12 @@ export default function MyBusinessesScreen() {
   const handleSelectBusiness = async (business: Business) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await selectBusiness(business);
-    // Solo volver atrás si no estamos en la pantalla principal de perfil
+    // Solo volver atrï¿½s si no estamos en la pantalla principal de perfil
     // Permitir editar si estamos navegando desde perfil
   };
 
   const handlePickImage = async () => {
-    console.log('?? Iniciando selección de imagen');
+    console.log('?? Iniciando selecciï¿½n de imagen');
     try {
       setUploadingImage(true);
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -134,10 +134,10 @@ export default function MyBusinessesScreen() {
 
       if (!result.canceled && result.assets[0].base64) {
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        console.log('?? Imagen convertida, tamaño:', base64Image.length);
+        console.log('?? Imagen convertida, tamaï¿½o:', base64Image.length);
         setNewBusiness(prev => ({ ...prev, image: base64Image }));
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        Alert.alert('Éxito', 'Imagen seleccionada. Presiona Actualizar.');
+        Alert.alert('ï¿½xito', 'Imagen seleccionada. Presiona Actualizar.');
       }
     } catch (error) {
       console.error('?? Error:', error);
@@ -151,7 +151,7 @@ export default function MyBusinessesScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permiso denegado", "Necesitamos acceso a tu ubicación");
+        Alert.alert("Permiso denegado", "Necesitamos acceso a tu ubicaciï¿½n");
         return;
       }
 
@@ -170,9 +170,9 @@ export default function MyBusinessesScreen() {
       setBusinessLng(location.coords.longitude);
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Éxito", "Ubicación obtenida");
+      Alert.alert("ï¿½xito", "Ubicaciï¿½n obtenida");
     } catch (error) {
-      Alert.alert("Error", "No se pudo obtener la ubicación");
+      Alert.alert("Error", "No se pudo obtener la ubicaciï¿½n");
     }
   };
 
@@ -214,7 +214,7 @@ export default function MyBusinessesScreen() {
         setShowEditModal(false);
         setEditingBusiness(null);
         await loadBusinesses();
-        Alert.alert("Éxito", "Negocio actualizado correctamente");
+        Alert.alert("ï¿½xito", "Negocio actualizado correctamente");
       } else {
         Alert.alert("Error", data.error || "No se pudo actualizar");
       }
@@ -769,7 +769,10 @@ export default function MyBusinessesScreen() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <ScrollView style={styles.modalContent}>
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
+          >
             <ThemedText style={styles.modalTitle}>Nuevo Negocio</ThemedText>
 
             <ThemedText style={styles.inputLabel}>Nombre *</ThemedText>
@@ -781,10 +784,10 @@ export default function MyBusinessesScreen() {
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, name: text }))}
             />
 
-            <ThemedText style={styles.inputLabel}>Descripción</ThemedText>
+            <ThemedText style={styles.inputLabel}>Descripciï¿½n</ThemedText>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Breve descripción de tu negocio"
+              placeholder="Breve descripciï¿½n de tu negocio"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.description}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, description: text }))}
@@ -812,19 +815,19 @@ export default function MyBusinessesScreen() {
               ))}
             </View>
 
-            <ThemedText style={styles.inputLabel}>Dirección</ThemedText>
+            <ThemedText style={styles.inputLabel}>Direcciï¿½n</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Dirección del negocio"
+              placeholder="Direcciï¿½n del negocio"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.address}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, address: text }))}
             />
 
-            <ThemedText style={styles.inputLabel}>Teléfono</ThemedText>
+            <ThemedText style={styles.inputLabel}>Telï¿½fono</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Número de contacto"
+              placeholder="Nï¿½mero de contacto"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.phone}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, phone: text }))}
@@ -891,7 +894,10 @@ export default function MyBusinessesScreen() {
         onRequestClose={() => setShowEditModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <ScrollView style={styles.modalContent}>
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
+          >
             <ThemedText style={styles.modalTitle}>Editar Negocio</ThemedText>
 
             <ThemedText style={styles.inputLabel}>Nombre *</ThemedText>
@@ -903,10 +909,10 @@ export default function MyBusinessesScreen() {
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, name: text }))}
             />
 
-            <ThemedText style={styles.inputLabel}>Descripción</ThemedText>
+            <ThemedText style={styles.inputLabel}>Descripciï¿½n</ThemedText>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Breve descripción de tu negocio"
+              placeholder="Breve descripciï¿½n de tu negocio"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.description}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, description: text }))}
@@ -934,19 +940,19 @@ export default function MyBusinessesScreen() {
               ))}
             </View>
 
-            <ThemedText style={styles.inputLabel}>Dirección</ThemedText>
+            <ThemedText style={styles.inputLabel}>Direcciï¿½n</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Dirección del negocio"
+              placeholder="Direcciï¿½n del negocio"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.address}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, address: text }))}
             />
 
-            <ThemedText style={styles.inputLabel}>Teléfono</ThemedText>
+            <ThemedText style={styles.inputLabel}>Telï¿½fono</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Número de contacto"
+              placeholder="Nï¿½mero de contacto"
               placeholderTextColor={theme.colors.textSecondary}
               value={newBusiness.phone}
               onChangeText={(text) => setNewBusiness(prev => ({ ...prev, phone: text }))}
@@ -959,14 +965,14 @@ export default function MyBusinessesScreen() {
             >
               <Feather name="map-pin" size={18} color="#fff" />
               <ThemedText style={[styles.buttonText, { color: "#fff", marginLeft: 8 }]}>
-                Usar mi ubicación GPS
+                Usar mi ubicaciï¿½n GPS
               </ThemedText>
             </Pressable>
             {businessLat && businessLng && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
                 <Feather name="check-circle" size={16} color="#4CAF50" />
                 <ThemedText style={{ color: "#4CAF50", marginLeft: 6, fontSize: 12 }}>
-                  Ubicación configurada ({businessLat.toFixed(4)}, {businessLng.toFixed(4)})
+                  Ubicaciï¿½n configurada ({businessLat.toFixed(4)}, {businessLng.toFixed(4)})
                 </ThemedText>
               </View>
             )}
@@ -1039,7 +1045,7 @@ export default function MyBusinessesScreen() {
             </View>
             <ThemedText style={styles.modalTitle}>Eliminar Negocio</ThemedText>
             <ThemedText style={styles.deleteMessage}>
-              Esta acción no se puede deshacer. Si el negocio tiene pedidos activos, no podrá ser eliminado.
+              Esta acciï¿½n no se puede deshacer. Si el negocio tiene pedidos activos, no podrï¿½ ser eliminado.
             </ThemedText>
 
             <View style={[styles.modalButtons, { width: "100%" }]}>
