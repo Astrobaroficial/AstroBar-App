@@ -26,6 +26,7 @@ interface Product {
 export default function CreateFlashPromotionScreen({ route }: any) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { showToast } = useToast();
   const navigation = useNavigation<any>();
   const editPromotion = route?.params?.editPromotion;

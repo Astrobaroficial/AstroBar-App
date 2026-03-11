@@ -110,12 +110,13 @@ export default function MapScreen() {
           });
         }, 100);
       } else {
-        console.log('No routes found');
-        Alert.alert('Error', 'No se pudo encontrar una ruta');
+        console.log('Error response:', data);
+        const errorMsg = data.details || data.hint || data.error || 'No se pudo encontrar una ruta';
+        Alert.alert('Error', errorMsg);
       }
     } catch (err: any) {
       console.error('Error getting directions:', err);
-      Alert.alert('Error', 'Error al obtener direcciones: ' + err.message);
+      Alert.alert('Error', 'Error al obtener direcciones. Verifica los logs del servidor.');
     }
   };
 
