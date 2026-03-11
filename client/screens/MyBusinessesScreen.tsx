@@ -447,11 +447,11 @@ export default function MyBusinessesScreen() {
       justifyContent: "flex-end",
     },
     modalContent: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: theme.background,
       borderTopLeftRadius: BorderRadius.xl,
       borderTopRightRadius: BorderRadius.xl,
       padding: Spacing.lg,
-      paddingBottom: insets.bottom + Spacing.lg,
+      paddingBottom: insets.bottom + Spacing['3xl'],
       maxHeight: "90%",
     },
     modalTitle: {
@@ -769,10 +769,7 @@ export default function MyBusinessesScreen() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <ScrollView 
-            style={styles.modalContent}
-            contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
-          >
+          <ScrollView style={styles.modalContent}>
             <ThemedText style={styles.modalTitle}>Nuevo Negocio</ThemedText>
 
             <ThemedText style={styles.inputLabel}>Nombre *</ThemedText>
@@ -894,10 +891,7 @@ export default function MyBusinessesScreen() {
         onRequestClose={() => setShowEditModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <ScrollView 
-            style={styles.modalContent}
-            contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
-          >
+          <ScrollView style={styles.modalContent}>
             <ThemedText style={styles.modalTitle}>Editar Negocio</ThemedText>
 
             <ThemedText style={styles.inputLabel}>Nombre *</ThemedText>
