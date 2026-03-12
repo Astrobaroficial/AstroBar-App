@@ -280,12 +280,13 @@ router.get("/payment-methods", authenticateToken, async (req, res) => {
   }
 });
 
-// Add payment method (tarjeta)
+// Add payment method (tarjeta) - Tokenizar con Mercado Pago
 router.post("/payment-methods", authenticateToken, async (req, res) => {
   try {
     const { paymentCards } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq } = await import("drizzle-orm");
+    const MercadoPagoService = await import("../services/mercadoPagoService");
     const { cardNumber, cardholderName, expiryMonth, expiryYear, cvv, isDefault } = req.body;
 
     // Validar datos
@@ -311,8 +312,27 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Fecha de vencimiento muy lejana" });
     }
 
+    // Tokenizar tarjeta con Mercado Pago
+    const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    if (!mpAccessToken) {
+      return res.status(500).json({ error: "Mercado Pago no está configurado" });
+    }
+
+    const mpService = new MercadoPagoService.default(mpAccessToken);
+    const tokenResult = await mpService.tokenizeCard({
+      cardNumber,
+      cardholderName,
+      expiryMonth,
+      expiryYear: fullYear,
+      cvv,
+    });
+
+    if (!tokenResult.success) {
+      return res.status(400).json({ error: "Error al tokenizar tarjeta" });
+    }
+
     // Detectar marca de tarjeta
-    let brand = "Visa";
+    let brand = tokenResult.cardBrand || "Visa";
     if (cardNumber.startsWith("5")) brand = "Mastercard";
     else if (cardNumber.startsWith("3")) brand = "Amex";
 
@@ -325,9 +345,9 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
         .where(eq(paymentCards.userId, req.user!.id));
     }
 
-    // Guardar tarjeta (guardar solo últimos 2 dígitos del año)
+    // Guardar tarjeta con token de Mercado Pago
     const cardId = `card_${Date.now()}`;
-    const yearToStore = expiryYear > 100 ? expiryYear % 100 : expiryYear;
+    const yearToStore = fullYear > 100 ? fullYear % 100 : fullYear;
     await db.insert(paymentCards).values({
       id: cardId,
       userId: req.user!.id,
@@ -336,14 +356,16 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       expiryMonth,
       expiryYear: yearToStore,
       isDefault,
+      mpTokenId: tokenResult.token,
       isActive: true,
     });
 
-    console.log(`💳 Tarjeta agregada para usuario ${req.user!.id}:`, {
+    console.log(`💳 Tarjeta tokenizada y guardada para usuario ${req.user!.id}:`, {
       lastFourDigits,
       brand,
       expiryMonth,
-      expiryYear,
+      expiryYear: yearToStore,
+      mpToken: tokenResult.token,
       isDefault,
     });
 
@@ -361,7 +383,7 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
     });
   } catch (error: any) {
     console.error("Error adding payment method:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || "Error al agregar tarjeta" });
   }
 });
 

@@ -71,8 +71,6 @@ export function useTheme() {
   const isDark = effectiveScheme === "dark";
   const themeData = isDark ? darkTheme : lightTheme;
 
-  console.log('🎨 Theme Debug:', { themeMode, systemColorScheme, effectiveScheme, isDark });
-
   // Ensure gradients always have values (critical for Android LinearGradient)
   const safeTheme = {
     ...themeData,

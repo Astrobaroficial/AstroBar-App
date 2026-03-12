@@ -672,8 +672,194 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// Redeem QR code (bar scans)
-router.post("/redeem", authenticateToken, requireRole("business_owner"), async (req, res) => {
+// Pay for promotion with saved card
+router.post("/:id/pay", authenticateToken, async (req, res) => {
+  try {
+    const { promotions, paymentCards, promotionTransactions, userPoints, businesses, users } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and, sql } = await import("drizzle-orm");
+    const MercadoPagoService = await import("../services/mercadoPagoService");
+
+    const promotionId = req.params.id;
+    const userId = req.user!.id;
+    const { cardId } = req.body;
+
+    // Get promotion
+    const [promotion] = await db
+      .select()
+      .from(promotions)
+      .where(eq(promotions.id, promotionId))
+      .limit(1);
+
+    if (!promotion) {
+      return res.status(404).json({ error: "Promoción no encontrada" });
+    }
+
+    const now = new Date();
+    if (!promotion.isActive || promotion.startTime > now || promotion.endTime < now) {
+      return res.status(400).json({ error: "Promoción no disponible" });
+    }
+
+    if (promotion.stock <= promotion.stockConsumed) {
+      return res.status(400).json({ error: "Promoción agotada" });
+    }
+
+    // Get saved card
+    const [card] = await db
+      .select()
+      .from(paymentCards)
+      .where(
+        and(
+          eq(paymentCards.id, cardId),
+          eq(paymentCards.userId, userId),
+          eq(paymentCards.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (!card || !card.mpTokenId) {
+      return res.status(404).json({ error: "Tarjeta no encontrada o no tokenizada" });
+    }
+
+    // Calculate amounts
+    const { ProgressiveCommissionService } = await import("../progressiveCommissionService");
+    const split = await ProgressiveCommissionService.calculateProgressiveSplit(promotion.businessId, promotion.promoPrice);
+    
+    const promoPrice = promotion.promoPrice;
+    const platformCommission = split.platform;
+    const totalAmount = split.total;
+
+    // Create payment with Mercado Pago
+    const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    if (!mpAccessToken) {
+      return res.status(500).json({ error: "Mercado Pago no está configurado" });
+    }
+
+    const mpService = new MercadoPagoService.default(mpAccessToken);
+    
+    // Get user email for payment
+    const [user] = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    console.log('💳 Procesando pago con Mercado Pago...');
+    const paymentResult = await mpService.createPayment({
+      token: card.mpTokenId,
+      amount: totalAmount / 100, // Convertir de centavos a pesos
+      description: `${promotion.title} - AstroBar`,
+      payer: {
+        email: user?.email || 'customer@astrobar.com',
+        firstName: user?.name?.split(' ')[0] || 'Customer',
+        lastName: user?.name?.split(' ')[1] || '',
+      },
+    });
+
+    if (!paymentResult.success || paymentResult.status !== 'approved') {
+      console.error('❌ Pago rechazado:', paymentResult.statusDetail);
+      return res.status(400).json({ 
+        error: "Pago rechazado",
+        detail: paymentResult.statusDetail 
+      });
+    }
+
+    // Generate unique QR code
+    const qrCode = `ASTRO-${uuidv4().substring(0, 8).toUpperCase()}`;
+
+    // Create transaction
+    const transactionId = uuidv4();
+    const canCancelUntil = new Date(now.getTime() + 60 * 1000); // 60 seconds
+
+    await db.insert(promotionTransactions).values({
+      id: transactionId,
+      promotionId,
+      userId,
+      businessId: promotion.businessId,
+      qrCode,
+      status: "confirmed",
+      amountPaid: totalAmount,
+      platformCommission,
+      businessRevenue: promoPrice,
+      canCancelUntil,
+    });
+
+    // Update stock
+    await db
+      .update(promotions)
+      .set({ stockConsumed: sql`${promotions.stockConsumed} + 1` })
+      .where(eq(promotions.id, promotionId));
+
+    // Award points to user
+    const [existingPoints] = await db
+      .select()
+      .from(userPoints)
+      .where(eq(userPoints.userId, userId))
+      .limit(1);
+
+    if (existingPoints) {
+      const newTotal = existingPoints.totalPoints + 10;
+      let newLevel = "copper";
+      if (newTotal >= 1000) newLevel = "platinum";
+      else if (newTotal >= 500) newLevel = "gold";
+      else if (newTotal >= 250) newLevel = "silver";
+      else if (newTotal >= 100) newLevel = "bronze";
+
+      await db
+        .update(userPoints)
+        .set({
+          totalPoints: newTotal,
+          currentLevel: newLevel,
+        })
+        .where(eq(userPoints.userId, userId));
+    } else {
+      await db.insert(userPoints).values({
+        id: uuidv4(),
+        userId,
+        totalPoints: 10,
+        promotionsRedeemed: 0,
+        currentLevel: "copper",
+      });
+    }
+
+    // Notify business owner
+    try {
+      const [business] = await db.select().from(businesses).where(eq(businesses.id, promotion.businessId)).limit(1);
+      if (business?.ownerId) {
+        const [owner] = await db.select().from(users).where(eq(users.id, business.ownerId)).limit(1);
+        if (owner?.pushToken) {
+          const { sendPushNotification } = await import("../services/pushNotifications");
+          await sendPushNotification(
+            owner.pushToken,
+            "¡Pago recibido!",
+            `${promotion.title} - $${(promoPrice / 100).toFixed(2)}`,
+            { type: 'payment_received', promotionId, transactionId, qrCode }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error sending notification to business:', error);
+    }
+
+    console.log(`✅ Pago procesado exitosamente. Transacción: ${transactionId}`);
+
+    res.json({
+      success: true,
+      transaction: {
+        id: transactionId,
+        qrCode,
+        status: "confirmed",
+        amountPaid: totalAmount,
+        paymentId: paymentResult.paymentId,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error processing payment:", error);
+    res.status(500).json({ error: error.message || "Error al procesar pago" });
+  }
+});
+
+
   try {
     const { promotionTransactions, userPoints } = await import("@shared/schema-mysql");
     const { db } = await import("../db");

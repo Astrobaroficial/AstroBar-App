@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -31,7 +31,8 @@ export default function CustomerPaymentMethodsScreen() {
   const [cards, setCards] = useState<PaymentCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [mpConnected, setMpConnected] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [confirmDeleteCardId, setConfirmDeleteCardId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPaymentMethods();
@@ -64,29 +65,30 @@ export default function CustomerPaymentMethodsScreen() {
     navigation.navigate('AddPaymentCard' as any);
   };
 
-  const handleDeleteCard = (cardId: string) => {
-    Alert.alert(
-      'Eliminar Tarjeta',
-      '¿Estás seguro de que deseas eliminar esta tarjeta?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const response = await api.delete(`/user/payment-methods/${cardId}`);
-              if (response.data.success) {
-                showToast('Tarjeta eliminada', 'success');
-                loadPaymentMethods();
-              }
-            } catch (error) {
-              showToast('Error al eliminar tarjeta', 'error');
-            }
-          },
-        },
-      ]
-    );
+  const confirmDelete = async (cardId: string) => {
+    console.log('✅ Confirmado eliminar cardId:', cardId);
+    setConfirmDeleteCardId(null);
+    setDeletingCardId(cardId);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      console.log('📤 Enviando DELETE a /user/payment-methods/' + cardId);
+      const response = await api.delete(`/user/payment-methods/${cardId}`);
+      console.log('📥 Respuesta del servidor:', response.data);
+      if (response.data.success) {
+        showToast('Tarjeta eliminada', 'success');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await loadPaymentMethods();
+      } else {
+        showToast(response.data.error || 'Error al eliminar tarjeta', 'error');
+      }
+    } catch (error: any) {
+      console.error('❌ Error deleting card:', error);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      showToast(error.response?.data?.error || error.message || 'Error al eliminar tarjeta', 'error');
+    } finally {
+      setDeletingCardId(null);
+    }
   };
 
   const getBrandIcon = (brand: string) => {
@@ -188,10 +190,24 @@ export default function CustomerPaymentMethodsScreen() {
                   )}
                 </View>
                 <Pressable
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteCard(card.id)}
+                  style={({ pressed }) => [
+                    styles.deleteButton,
+                    { 
+                      backgroundColor: pressed ? AstroBarColors.errorLight : 'transparent',
+                      opacity: deletingCardId === card.id ? 0.6 : 1,
+                    }
+                  ]}
+                  onPress={() => {
+                    console.log('🖱️ Presionado botón eliminar para card:', card.id);
+                    setConfirmDeleteCardId(card.id);
+                  }}
+                  disabled={deletingCardId !== null}
                 >
-                  <Feather name="trash-2" size={18} color={AstroBarColors.error} />
+                  <Feather 
+                    name={deletingCardId === card.id ? 'loader' : 'trash-2'} 
+                    size={20} 
+                    color={AstroBarColors.error} 
+                  />
                 </Pressable>
               </View>
             ))}
@@ -262,6 +278,49 @@ export default function CustomerPaymentMethodsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={confirmDeleteCardId !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmDeleteCardId(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <View style={styles.modalHeader}>
+              <Feather name="alert-circle" size={32} color={AstroBarColors.error} />
+              <ThemedText type="h3" style={{ marginTop: Spacing.md }}>
+                Eliminar Tarjeta
+              </ThemedText>
+            </View>
+
+            <ThemedText type="body" style={{ textAlign: 'center', marginVertical: Spacing.lg, color: theme.textSecondary }}>
+              ¿Estás seguro de que deseas eliminar esta tarjeta? Esta acción no se puede deshacer.
+            </ThemedText>
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, { backgroundColor: theme.border }]}
+                onPress={() => setConfirmDeleteCardId(null)}
+              >
+                <ThemedText type="body" style={{ fontWeight: '600' }}>
+                  Cancelar
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalButton, { backgroundColor: AstroBarColors.error }]}
+                onPress={() => confirmDelete(confirmDeleteCardId!)}
+              >
+                <ThemedText type="body" style={{ fontWeight: '600', color: '#FFFFFF' }}>
+                  Eliminar
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -320,8 +379,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
   },
   deleteButton: {
-    padding: Spacing.sm,
+    padding: Spacing.md,
     marginLeft: Spacing.md,
+    borderRadius: BorderRadius.md,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   button: {
     flexDirection: 'row',
@@ -353,5 +417,31 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'flex-start',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    alignItems: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
   },
 });

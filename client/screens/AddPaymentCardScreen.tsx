@@ -46,28 +46,23 @@ export default function AddPaymentCardScreen() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
 
-    // Convertir año de 2 dígitos a 4 dígitos
     const fullYear = year < 100 ? 2000 + year : year;
 
-    // Validar que el año no sea del pasado
     if (fullYear < currentYear) {
       showToast('La tarjeta está vencida (año pasado)', 'error');
       return false;
     }
 
-    // Si es el año actual, validar que el mes no sea del pasado
     if (fullYear === currentYear && month < currentMonth) {
       showToast('La tarjeta está vencida (mes pasado)', 'error');
       return false;
     }
 
-    // Validar que el mes sea válido (1-12)
     if (month < 1 || month > 12) {
       showToast('Mes de vencimiento inválido (01-12)', 'error');
       return false;
     }
 
-    // Validar que no sea más de 20 años en el futuro (tarjetas típicamente duran 5-10 años)
     if (fullYear > currentYear + 20) {
       showToast('Fecha de vencimiento muy lejana', 'error');
       return false;
@@ -94,7 +89,6 @@ export default function AddPaymentCardScreen() {
       return false;
     }
 
-    // Validar fecha de vencimiento
     const [month, year] = expiryDate.split('/');
     if (!validateExpiryDate(parseInt(month), parseInt(year))) {
       return false;
@@ -111,6 +105,10 @@ export default function AddPaymentCardScreen() {
 
     try {
       const [month, year] = expiryDate.split('/');
+      
+      console.log('🔐 Tokenizando tarjeta con Mercado Pago...');
+      
+      // Enviar datos al backend para tokenizar con Mercado Pago
       const response = await api.post('/user/payment-methods', {
         cardNumber: cardNumber.replace(/\s/g, ''),
         cardholderName,
@@ -120,14 +118,18 @@ export default function AddPaymentCardScreen() {
         isDefault,
       });
 
+      console.log('✅ Respuesta del servidor:', response.data);
+
       if (response.data.success) {
         showToast('Tarjeta agregada exitosamente', 'success');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         navigation.goBack();
       } else {
         showToast(response.data.error || 'Error al agregar tarjeta', 'error');
       }
     } catch (error: any) {
-      showToast(error.message || 'Error al agregar tarjeta', 'error');
+      console.error('❌ Error:', error);
+      showToast(error.response?.data?.error || error.message || 'Error al agregar tarjeta', 'error');
     } finally {
       setLoading(false);
     }
@@ -260,7 +262,7 @@ export default function AddPaymentCardScreen() {
             </ThemedText>
             <ThemedText type="small" style={{ color: AstroBarColors.info, marginTop: Spacing.xs }}>
               • Encriptación de nivel bancario{'\n'}
-              • Procesado por Mercado Pago{'\n'}
+              • Tokenizado con Mercado Pago{'\n'}
               • Nunca guardamos tu CVV
             </ThemedText>
           </View>
