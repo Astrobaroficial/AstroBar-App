@@ -12,10 +12,12 @@ import MyBusinessesScreen from "@/screens/MyBusinessesScreen";
 import SupportScreen from "@/screens/SupportScreen";
 import TermsScreen from "@/screens/TermsScreen";
 import PrivacyScreen from "@/screens/PrivacyScreen";
-import BankAccountSetupScreen from "@/screens/BankAccountSetupScreen";
+import AddBankAccountScreen from "@/screens/AddBankAccountScreen";
 import PaymentHistoryScreen from "@/screens/PaymentHistoryScreen";
 import WithdrawalRequestScreen from "@/screens/WithdrawalRequestScreen";
 import MercadoPagoConnectScreen from "@/screens/MercadoPagoConnectScreen";
+import CustomerPaymentMethodsScreen from "@/screens/CustomerPaymentMethodsScreen";
+import AddPaymentCardScreen from "@/screens/AddPaymentCardScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type ProfileStackParamList = {
@@ -27,6 +29,8 @@ export type ProfileStackParamList = {
     onLocationSelected: (coords: { latitude: number; longitude: number }, address: string) => void;
   };
   PaymentMethods: undefined;
+  CustomerPaymentMethods: undefined;
+  AddPaymentCard: undefined;
   Wallet: undefined;
   MyBusinesses: undefined;
   Support: undefined;
@@ -80,6 +84,16 @@ export default function ProfileStackNavigator() {
         options={{ headerTitle: "Métodos de Pago", headerShown: false }}
       />
       <Stack.Screen
+        name="CustomerPaymentMethods"
+        component={CustomerPaymentMethodsScreen}
+        options={{ headerTitle: "Métodos de Pago", headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddPaymentCard"
+        component={AddPaymentCardScreen}
+        options={{ headerTitle: "Agregar Tarjeta", headerShown: false }}
+      />
+      <Stack.Screen
         name="Wallet"
         component={WalletScreen}
         options={{ headerTitle: "Mi Billetera" }}
@@ -106,7 +120,7 @@ export default function ProfileStackNavigator() {
       />
       <Stack.Screen
         name="BankAccountSetup"
-        component={BankAccountSetupScreen}
+        component={AddBankAccountScreen}
         options={{ headerTitle: "Configurar Cuenta" }}
       />
       <Stack.Screen
@@ -127,3 +141,4 @@ export default function ProfileStackNavigator() {
     </Stack.Navigator>
   );
 }
+

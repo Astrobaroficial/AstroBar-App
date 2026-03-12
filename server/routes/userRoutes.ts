@@ -250,6 +250,77 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
   }
 });
 
+// Get user payment methods
+router.get("/payment-methods", authenticateToken, async (req, res) => {
+  try {
+    // Por ahora retornamos una respuesta vacía
+    // En el futuro se conectará con Mercado Pago para obtener tarjetas guardadas
+    res.json({
+      success: true,
+      cards: [],
+      mpConnected: false,
+    });
+  } catch (error: any) {
+    console.error("Error loading payment methods:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add payment method (tarjeta)
+router.post("/payment-methods", authenticateToken, async (req, res) => {
+  try {
+    const { cardNumber, cardholderName, expiryMonth, expiryYear, cvv, isDefault } = req.body;
+
+    // Validar datos
+    if (!cardNumber || !cardholderName || !expiryMonth || !expiryYear || !cvv) {
+      return res.status(400).json({ error: "Faltan datos de la tarjeta" });
+    }
+
+    // Aquí se enviaría a Mercado Pago para tokenizar la tarjeta
+    // Por ahora solo retornamos éxito
+    console.log(`💳 Tarjeta agregada para usuario ${req.user!.id}:`, {
+      lastFourDigits: cardNumber.slice(-4),
+      cardholderName,
+      expiryMonth,
+      expiryYear,
+      isDefault,
+    });
+
+    res.json({
+      success: true,
+      message: "Tarjeta agregada exitosamente",
+      card: {
+        id: `card_${Date.now()}`,
+        lastFourDigits: cardNumber.slice(-4),
+        brand: 'Visa',
+        expiryMonth,
+        expiryYear,
+        isDefault,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error adding payment method:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete payment method
+router.delete("/payment-methods/:cardId", authenticateToken, async (req, res) => {
+  try {
+    const { cardId } = req.params;
+
+    console.log(`🗑️ Tarjeta eliminada para usuario ${req.user!.id}:`, cardId);
+
+    res.json({
+      success: true,
+      message: "Tarjeta eliminada",
+    });
+  } catch (error: any) {
+    console.error("Error deleting payment method:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get user notification preferences
 router.get("/notification-preferences", authenticateToken, async (req, res) => {
   try {

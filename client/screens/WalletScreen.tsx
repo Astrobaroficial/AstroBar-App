@@ -144,24 +144,46 @@ export default function WalletScreen() {
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
           <ThemedText type="h4" style={styles.sectionTitle}>Acciones Rápidas</ThemedText>
           
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: theme.border }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('MercadoPagoConnect' as any);
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
-              <Feather name="credit-card" size={20} color="#009EE3" />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Mercado Pago</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                {user?.role === 'customer' ? 'Gestionar métodos de pago' : 'Conectar cuenta para recibir pagos'}
-              </ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
+          {user?.role === 'customer' && (
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('CustomerPaymentMethods' as any);
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+                <Feather name="credit-card" size={20} color="#009EE3" />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Configurar Método de Pago</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  Agregar tarjeta para comprar promociones
+                </ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          )}
+          {user?.role !== 'customer' && (
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('MercadoPagoConnect' as any);
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+                <Feather name="credit-card" size={20} color="#009EE3" />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Mercado Pago</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  Conectar cuenta para recibir pagos
+                </ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          )}
 
           {user?.role !== 'customer' && (
             <Pressable
@@ -220,26 +242,7 @@ export default function WalletScreen() {
             </Pressable>
           )}
 
-          <Pressable
-            style={styles.actionItem}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate(user?.role === 'customer' ? 'MercadoPagoConnect' : 'MercadoPagoConnect' as any);
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.successLight }]}>
-              <Feather name="credit-card" size={20} color={AstroBarColors.success} />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">
-                {user?.role === 'customer' ? 'Tarjetas Guardadas' : 'Estado Mercado Pago'}
-              </ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                {user?.role === 'customer' ? 'Gestionar tarjetas de crédito/débito' : 'Verificar cuenta de pagos'}
-              </ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
+
         </View>
 
         {/* Info Card */}
