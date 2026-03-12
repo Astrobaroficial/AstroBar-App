@@ -12,16 +12,22 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
   BACKEND_URL: z.string().url("BACKEND_URL must be a valid URL"),
 
-  // Stripe (Required)
-  STRIPE_SECRET_KEY: z
+  // Mercado Pago (Required)
+  MERCADO_PAGO_ACCESS_TOKEN: z
     .string()
-    .startsWith("sk_", "STRIPE_SECRET_KEY must start with sk_"),
-  STRIPE_PUBLISHABLE_KEY: z
+    .min(1, "MERCADO_PAGO_ACCESS_TOKEN is required"),
+  MERCADO_PAGO_PUBLIC_KEY: z
     .string()
-    .startsWith("pk_", "STRIPE_PUBLISHABLE_KEY must start with pk_"),
-  STRIPE_WEBHOOK_SECRET: z
+    .min(1, "MERCADO_PAGO_PUBLIC_KEY is required"),
+  MERCADO_PAGO_CLIENT_ID: z
     .string()
-    .startsWith("whsec_", "STRIPE_WEBHOOK_SECRET must start with whsec_"),
+    .min(1, "MERCADO_PAGO_CLIENT_ID is required"),
+  MERCADO_PAGO_CLIENT_SECRET: z
+    .string()
+    .min(1, "MERCADO_PAGO_CLIENT_SECRET is required"),
+  MERCADO_PAGO_REDIRECT_URI: z
+    .string()
+    .url("MERCADO_PAGO_REDIRECT_URI must be a valid URL"),
 
   // Twilio (Required)
   TWILIO_ACCOUNT_SID: z
@@ -59,10 +65,10 @@ export function validateEnv(): Env {
       });
       console.error("\n📋 Required environment variables:");
       console.error(
-        "  DATABASE_URL, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY,",
+        "  DATABASE_URL, MERCADO_PAGO_ACCESS_TOKEN, MERCADO_PAGO_PUBLIC_KEY,",
       );
       console.error(
-        "  STRIPE_WEBHOOK_SECRET, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,",
+        "  MERCADO_PAGO_CLIENT_ID, MERCADO_PAGO_CLIENT_SECRET,",
       );
       console.error("  TWILIO_PHONE_NUMBER, TWILIO_VERIFY_SERVICE_SID,");
       console.error("  FRONTEND_URL, BACKEND_URL");
