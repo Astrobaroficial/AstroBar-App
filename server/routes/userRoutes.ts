@@ -293,6 +293,24 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Faltan datos de la tarjeta" });
     }
 
+    // Validar fecha de vencimiento
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const fullYear = expiryYear < 100 ? 2000 + expiryYear : expiryYear;
+
+    if (fullYear < currentYear || (fullYear === currentYear && expiryMonth < currentMonth)) {
+      return res.status(400).json({ error: "La tarjeta está vencida" });
+    }
+
+    if (expiryMonth < 1 || expiryMonth > 12) {
+      return res.status(400).json({ error: "Mes de vencimiento inválido" });
+    }
+
+    if (fullYear > currentYear + 20) {
+      return res.status(400).json({ error: "Fecha de vencimiento muy lejana" });
+    }
+
     // Detectar marca de tarjeta
     let brand = "Visa";
     if (cardNumber.startsWith("5")) brand = "Mastercard";

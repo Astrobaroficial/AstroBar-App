@@ -41,6 +41,41 @@ export default function AddPaymentCardScreen() {
     }
   };
 
+  const validateExpiryDate = (month: number, year: number): boolean => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // Convertir año de 2 dígitos a 4 dígitos
+    const fullYear = year < 100 ? 2000 + year : year;
+
+    // Validar que el año no sea del pasado
+    if (fullYear < currentYear) {
+      showToast('La tarjeta está vencida (año pasado)', 'error');
+      return false;
+    }
+
+    // Si es el año actual, validar que el mes no sea del pasado
+    if (fullYear === currentYear && month < currentMonth) {
+      showToast('La tarjeta está vencida (mes pasado)', 'error');
+      return false;
+    }
+
+    // Validar que el mes sea válido (1-12)
+    if (month < 1 || month > 12) {
+      showToast('Mes de vencimiento inválido (01-12)', 'error');
+      return false;
+    }
+
+    // Validar que no sea más de 20 años en el futuro (tarjetas típicamente duran 5-10 años)
+    if (fullYear > currentYear + 20) {
+      showToast('Fecha de vencimiento muy lejana', 'error');
+      return false;
+    }
+
+    return true;
+  };
+
   const validateCard = () => {
     if (!cardNumber.replace(/\s/g, '')) {
       showToast('Ingresa el número de tarjeta', 'error');
@@ -58,6 +93,13 @@ export default function AddPaymentCardScreen() {
       showToast('Ingresa el CVV', 'error');
       return false;
     }
+
+    // Validar fecha de vencimiento
+    const [month, year] = expiryDate.split('/');
+    if (!validateExpiryDate(parseInt(month), parseInt(year))) {
+      return false;
+    }
+
     return true;
   };
 
@@ -172,6 +214,9 @@ export default function AddPaymentCardScreen() {
                 maxLength={5}
                 editable={!loading}
               />
+              <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
+                Ej: 12/25 (Diciembre 2025)
+              </ThemedText>
             </View>
 
             <View style={[styles.formGroup, { flex: 1 }]}>
