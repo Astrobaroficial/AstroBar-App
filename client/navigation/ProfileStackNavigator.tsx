@@ -3,9 +3,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import ProfileScreen from "@/screens/ProfileScreen";
 import UserProfileStats from "@/screens/UserProfileStats";
-import SavedAddressesScreen from "@/screens/SavedAddressesScreen";
-import AddAddressScreen from "@/screens/AddAddressScreen";
-import LocationPickerScreen from "@/screens/LocationPickerScreen";
 import PaymentMethodsScreen from "@/screens/PaymentMethodsScreen";
 import WalletScreen from "@/screens/WalletScreen";
 import CustomerWalletScreen from "@/screens/CustomerWalletScreen";
@@ -25,11 +22,6 @@ import { useScreenOptions } from "@/hooks/useScreenOptions";
 export type ProfileStackParamList = {
   Profile: undefined;
   UserStats: undefined;
-  SavedAddresses: undefined;
-  AddAddress: { address?: any; fromCheckout?: boolean } | undefined;
-  LocationPicker: {
-    onLocationSelected: (coords: { latitude: number; longitude: number }, address: string) => void;
-  };
   PaymentMethods: undefined;
   CustomerPaymentMethods: undefined;
   AddPaymentCard: undefined;
@@ -66,21 +58,6 @@ export default function ProfileStackNavigator() {
         options={{
           headerTitle: "Mis Estadísticas",
         }}
-      />
-      <Stack.Screen
-        name="SavedAddresses"
-        component={SavedAddressesScreen}
-        options={{ headerTitle: "Direcciones Guardadas" }}
-      />
-      <Stack.Screen
-        name="AddAddress"
-        component={AddAddressScreen}
-        options={{ headerTitle: "Agregar Dirección" }}
-      />
-      <Stack.Screen
-        name="LocationPicker"
-        component={LocationPickerScreen}
-        options={{ headerTitle: "Seleccionar Ubicación" }}
       />
       <Stack.Screen
         name="PaymentMethods"
