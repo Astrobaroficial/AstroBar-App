@@ -56,7 +56,7 @@ export const securityHeaders = helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.stripe.com"],
+      connectSrc: ["'self'", "https://api.mercadopago.com"],
     },
   },
   hsts: {
