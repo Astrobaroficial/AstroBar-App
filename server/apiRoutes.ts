@@ -9,6 +9,7 @@ import adminPanelRoutes from "./routes/adminPanelRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import auditRoutes from "./routes/auditRoutes";
+import customerMercadopagoRoutes from "./routes/customerMercadopagoRoutes";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/admin/panel", adminPanelRoutes);
 router.use("/admin", adminRoutes);
 router.use("/", notificationRoutes);
 router.use("/admin", auditRoutes);
+router.use("/customer-mp", customerMercadopagoRoutes);
 
 export default router;
