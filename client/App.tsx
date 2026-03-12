@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Platform, View } from "react-native";
+import { StyleSheet, Platform, View, Linking } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -83,6 +83,34 @@ export default function App() {
     };
     
     initPushNotifications();
+  }, []);
+
+  // Deep linking handler para Mercado Pago
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      const url = event.url;
+      console.log('🔗 Deep link received:', url);
+      
+      if (url.includes('mp-connected')) {
+        const success = url.includes('success=true');
+        console.log(success ? '✅ MP conectado exitosamente' : '❌ Error al conectar MP');
+      } else if (url.includes('payment-success')) {
+        console.log('✅ Pago exitoso');
+      } else if (url.includes('payment-failure')) {
+        console.log('❌ Pago fallido');
+      } else if (url.includes('payment-pending')) {
+        console.log('⏳ Pago pendiente');
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Check initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {

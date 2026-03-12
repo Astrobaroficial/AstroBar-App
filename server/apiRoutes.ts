@@ -10,6 +10,7 @@ import adminRoutes from "./routes/adminRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import auditRoutes from "./routes/auditRoutes";
 import customerMercadopagoRoutes from "./routes/customerMercadopagoRoutes";
+import customerPaymentRoutes from "./routes/customerPaymentRoutes";
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use("/admin", adminRoutes);
 router.use("/", notificationRoutes);
 router.use("/admin", auditRoutes);
 router.use("/customer-mp", customerMercadopagoRoutes);
+router.use("/customer-payment", customerPaymentRoutes);
 
 export default router;

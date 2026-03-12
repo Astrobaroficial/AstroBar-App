@@ -103,7 +103,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen
         name="CustomerWallet"
         component={CustomerWalletScreen}
-        options={{ headerTitle: "Mi Billetera", headerShown: false }}
+        options={{ headerTitle: "Mi Billetera" }}
       />
       <Stack.Screen
         name="MyBusinesses"

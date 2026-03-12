@@ -40,7 +40,7 @@ export default function CustomerWalletScreen() {
 
   const loadMercadoPagoStatus = async () => {
     try {
-      const response = await apiRequest('GET', '/api/mp/status');
+      const response = await apiRequest('GET', '/api/customer-mp/status');
       const data = await response.json();
       if (data.success && data.connected) {
         setMpAccount(data);
@@ -59,7 +59,7 @@ export default function CustomerWalletScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setConnecting(true);
     try {
-      const response = await apiRequest('GET', '/api/mp/connect');
+      const response = await apiRequest('GET', '/api/customer-mp/connect');
       const data = await response.json();
       
       if (data.success && data.authUrl) {
@@ -88,7 +88,7 @@ export default function CustomerWalletScreen() {
     setShowDisconnectModal(false);
     
     try {
-      const response = await apiRequest('POST', '/api/mp/disconnect');
+      const response = await apiRequest('POST', '/api/customer-mp/disconnect');
       const data = await response.json();
       
       if (data.success) {

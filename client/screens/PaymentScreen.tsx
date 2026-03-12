@@ -79,7 +79,7 @@ export default function PaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/mp/create-payment", { 
+      const response = await apiRequest("POST", "/api/customer-payment/create-payment", { 
         transactionId: userPromotionId 
       });
       const data = await response.json();
