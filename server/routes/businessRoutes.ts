@@ -60,6 +60,56 @@ router.get("/products", authenticateToken, requireRole("business_owner"), async 
   }
 });
 
+// Get business hours
+router.get("/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    let schedules = [];
+    if (business.openingHours) {
+      try {
+        schedules = JSON.parse(business.openingHours);
+      } catch (e) {
+        schedules = [];
+      }
+    }
+
+    res.json({ success: true, schedules });
+  } catch (error: any) {
+    console.error('Get hours error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update business hours
+router.put("/hours", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { schedules } = req.body;
+    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    await db
+      .update(businesses)
+      .set({ 
+        openingHours: JSON.stringify(schedules),
+        updatedAt: new Date()
+      })
+      .where(eq(businesses.id, business.id));
+
+    console.log(`🕐 Horarios actualizados para ${business.name}`);
+    res.json({ success: true, message: "Horarios guardados correctamente" });
+  } catch (error: any) {
+    console.error('Update hours error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Dashboard route (PROTECTED - debe ir antes de /:id)
 router.get("/dashboard", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
