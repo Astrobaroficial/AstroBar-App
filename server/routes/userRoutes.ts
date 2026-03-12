@@ -307,15 +307,16 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
         .where(eq(paymentCards.userId, req.user!.id));
     }
 
-    // Guardar tarjeta
+    // Guardar tarjeta (guardar solo últimos 2 dígitos del año)
     const cardId = `card_${Date.now()}`;
+    const yearToStore = expiryYear > 100 ? expiryYear % 100 : expiryYear;
     await db.insert(paymentCards).values({
       id: cardId,
       userId: req.user!.id,
       lastFourDigits,
       brand,
       expiryMonth,
-      expiryYear,
+      expiryYear: yearToStore,
       isDefault,
       isActive: true,
     });
@@ -336,7 +337,7 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
         lastFourDigits,
         brand,
         expiryMonth,
-        expiryYear,
+        expiryYear: yearToStore,
         isDefault,
       },
     });

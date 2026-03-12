@@ -176,7 +176,7 @@ export default function CustomerPaymentMethodsScreen() {
                       {card.brand} •••• {card.lastFourDigits}
                     </ThemedText>
                     <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                      Vence {card.expiryMonth}/{card.expiryYear}
+                      Vence {card.expiryMonth}/20{String(card.expiryYear).padStart(2, '0')}
                     </ThemedText>
                   </View>
                   {card.isDefault && (
