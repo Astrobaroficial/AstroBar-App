@@ -617,6 +617,13 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     const promotionId = req.params.id;
     const userRole = req.user!.role;
+    const userId = req.user!.id;
+
+    console.log('🗑️ DELETE PROMOTION REQUEST:', {
+      promotionId,
+      userId,
+      userRole
+    });
 
     const [promotion] = await db
       .select()
@@ -625,11 +632,21 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       .limit(1);
 
     if (!promotion) {
+      console.error('❌ Promotion not found:', promotionId);
       return res.status(404).json({ error: "Promoción no encontrada" });
     }
 
+    console.log('📋 Promotion found:', {
+      id: promotion.id,
+      title: promotion.title,
+      type: promotion.type,
+      businessId: promotion.businessId,
+      isActive: promotion.isActive
+    });
+
     // Admin can delete any promotion
     if (userRole === 'admin' || userRole === 'super_admin') {
+      console.log('✅ Admin deleting promotion');
       await db
         .delete(promotions)
         .where(eq(promotions.id, promotionId));
@@ -638,21 +655,27 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     // Business owner can only delete their own promotions
     if (userRole === 'business_owner') {
+      console.log('🏢 Business owner attempting to delete');
       const [business] = await db
         .select()
         .from(businesses)
         .where(
           and(
             eq(businesses.id, promotion.businessId),
-            eq(businesses.ownerId, req.user!.id)
+            eq(businesses.ownerId, userId)
           )
         )
         .limit(1);
 
       if (!business) {
+        console.error('❌ Business not found or not owned by user:', {
+          businessId: promotion.businessId,
+          userId
+        });
         return res.status(403).json({ error: "No tienes acceso a esta promoción" });
       }
 
+      console.log('✅ Business owner verified, deleting promotion');
       // Business owner can delete any of their promotions (active or expired)
       await db
         .delete(promotions)
@@ -660,9 +683,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       return res.json({ success: true, message: "Promoción eliminada" });
     }
 
+    console.error('❌ User does not have permission:', { userRole });
     return res.status(403).json({ error: "No tienes permiso para eliminar promociones" });
   } catch (error: any) {
-    console.error("Error deleting promotion:", error);
+    console.error("❌ Error deleting promotion:", error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -392,6 +392,64 @@ router.get("/revenue/stats", authenticateToken, requireRole("admin", "super_admi
   }
 });
 
+// Get wallet stats for admin
+router.get("/wallet-stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    
+    // Total de comisiones (ingresos de la plataforma) - INCLUYE pending porque ya está pagado
+    const totalResult = await db.execute(sql`
+      SELECT 
+        SUM(platform_commission) as totalEarnings,
+        COUNT(*) as totalTransactions
+      FROM promotion_transactions
+      WHERE status IN ('redeemed', 'pending')
+    `);
+    const total = Array.isArray(totalResult[0]) ? totalResult[0][0] : totalResult[0];
+    
+    // Comisiones de este mes
+    const monthResult = await db.execute(sql`
+      SELECT SUM(platform_commission) as thisMonthEarnings
+      FROM promotion_transactions
+      WHERE status IN ('redeemed', 'pending')
+        AND MONTH(created_at) = MONTH(CURRENT_DATE())
+        AND YEAR(created_at) = YEAR(CURRENT_DATE())
+    `);
+    const month = Array.isArray(monthResult[0]) ? monthResult[0][0] : monthResult[0];
+    
+    // Pagos pendientes de entrega (transacciones pending)
+    const pendingResult = await db.execute(sql`
+      SELECT SUM(platform_commission) as pendingPayouts
+      FROM promotion_transactions
+      WHERE status = 'pending'
+    `);
+    const pending = Array.isArray(pendingResult[0]) ? pendingResult[0][0] : pendingResult[0];
+    
+    // Comisión promedio
+    const commissionResult = await db.execute(sql`
+      SELECT AVG(platform_commission / amount_paid * 100) as avgCommission
+      FROM promotion_transactions
+      WHERE status IN ('redeemed', 'pending') AND amount_paid > 0
+    `);
+    const commission = Array.isArray(commissionResult[0]) ? commissionResult[0][0] : commissionResult[0];
+    
+    res.json({
+      success: true,
+      stats: {
+        totalEarnings: Number(total?.totalEarnings || 0),
+        thisMonthEarnings: Number(month?.thisMonthEarnings || 0),
+        totalTransactions: Number(total?.totalTransactions || 0),
+        pendingPayouts: Number(pending?.pendingPayouts || 0),
+        platformCommission: Number(commission?.avgCommission || 0).toFixed(1),
+        averageOrderValue: 0, // No usado en admin wallet
+      },
+    });
+  } catch (error: any) {
+    console.error('Admin wallet stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get payment stats for admin panel
 router.get("/payment-stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {

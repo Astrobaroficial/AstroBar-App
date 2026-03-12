@@ -709,6 +709,26 @@ export const mercadopagoAccounts = mysqlTable("mercadopago_accounts", {
 
 export type MercadoPagoAccount = typeof mercadopagoAccounts.$inferSelect;
 
+// Customer Mercado Pago Accounts - Cuentas MP de clientes para pagar
+export const customerMercadopagoAccounts = mysqlTable("customer_mercadopago_accounts", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`(UUID())`),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  mpUserId: varchar("mp_user_id", { length: 255 }).notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  publicKey: varchar("public_key", { length: 255 }),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(
+    sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+  ),
+});
+
+export type CustomerMercadoPagoAccount = typeof customerMercadopagoAccounts.$inferSelect;
+
 // Payment Cards - Tarjetas de crédito/débito guardadas de clientes
 export const paymentCards = mysqlTable("payment_cards", {
   id: varchar("id", { length: 255 })

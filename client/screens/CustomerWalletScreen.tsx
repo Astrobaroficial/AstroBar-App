@@ -19,6 +19,16 @@ interface MercadoPagoAccount {
   connectedAt: string;
 }
 
+interface Transaction {
+  id: string;
+  promotionTitle: string;
+  businessName: string;
+  amountPaid: number;
+  status: string;
+  createdAt: string;
+  redeemedAt: string | null;
+}
+
 export default function CustomerWalletScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -27,14 +37,19 @@ export default function CustomerWalletScreen() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [filterTab, setFilterTab] = useState<'all' | 'completed' | 'pending'>('all');
 
   useEffect(() => {
     loadMercadoPagoStatus();
+    loadTransactions();
   }, []);
 
   useFocusEffect(
     React.useCallback(() => {
       loadMercadoPagoStatus();
+      loadTransactions();
     }, [])
   );
 
@@ -54,6 +69,25 @@ export default function CustomerWalletScreen() {
       setLoading(false);
     }
   };
+
+  const loadTransactions = async () => {
+    setLoadingTransactions(true);
+    try {
+      const response = await apiRequest('GET', `/api/user/payment-history?filter=${filterTab}`);
+      const data = await response.json();
+      if (data.success) {
+        setTransactions(data.transactions || []);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [filterTab]);
 
   const handleConnectMercadoPago = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -210,98 +244,178 @@ export default function CustomerWalletScreen() {
           )}
         </Pressable>
 
-        {/* Info Section */}
+        {/* Compact Info */}
+        <View style={[styles.compactInfo, { backgroundColor: theme.card }, Shadows.sm]}>
+          <ThemedText type="body" style={{ color: theme.textSecondary, lineHeight: 20 }}>
+            💳 Vincula tu cuenta • 🛒 Compra promociones • 📱 Recibe QR • 🏆 Gana puntos
+          </ThemedText>
+        </View>
+
+        {/* Stats Summary */}
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
-          <ThemedText type="h4" style={styles.sectionTitle}>¿Cómo funciona?</ThemedText>
-          
-          <View style={styles.stepItem}>
-            <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.primaryLight }]}>
-              <ThemedText type="body" style={{ color: AstroBarColors.primary, fontWeight: '600' }}>
-                1
-              </ThemedText>
-            </View>
-            <View style={styles.stepContent}>
-              <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Vincula tu Cuenta
+          <ThemedText type="h4" style={styles.sectionTitle}>📊 Resumen</ThemedText>
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <ThemedText type="h3" style={{ color: AstroBarColors.primary }}>
+                ${transactions.reduce((sum, t) => sum + t.amountPaid, 0).toLocaleString('es-AR')}
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-                Conecta tu cuenta de Mercado Pago de forma segura
+                Total Gastado
               </ThemedText>
             </View>
-          </View>
-
-          <View style={styles.stepItem}>
-            <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.successLight }]}>
-              <ThemedText type="body" style={{ color: AstroBarColors.success, fontWeight: '600' }}>
-                2
-              </ThemedText>
-            </View>
-            <View style={styles.stepContent}>
-              <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Compra Promociones
+            <View style={styles.statItem}>
+              <ThemedText type="h3" style={{ color: AstroBarColors.success }}>
+                {transactions.filter(t => t.status === 'redeemed').length}
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-                Agrega promociones al carrito y paga directamente
+                Completadas
               </ThemedText>
             </View>
-          </View>
-
-          <View style={styles.stepItem}>
-            <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.infoLight }]}>
-              <ThemedText type="body" style={{ color: AstroBarColors.info, fontWeight: '600' }}>
-                3
-              </ThemedText>
-            </View>
-            <View style={styles.stepContent}>
-              <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Recibe tu QR
+            <View style={styles.statItem}>
+              <ThemedText type="h3" style={{ color: AstroBarColors.warning }}>
+                {transactions.filter(t => t.status === 'pending').length}
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-                Canjea tu promoción en el bar con el código QR
+                Pendientes
               </ThemedText>
             </View>
           </View>
         </View>
 
-        {/* Benefits */}
+        {/* Transaction History */}
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
-          <ThemedText type="h4" style={styles.sectionTitle}>Beneficios</ThemedText>
+          <ThemedText type="h4" style={styles.sectionTitle}>📜 Historial de Pagos</ThemedText>
           
-          <View style={styles.benefitItem}>
-            <View style={[styles.benefitIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
-              <Feather name="shield" size={20} color={AstroBarColors.primary} />
-            </View>
-            <View style={styles.benefitContent}>
-              <ThemedText type="body">Pagos Seguros</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Encriptación de nivel bancario
+          {/* Filter Tabs */}
+          <View style={styles.filterTabs}>
+            <Pressable
+              style={[
+                styles.filterTab,
+                filterTab === 'all' && { backgroundColor: AstroBarColors.primary },
+              ]}
+              onPress={() => {
+                setFilterTab('all');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <ThemedText
+                type="small"
+                style={{
+                  color: filterTab === 'all' ? '#FFFFFF' : theme.textSecondary,
+                  fontWeight: filterTab === 'all' ? '600' : '400',
+                }}
+              >
+                Todas
               </ThemedText>
-            </View>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.filterTab,
+                filterTab === 'completed' && { backgroundColor: AstroBarColors.success },
+              ]}
+              onPress={() => {
+                setFilterTab('completed');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <ThemedText
+                type="small"
+                style={{
+                  color: filterTab === 'completed' ? '#FFFFFF' : theme.textSecondary,
+                  fontWeight: filterTab === 'completed' ? '600' : '400',
+                }}
+              >
+                Completadas
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.filterTab,
+                filterTab === 'pending' && { backgroundColor: AstroBarColors.warning },
+              ]}
+              onPress={() => {
+                setFilterTab('pending');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <ThemedText
+                type="small"
+                style={{
+                  color: filterTab === 'pending' ? '#FFFFFF' : theme.textSecondary,
+                  fontWeight: filterTab === 'pending' ? '600' : '400',
+                }}
+              >
+                Pendientes
+              </ThemedText>
+            </Pressable>
           </View>
 
-          <View style={styles.benefitItem}>
-            <View style={[styles.benefitIcon, { backgroundColor: AstroBarColors.successLight }]}>
-              <Feather name="zap" size={20} color={AstroBarColors.success} />
+          {/* Transactions List */}
+          {loadingTransactions ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="small" color={AstroBarColors.primary} />
             </View>
-            <View style={styles.benefitContent}>
-              <ThemedText type="body">Pagos Instantáneos</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Compra sin esperas
+          ) : transactions.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Feather name="inbox" size={48} color={theme.textSecondary} style={{ opacity: 0.3 }} />
+              <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.md }}>
+                No hay transacciones
               </ThemedText>
             </View>
-          </View>
-
-          <View style={styles.benefitItem}>
-            <View style={[styles.benefitIcon, { backgroundColor: AstroBarColors.infoLight }]}>
-              <Feather name="gift" size={20} color={AstroBarColors.info} />
-            </View>
-            <View style={styles.benefitContent}>
-              <ThemedText type="body">Gana Puntos</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                +10 puntos por promoción canjeada
-              </ThemedText>
-            </View>
-          </View>
+          ) : (
+            transactions.map((transaction) => (
+              <View key={transaction.id} style={[styles.transactionItem, { borderBottomColor: theme.border }]}>
+                <View style={styles.transactionHeader}>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="body" style={{ fontWeight: '600' }}>
+                      {transaction.promotionTitle}
+                    </ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
+                      {transaction.businessName}
+                    </ThemedText>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <ThemedText type="body" style={{ fontWeight: '600', color: AstroBarColors.primary }}>
+                      ${transaction.amountPaid.toLocaleString('es-AR')}
+                    </ThemedText>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor:
+                            transaction.status === 'redeemed'
+                              ? AstroBarColors.successLight
+                              : AstroBarColors.warningLight,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        type="small"
+                        style={{
+                          color:
+                            transaction.status === 'redeemed'
+                              ? AstroBarColors.success
+                              : AstroBarColors.warning,
+                          fontWeight: '600',
+                        }}
+                      >
+                        {transaction.status === 'redeemed' ? 'Entregado' : 'Pendiente Entrega'}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
+                  {new Date(transaction.createdAt).toLocaleDateString('es-AR', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </ThemedText>
+              </View>
+            ))
+          )}
         </View>
 
         {/* Info Card */}
@@ -417,39 +531,54 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.sm,
   },
-  stepItem: {
+  compactInfo: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  filterTabs: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  filterTab: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  transactionItem: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  transactionHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
   },
-  stepNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+    marginTop: Spacing.xs,
+  },
+  emptyState: {
+    paddingVertical: Spacing.xl * 2,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  benefitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-  },
-  benefitIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  benefitContent: {
-    flex: 1,
-    marginLeft: Spacing.md,
   },
   infoCard: {
     flexDirection: 'row',

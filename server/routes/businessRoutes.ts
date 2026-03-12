@@ -559,6 +559,63 @@ router.get("/commission-info", authenticateToken, requireRole("business_owner"),
     res.status(500).json({ error: error.message });
   }
 });
+
+// Payment history endpoint (PROTECTED - debe ir antes de /:id)
+router.get("/payment-history", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { filter } = req.query;
+    const { sql } = await import("drizzle-orm");
+    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    if (userBusinesses.length === 0) {
+      return res.json({ success: true, transactions: [] });
+    }
+    const businessIds = userBusinesses.map(b => b.id);
+    const { inArray } = await import("drizzle-orm");
+    
+    let query = sql`
+      SELECT 
+        pt.id,
+        pt.status,
+        pt.business_revenue,
+        pt.created_at,
+        p.title as promotion_title,
+        u.name as customer_name,
+        b.name as business_name
+      FROM promotion_transactions pt
+      LEFT JOIN promotions p ON pt.promotion_id = p.id
+      LEFT JOIN users u ON pt.user_id = u.id
+      LEFT JOIN businesses b ON pt.business_id = b.id
+      WHERE pt.business_id IN (${sql.join(businessIds.map(id => sql`${id}`), sql`, `)})
+    `;
+    
+    if (filter === 'sales') {
+      query = sql`${query} AND pt.status = 'redeemed'`;
+    } else if (filter === 'pending') {
+      query = sql`${query} AND pt.status = 'pending'`;
+    }
+    
+    query = sql`${query} ORDER BY pt.created_at DESC`;
+    
+    const result: any = await db.execute(query);
+    const allTransactions = Array.isArray(result[0]) ? result[0] : result;
+    
+    const mapped = allTransactions.map((t: any) => ({
+      id: t.id,
+      status: t.status,
+      businessRevenue: t.business_revenue || 0,
+      createdAt: t.created_at,
+      promotionTitle: t.promotion_title || 'Promoción',
+      customerName: t.customer_name || 'Cliente',
+      businessName: t.business_name || 'Bar'
+    }));
+    
+    res.json({ success: true, transactions: mapped });
+  } catch (error: any) {
+    console.error('Payment history error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get("/", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
@@ -767,6 +824,25 @@ router.post("/products", authenticateToken, requireRole("business_owner"), async
   }
 });
 
+// Update business settings (isOpen toggle)
+router.put("/settings", authenticateToken, requireRole("business_owner"), async (req, res) => {
+  try {
+    const { isOpen } = req.body;
+    
+    let [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+    
+    await db.update(businesses).set({ isActive: isOpen, updatedAt: new Date() }).where(eq(businesses.id, business.id));
+    
+    res.json({ success: true, isOpen });
+  } catch (error: any) {
+    console.error('Update settings error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update business route
 router.put("/:id", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
@@ -928,4 +1004,4 @@ router.get("/:id/future-promotions", async (req, res) => {
   }
 });
 
-export default router;
+export default router

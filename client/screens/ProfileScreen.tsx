@@ -525,7 +525,7 @@ export default function ProfileScreen() {
                 label="Mi Billetera"
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate("Wallet");
+                  navigation.navigate("PaymentHistory");
                 }}
               />
             </>
@@ -537,7 +537,7 @@ export default function ProfileScreen() {
               value="Ingresos y comisiones"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("Wallet" as any);
+                navigation.navigate("Wallet");
               }}
             />
           )}

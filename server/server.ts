@@ -126,6 +126,11 @@ import mercadopagoRoutes from './routes/mercadopagoRoutes';
 
 app.use('/api/mp', mercadopagoRoutes);
 
+// Customer Mercado Pago routes
+import customerMercadopagoRoutes from './routes/customerMercadopagoRoutes';
+
+app.use('/api/customer-mp', customerMercadopagoRoutes);
+
 // Webhook routes
 import webhookRoutes from './routes/webhookRoutes';
 

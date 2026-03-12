@@ -7,6 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { Badge } from '@/components/Badge';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
 import { apiRequest } from '@/lib/query-client';
@@ -25,11 +26,12 @@ interface Transaction {
 export default function PaymentHistoryScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'sales' | 'payouts'>('all');
+  const [filter, setFilter] = useState<'all' | 'sales' | 'pending'>('all');
 
   useEffect(() => {
     loadTransactions();
@@ -37,10 +39,25 @@ export default function PaymentHistoryScreen() {
 
   const loadTransactions = async () => {
     try {
-      const response = await apiRequest('GET', `/api/business/payment-history?filter=${filter}`);
+      // Usar endpoint correcto según el rol
+      const endpoint = (user?.role === 'admin' || user?.role === 'super_admin')
+        ? `/api/admin/transactions?filter=${filter}`
+        : `/api/business/payment-history?filter=${filter}`;
+      
+      const response = await apiRequest('GET', endpoint);
       const data = await response.json();
       if (data.success) {
-        setTransactions(data.transactions);
+        const mapped = data.transactions.map((t: any) => ({
+          id: t.id,
+          type: 'promotion_sale',
+          amount: t.businessRevenue || t.platformCommission || 0,
+          status: t.status === 'redeemed' ? 'completed' : t.status,
+          description: `${t.business?.name || t.businessName || 'Bar'} - ${t.promotion?.title || t.promotionTitle || 'Promoción'}`,
+          createdAt: t.createdAt,
+          promotionTitle: t.promotion?.title || t.promotionTitle,
+          customerName: t.user?.name || t.customerName
+        }));
+        setTransactions(mapped);
       }
     } catch (error) {
       showToast('Error al cargar historial', 'error');
@@ -92,16 +109,18 @@ export default function PaymentHistoryScreen() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed': return 'Completado';
-      case 'pending': return 'Pendiente';
+      case 'completed': return 'Entregado';
+      case 'redeemed': return 'Entregado';
+      case 'pending': return 'Pagado - Pendiente de entrega';
       case 'failed': return 'Fallido';
+      case 'cancelled': return 'Cancelado';
       default: return status;
     }
   };
 
   const filteredTransactions = transactions.filter(t => {
-    if (filter === 'sales') return t.type === 'promotion_sale';
-    if (filter === 'payouts') return t.type === 'payout';
+    if (filter === 'sales') return t.status === 'completed' || t.status === 'redeemed';
+    if (filter === 'pending') return t.status === 'pending';
     return true;
   });
 
@@ -124,8 +143,8 @@ export default function PaymentHistoryScreen() {
         <View style={[styles.filterTabs, { backgroundColor: theme.card }, Shadows.sm]}>
           {[
             { key: 'all', label: 'Todos' },
-            { key: 'sales', label: 'Ventas' },
-            { key: 'payouts', label: 'Retiros' }
+            { key: 'sales', label: 'Entregados' },
+            { key: 'pending', label: 'Pendientes' }
           ].map((tab) => (
             <Pressable
               key={tab.key}
@@ -164,7 +183,9 @@ export default function PaymentHistoryScreen() {
               Sin transacciones
             </ThemedText>
             <ThemedText type="body" style={{ color: theme.textSecondary, textAlign: 'center' }}>
-              Aquí aparecerán tus ventas y retiros
+              {filter === 'sales' ? 'Aquí aparecerán los productos entregados' :
+               filter === 'pending' ? 'Aquí aparecerán los pagos pendientes de entrega' :
+               'Aquí aparecerá tu historial de ventas'}
             </ThemedText>
           </View>
         ) : (
@@ -214,12 +235,18 @@ export default function PaymentHistoryScreen() {
                     <Badge
                       text={getStatusText(transaction.status)}
                       variant={
-                        transaction.status === 'completed' ? 'success' :
-                        transaction.status === 'pending' ? 'warning' : 'error'
+                        transaction.status === 'completed' || transaction.status === 'redeemed' ? 'success' :
+                        transaction.status === 'pending' ? 'info' : 'error'
                       }
                       size="small"
                     />
                   </View>
+
+                  {transaction.status === 'pending' && (
+                    <ThemedText type="small" style={{ color: AstroBarColors.success, marginTop: Spacing.xs, fontWeight: '600' }}>
+                      ✓ Pago confirmado - Esperando entrega del producto
+                    </ThemedText>
+                  )}
 
                   {transaction.promotionTitle && (
                     <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>

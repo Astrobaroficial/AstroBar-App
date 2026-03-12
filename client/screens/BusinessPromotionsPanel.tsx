@@ -87,6 +87,33 @@ export default function BusinessPromotionsPanel() {
   };
 
   const deletePromotion = async (id: string, title: string) => {
+    // Para web, usar confirm nativo
+    if (typeof window !== 'undefined' && window.confirm) {
+      const confirmed = window.confirm(`¿Estás seguro de eliminar "${title}"?`);
+      if (!confirmed) return;
+      
+      try {
+        console.log('🗑️ Eliminando promoción:', id);
+        const response = await apiRequest('DELETE', `/api/promotions/${id}`);
+        console.log('📡 Response status:', response.status);
+        const result = await response.json();
+        console.log('📦 Response data:', result);
+        
+        if (result.success) {
+          loadPromotions();
+          window.alert('Promoción eliminada exitosamente');
+        } else {
+          console.error('❌ Error en respuesta:', result.error);
+          window.alert('Error: ' + (result.error || 'Error al eliminar'));
+        }
+      } catch (error: any) {
+        console.error('❌ Error al eliminar promoción:', error);
+        window.alert('Error: ' + (error.message || 'Error al eliminar promoción'));
+      }
+      return;
+    }
+    
+    // Para móvil, usar Alert.alert
     Alert.alert(
       'Eliminar promoción',
       `¿Estás seguro de eliminar "${title}"?`,
@@ -97,17 +124,22 @@ export default function BusinessPromotionsPanel() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('🗑️ Eliminando promoción:', id);
               const response = await apiRequest('DELETE', `/api/promotions/${id}`);
+              console.log('📡 Response status:', response.status);
               const result = await response.json();
+              console.log('📦 Response data:', result);
               
               if (result.success) {
                 loadPromotions();
                 Alert.alert('Éxito', 'Promoción eliminada');
               } else {
+                console.error('❌ Error en respuesta:', result.error);
                 Alert.alert('Error', result.error || 'Error al eliminar');
               }
             } catch (error: any) {
-              Alert.alert('Error', 'Error al eliminar promoción');
+              console.error('❌ Error al eliminar promoción:', error);
+              Alert.alert('Error', error.message || 'Error al eliminar promoción');
             }
           }
         }
@@ -166,14 +198,12 @@ export default function BusinessPromotionsPanel() {
                 />
               </TouchableOpacity>
             )}
-            {isExpired && (
-              <TouchableOpacity
-                onPress={() => deletePromotion(item.id, item.title)}
-                style={[styles.statusBtn, { backgroundColor: '#EF4444' }]}
-              >
-                <Ionicons name="trash" size={16} color="#FFF" />
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              onPress={() => deletePromotion(item.id, item.title)}
+              style={[styles.statusBtn, { backgroundColor: '#EF4444' }]}
+            >
+              <Ionicons name="trash" size={16} color="#FFF" />
+            </TouchableOpacity>
           </View>
         </View>
 

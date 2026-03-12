@@ -432,6 +432,49 @@ router.get("/notification-preferences", authenticateToken, async (req, res) => {
   }
 });
 
+// Get payment history for customer
+router.get("/payment-history", authenticateToken, async (req, res) => {
+  try {
+    const { filter } = req.query;
+    const { promotionTransactions, promotions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and, sql } = await import("drizzle-orm");
+
+    const userId = req.user!.id;
+
+    // Build query with JOINs
+    const result: any = await db.execute(sql`
+      SELECT 
+        pt.id,
+        pt.amount_paid as amountPaid,
+        pt.platform_commission as platformCommission,
+        pt.business_revenue as businessRevenue,
+        pt.status,
+        pt.created_at as createdAt,
+        pt.redeemed_at as redeemedAt,
+        p.title as promotionTitle,
+        b.name as businessName
+      FROM promotion_transactions pt
+      LEFT JOIN promotions p ON pt.promotion_id = p.id
+      LEFT JOIN businesses b ON pt.business_id = b.id
+      WHERE pt.user_id = ${userId}
+      ${
+        filter === 'completed' ? sql`AND pt.status = 'redeemed'` :
+        filter === 'pending' ? sql`AND pt.status = 'pending'` :
+        sql``
+      }
+      ORDER BY pt.created_at DESC
+    `);
+
+    const transactions = Array.isArray(result[0]) ? result[0] : result;
+
+    res.json({ success: true, transactions });
+  } catch (error: any) {
+    console.error("Error loading payment history:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update user notification preferences
 router.put("/notification-preferences", authenticateToken, async (req, res) => {
   try {

@@ -8,7 +8,7 @@ import AdminOperations from "@/screens/AdminOperations";
 import AdminSettings from "@/screens/AdminSettings";
 import HeatmapScreen from "@/screens/HeatmapScreen";
 import RankingScreen from "@/screens/RankingScreen";
-import ProfileScreen from "@/screens/ProfileScreen";
+import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { AstroBarColors } from "@/constants/theme";
 
@@ -76,9 +76,10 @@ export default function AdminTabNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           title: "Perfil",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="user" size={size} color={color} />
           ),
