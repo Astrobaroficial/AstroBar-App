@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -31,10 +31,17 @@ export default function CustomerPaymentMethodsScreen() {
   const [cards, setCards] = useState<PaymentCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [mpConnected, setMpConnected] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadPaymentMethods();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPaymentMethods();
+    }, [])
+  );
 
   const loadPaymentMethods = async () => {
     try {

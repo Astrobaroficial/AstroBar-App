@@ -240,7 +240,7 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
         pendingPayouts,
         thisMonthEarnings,
         totalTransactions,
-        platformCommission: 0.10, // 10% for display
+        platformCommission: 0.10,
         averageOrderValue: totalTransactions > 0 ? totalEarnings / totalTransactions : 0,
       },
     });
@@ -253,12 +253,26 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
 // Get user payment methods
 router.get("/payment-methods", authenticateToken, async (req, res) => {
   try {
-    // Por ahora retornamos una respuesta vacía
-    // En el futuro se conectará con Mercado Pago para obtener tarjetas guardadas
+    const { paymentCards } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
+
+    const cards = await db
+      .select({
+        id: paymentCards.id,
+        lastFourDigits: paymentCards.lastFourDigits,
+        brand: paymentCards.brand,
+        expiryMonth: paymentCards.expiryMonth,
+        expiryYear: paymentCards.expiryYear,
+        isDefault: paymentCards.isDefault,
+      })
+      .from(paymentCards)
+      .where(eq(paymentCards.userId, req.user!.id));
+
     res.json({
       success: true,
-      cards: [],
-      mpConnected: false,
+      cards,
+      mpConnected: cards.length > 0,
     });
   } catch (error: any) {
     console.error("Error loading payment methods:", error);
@@ -269,6 +283,9 @@ router.get("/payment-methods", authenticateToken, async (req, res) => {
 // Add payment method (tarjeta)
 router.post("/payment-methods", authenticateToken, async (req, res) => {
   try {
+    const { paymentCards } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq } = await import("drizzle-orm");
     const { cardNumber, cardholderName, expiryMonth, expiryYear, cvv, isDefault } = req.body;
 
     // Validar datos
@@ -276,11 +293,36 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Faltan datos de la tarjeta" });
     }
 
-    // Aquí se enviaría a Mercado Pago para tokenizar la tarjeta
-    // Por ahora solo retornamos éxito
+    // Detectar marca de tarjeta
+    let brand = "Visa";
+    if (cardNumber.startsWith("5")) brand = "Mastercard";
+    else if (cardNumber.startsWith("3")) brand = "Amex";
+
+    const lastFourDigits = cardNumber.slice(-4);
+
+    // Si es predeterminada, desmarcar las otras
+    if (isDefault) {
+      await db.update(paymentCards)
+        .set({ isDefault: false })
+        .where(eq(paymentCards.userId, req.user!.id));
+    }
+
+    // Guardar tarjeta
+    const cardId = `card_${Date.now()}`;
+    await db.insert(paymentCards).values({
+      id: cardId,
+      userId: req.user!.id,
+      lastFourDigits,
+      brand,
+      expiryMonth,
+      expiryYear,
+      isDefault,
+      isActive: true,
+    });
+
     console.log(`💳 Tarjeta agregada para usuario ${req.user!.id}:`, {
-      lastFourDigits: cardNumber.slice(-4),
-      cardholderName,
+      lastFourDigits,
+      brand,
       expiryMonth,
       expiryYear,
       isDefault,
@@ -290,9 +332,9 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       success: true,
       message: "Tarjeta agregada exitosamente",
       card: {
-        id: `card_${Date.now()}`,
-        lastFourDigits: cardNumber.slice(-4),
-        brand: 'Visa',
+        id: cardId,
+        lastFourDigits,
+        brand,
         expiryMonth,
         expiryYear,
         isDefault,
@@ -307,7 +349,18 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
 // Delete payment method
 router.delete("/payment-methods/:cardId", authenticateToken, async (req, res) => {
   try {
+    const { paymentCards } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and } = await import("drizzle-orm");
     const { cardId } = req.params;
+
+    await db.delete(paymentCards)
+      .where(
+        and(
+          eq(paymentCards.id, cardId),
+          eq(paymentCards.userId, req.user!.id)
+        )
+      );
 
     console.log(`🗑️ Tarjeta eliminada para usuario ${req.user!.id}:`, cardId);
 
@@ -373,4 +426,5 @@ router.put("/notification-preferences", authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 export default router;
