@@ -12,22 +12,27 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
   BACKEND_URL: z.string().url("BACKEND_URL must be a valid URL"),
 
-  // Mercado Pago (Required)
+  // Mercado Pago (Optional in development, Required in production)
   MERCADO_PAGO_ACCESS_TOKEN: z
     .string()
-    .min(1, "MERCADO_PAGO_ACCESS_TOKEN is required"),
+    .min(1, "MERCADO_PAGO_ACCESS_TOKEN is required")
+    .optional(),
   MERCADO_PAGO_PUBLIC_KEY: z
     .string()
-    .min(1, "MERCADO_PAGO_PUBLIC_KEY is required"),
+    .min(1, "MERCADO_PAGO_PUBLIC_KEY is required")
+    .optional(),
   MERCADO_PAGO_CLIENT_ID: z
     .string()
-    .min(1, "MERCADO_PAGO_CLIENT_ID is required"),
+    .min(1, "MERCADO_PAGO_CLIENT_ID is required")
+    .optional(),
   MERCADO_PAGO_CLIENT_SECRET: z
     .string()
-    .min(1, "MERCADO_PAGO_CLIENT_SECRET is required"),
+    .min(1, "MERCADO_PAGO_CLIENT_SECRET is required")
+    .optional(),
   MERCADO_PAGO_REDIRECT_URI: z
     .string()
-    .url("MERCADO_PAGO_REDIRECT_URI must be a valid URL"),
+    .url("MERCADO_PAGO_REDIRECT_URI must be a valid URL")
+    .optional(),
 
   // Twilio (Required)
   TWILIO_ACCOUNT_SID: z

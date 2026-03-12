@@ -6,11 +6,20 @@ import path from 'path';
 import apiRoutes from './apiRoutes';
 import { validateEnv } from './env';
 
+console.log('🚀 [STARTUP] Initializing AstroBar Server...');
+
 // Clear module cache to force fresh DB connection
 delete require.cache[require.resolve('./db')];
 
 // Validate environment variables at startup
-validateEnv();
+console.log('🔍 [STARTUP] Validating environment variables...');
+try {
+  validateEnv();
+  console.log('✅ [STARTUP] Environment variables validated');
+} catch (error: any) {
+  console.error('❌ [STARTUP] Environment validation failed:', error.message);
+  process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
