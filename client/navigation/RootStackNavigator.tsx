@@ -11,6 +11,7 @@ import VerifyPhoneScreen from "@/screens/VerifyPhoneScreen";
 import BusinessDetailScreen from "@/screens/BusinessDetailScreen";
 import ProductDetailScreen from "@/screens/ProductDetailScreen";
 import CartScreen from "@/screens/CartScreen";
+import CheckoutScreen from "@/screens/CheckoutScreen";
 import BusinessManageScreen from "@/screens/BusinessManageScreen";
 import BusinessStatsScreen from "@/screens/BusinessStatsScreen";
 import BusinessHoursScreen from "@/screens/BusinessHoursScreen";
@@ -25,7 +26,6 @@ import CreateCommonPromotionScreen from "@/screens/CreateCommonPromotionScreen";
 import CommonPromotionsScreen from "@/screens/CommonPromotionsScreen";
 import BarMenuScreen from "@/screens/BarMenuScreen";
 import OrderCartScreen from "@/screens/OrderCartScreen";
-
 import OrderPaymentScreen from "@/screens/OrderPaymentScreen";
 
 import TermsScreen from "@/screens/TermsScreen";
@@ -53,6 +53,7 @@ export type RootStackParamList = {
     businessName: string;
   };
   Cart: undefined;
+  Checkout: undefined;
   BusinessManage: undefined;
   BusinessStats: undefined;
   EditProfile: undefined;
@@ -124,6 +125,11 @@ export default function RootStackNavigator() {
           <Stack.Screen
             name="Cart"
             component={CartScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Checkout"
+            component={CheckoutScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
