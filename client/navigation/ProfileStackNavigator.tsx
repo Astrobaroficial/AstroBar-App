@@ -15,7 +15,6 @@ import PrivacyScreen from "@/screens/PrivacyScreen";
 import BankAccountSetupScreen from "@/screens/BankAccountSetupScreen";
 import PaymentHistoryScreen from "@/screens/PaymentHistoryScreen";
 import WithdrawalRequestScreen from "@/screens/WithdrawalRequestScreen";
-import StripeConnectStatusScreen from "@/screens/StripeConnectStatusScreen";
 import MercadoPagoConnectScreen from "@/screens/MercadoPagoConnectScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
@@ -36,7 +35,6 @@ export type ProfileStackParamList = {
   BankAccountSetup: undefined;
   PaymentHistory: undefined;
   WithdrawalRequest: undefined;
-  StripeConnectStatus: undefined;
   MercadoPagoConnect: undefined;
 };
 
@@ -120,11 +118,6 @@ export default function ProfileStackNavigator() {
         name="WithdrawalRequest"
         component={WithdrawalRequestScreen}
         options={{ headerTitle: "Solicitar Retiro" }}
-      />
-      <Stack.Screen
-        name="StripeConnectStatus"
-        component={StripeConnectStatusScreen}
-        options={{ headerTitle: "Estado Stripe Connect" }}
       />
       <Stack.Screen
         name="MercadoPagoConnect"

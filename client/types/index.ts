@@ -11,7 +11,6 @@ export interface User {
   emailVerified?: boolean;
   phoneVerified?: boolean;
   biometricEnabled?: boolean;
-  stripeCustomerId?: string;
   createdAt: string;
   isActive?: boolean;
   token?: string; // JWT token for authentication

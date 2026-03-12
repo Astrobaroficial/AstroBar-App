@@ -26,7 +26,6 @@ import { CartProvider } from "@/contexts/CartContext";
 import { OrderCartProvider } from "@/contexts/OrderCartContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { ToastProvider } from "@/contexts/ToastContext";
-import { StripeProvider } from "@/providers/StripeProvider";
 import {
   OnboardingOverlay,
   checkOnboardingCompleted,
@@ -138,8 +137,7 @@ export default function App() {
         <SafeAreaProvider>
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
-              <StripeProvider>
-                <AppProvider>
+              <AppProvider>
                   <AuthProvider>
                     <BusinessProvider>
                       <CartProvider>
@@ -166,7 +164,6 @@ export default function App() {
                     </BusinessProvider>
                   </AuthProvider>
                 </AppProvider>
-              </StripeProvider>
               <StatusBar style="auto" />
             </KeyboardProvider>
           </GestureHandlerRootView>
