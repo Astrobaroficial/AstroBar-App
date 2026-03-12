@@ -16,10 +16,10 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const allPromotions = await db.select().from(promotions);
     const allTransactions = await db.select().from(promotionTransactions);
 
-    const totalPromotions = allPromotions.length;
+    const totalPromotions = allPromotions.length; // Total histórico (incluye expiradas)
     const pausedBusinesses = allBusinesses.filter(b => !b.isActive).length;
     const totalBars = allBusinesses.length;
-    const totalUsers = allUsers.length; // TODOS los usuarios, no solo customers
+    const totalUsers = allUsers.length;
 
     // Calcular ingresos
     const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);

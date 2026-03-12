@@ -217,7 +217,7 @@ export default function AdminManagement() {
 
       <FlatList
         data={data}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || item.businessId || `item-${index}`}
         renderItem={activeTab === 'users' ? renderUser : activeTab === 'businesses' ? renderBusiness : renderCommission}
         contentContainerStyle={styles.list}
         refreshing={loading}

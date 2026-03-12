@@ -55,12 +55,6 @@ export default function HeatmapScreen() {
         const businesses = businessesData.businesses || [];
         const businessesWithUsers = businesses.filter((b: any) => b.nearbyUsers > 0);
         
-        // Calculate peak hours (mock data for now)
-        const peakHours = Array.from({ length: 24 }, (_, hour) => ({
-          hour,
-          users: Math.floor(Math.random() * heatmapData.totalActiveUsers)
-        })).sort((a, b) => b.users - a.users).slice(0, 5);
-
         const topBusinesses = businesses
           .filter((b: any) => b.nearbyUsers > 0)
           .sort((a: any, b: any) => b.nearbyUsers - a.nearbyUsers)
@@ -72,7 +66,7 @@ export default function HeatmapScreen() {
           averageUsersPerBusiness: businessesWithUsers.length > 0 
             ? Math.round(businessesWithUsers.reduce((sum: number, b: any) => sum + b.nearbyUsers, 0) / businessesWithUsers.length)
             : 0,
-          peakHours,
+          peakHours: [], // Datos reales no disponibles
           topBusinesses
         });
 
@@ -238,16 +232,16 @@ export default function HeatmapScreen() {
         </View>
 
         {/* Horarios pico */}
-        <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
-          <View style={styles.sectionHeader}>
-            <Feather name="clock" size={20} color={AstroBarColors.primary} />
-            <ThemedText type="h3" style={styles.sectionTitle}>
-              Horarios de Mayor Actividad
-            </ThemedText>
-          </View>
-          
-          {demandData?.peakHours && demandData.peakHours.length > 0 ? (
-            demandData.peakHours.map((peak, index) => (
+        {demandData?.peakHours && demandData.peakHours.length > 0 && (
+          <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
+            <View style={styles.sectionHeader}>
+              <Feather name="clock" size={20} color={AstroBarColors.primary} />
+              <ThemedText type="h3" style={styles.sectionTitle}>
+                Horarios de Mayor Actividad
+              </ThemedText>
+            </View>
+            
+            {demandData.peakHours.map((peak, index) => (
               <View key={peak.hour} style={styles.peakHourRow}>
                 <ThemedText type="body" style={styles.hourText}>
                   {formatHour(peak.hour)}
@@ -267,16 +261,9 @@ export default function HeatmapScreen() {
                   {peak.users}
                 </ThemedText>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Feather name="clock" size={32} color={theme.textSecondary} />
-              <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: 8 }}>
-                Datos insuficientes para análisis horario
-              </ThemedText>
-            </View>
-          )}
-        </View>
+            ))}
+          </View>
+        )}
 
         {/* Información adicional */}
         <View style={[styles.infoCard, { backgroundColor: AstroBarColors.primary + '10' }]}>

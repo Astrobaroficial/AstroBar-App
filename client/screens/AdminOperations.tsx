@@ -1,10 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { api } from '../lib/api';
 import { AstroBarColors } from '@/constants/theme';
 
 type Tab = 'transactions' | 'promotions';
+
+// Helper para confirmar en web y mobile
+const confirmAction = (title: string, message: string, onConfirm: () => void) => {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: onConfirm }
+    ]);
+  }
+};
+
+const showAlert = (title: string, message: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
 
 export default function AdminOperations() {
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
@@ -56,33 +78,26 @@ export default function AdminOperations() {
   const togglePromotion = async (id: string, currentStatus: boolean) => {
     try {
       await api.patch(`/promotions/${id}`, { isActive: !currentStatus });
-      Alert.alert('Éxito', currentStatus ? 'Promoción pausada' : 'Promoción activada');
+      showAlert('Éxito', currentStatus ? 'Promoción pausada' : 'Promoción activada');
       loadData();
     } catch (error) {
-      Alert.alert('Error', 'No se pudo actualizar la promoción');
+      showAlert('Error', 'No se pudo actualizar la promoción');
     }
   };
 
   const deletePromotion = async (id: string) => {
-    Alert.alert(
+    confirmAction(
       'Confirmar',
       '¿Eliminar esta promoción?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/promotions/${id}`);
-              Alert.alert('Éxito', 'Promoción eliminada');
-              loadData();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar');
-            }
-          }
+      async () => {
+        try {
+          await api.delete(`/promotions/${id}`);
+          showAlert('Éxito', 'Promoción eliminada');
+          loadData();
+        } catch (error) {
+          showAlert('Error', 'No se pudo eliminar');
         }
-      ]
+      }
     );
   };
 
@@ -106,7 +121,7 @@ export default function AdminOperations() {
       </View>
       <Text style={styles.cardDetail}>Bar: {item.businessName}</Text>
       <Text style={styles.cardDetail}>Tipo: {item.type === 'flash' ? 'Flash' : 'Común'}</Text>
-      <Text style={styles.cardDetail}>Precio: ${(item.promoPrice / 100).toFixed(2)}</Text>
+      <Text style={styles.cardDetail}>Precio: ${item.promoPrice.toFixed(2)}</Text>
       <Text style={styles.cardDetail}>Stock: {item.stock - item.stockConsumed}/{item.stock}</Text>
       <Text style={styles.cardDetail}>Inicio: {new Date(item.startTime).toLocaleString()}</Text>
       <Text style={styles.cardDetail}>Fin: {new Date(item.endTime).toLocaleString()}</Text>
@@ -126,8 +141,8 @@ export default function AdminOperations() {
       </View>
       <Text style={styles.cardDetail}>Usuario: {item.user?.name}</Text>
       <Text style={styles.cardDetail}>Bar: {item.business?.name}</Text>
-      <Text style={styles.cardDetail}>Monto: ${(item.amountPaid / 100).toFixed(2)}</Text>
-      <Text style={styles.cardDetail}>Comisión: ${(item.platformCommission / 100).toFixed(2)}</Text>
+      <Text style={styles.cardDetail}>Monto: ${item.amountPaid.toFixed(2)}</Text>
+      <Text style={styles.cardDetail}>Comisión: ${item.platformCommission.toFixed(2)}</Text>
       <Text style={styles.cardDetail}>
         Fecha: {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString()}
       </Text>

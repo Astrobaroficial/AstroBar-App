@@ -61,7 +61,7 @@ export default function AdminDashboard() {
 
         <View style={[styles.card, { backgroundColor: '#FF9800' }]}>
           <Feather name="zap" size={32} color="#fff" />
-          <Text style={styles.cardValue}>{stats.promotions?.totalActive || 0}</Text>
+          <Text style={styles.cardValue}>{stats.activePromotions || 0}</Text>
           <Text style={styles.cardLabel}>Promociones</Text>
         </View>
 
@@ -93,19 +93,19 @@ export default function AdminDashboard() {
           <View style={styles.revenueGrid}>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Ingresos Totales</Text>
-              <Text style={styles.revenueValue}>${revenue.totalRevenue.toFixed(2)}</Text>
+              <Text style={styles.revenueValue}>${Number(revenue.totalRevenue || 0).toFixed(2)}</Text>
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Comisión Plataforma</Text>
-              <Text style={[styles.revenueValue, { color: AstroBarColors.primary }]}>${revenue.platformRevenue.toFixed(2)}</Text>
+              <Text style={[styles.revenueValue, { color: AstroBarColors.primary }]}>${Number(revenue.platformRevenue || 0).toFixed(2)}</Text>
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Transacciones</Text>
-              <Text style={styles.revenueValue}>{revenue.totalTransactions}</Text>
+              <Text style={styles.revenueValue}>{revenue.totalTransactions || 0}</Text>
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Ticket Promedio</Text>
-              <Text style={styles.revenueValue}>${revenue.avgTransaction.toFixed(2)}</Text>
+              <Text style={styles.revenueValue}>${Number(revenue.avgTransaction || 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
               </View>
               <View style={styles.listItemContent}>
                 <Text style={styles.listItemTitle}>{user.name}</Text>
-                <Text style={styles.listItemSubtitle}>{user.redemptions} canjes • ${user.totalSpent.toFixed(2)}</Text>
+                <Text style={styles.listItemSubtitle}>{user.redemptions} canjes • ${Number(user.totalSpent || 0).toFixed(2)}</Text>
               </View>
             </View>
           ))}
