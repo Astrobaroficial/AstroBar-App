@@ -27,6 +27,8 @@ export default function HeatmapScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   
+  // Force rebuild - connected to Render backend
+  
   const [isLoading, setIsLoading] = useState(true);
   const [demandData, setDemandData] = useState<DemandData | null>(null);
   const [error, setError] = useState<string | null>(null);
