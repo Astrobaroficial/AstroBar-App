@@ -125,7 +125,7 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     
     let platformCommission = 30;
     if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
-      platformCommission = parseFloat(commissionResult[0][0].platform_commission) * 100;
+      platformCommission = parseFloat(commissionResult[0][0].platform_commission);
     }
 
     // Solo mostrar transacciones reales (redeemed o pending)
@@ -418,7 +418,7 @@ router.get("/debug-commission-test", async (req, res) => {
     const rawResult = commissionResult;
     const firstElement = commissionResult[0];
     const platformCommissionValue = commissionResult[0]?.platform_commission;
-    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) : 30;
 
     res.json({ 
       success: true,
@@ -457,7 +457,7 @@ router.get("/debug-commission", authenticateToken, async (req, res) => {
     const rawResult = commissionResult;
     const firstElement = commissionResult[0];
     const platformCommissionValue = commissionResult[0]?.platform_commission;
-    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) * 100 : 30;
+    const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) : 30;
 
     res.json({ 
       success: true,

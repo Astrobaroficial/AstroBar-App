@@ -93,11 +93,11 @@ export default function AdminDashboard() {
           <View style={styles.revenueGrid}>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Ingresos Totales</Text>
-              <Text style={styles.revenueValue}>${(revenue.totalRevenue / 100).toFixed(2)}</Text>
+              <Text style={styles.revenueValue}>${revenue.totalRevenue.toFixed(2)}</Text>
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Comisión Plataforma</Text>
-              <Text style={[styles.revenueValue, { color: AstroBarColors.primary }]}>${(revenue.platformRevenue / 100).toFixed(2)}</Text>
+              <Text style={[styles.revenueValue, { color: AstroBarColors.primary }]}>${revenue.platformRevenue.toFixed(2)}</Text>
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Transacciones</Text>
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
             </View>
             <View style={styles.revenueItem}>
               <Text style={styles.revenueLabel}>Ticket Promedio</Text>
-              <Text style={styles.revenueValue}>${(revenue.avgTransaction / 100).toFixed(2)}</Text>
+              <Text style={styles.revenueValue}>${revenue.avgTransaction.toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
               </View>
               <View style={styles.listItemContent}>
                 <Text style={styles.listItemTitle}>{user.name}</Text>
-                <Text style={styles.listItemSubtitle}>{user.redemptions} canjes • ${(user.totalSpent / 100).toFixed(2)}</Text>
+                <Text style={styles.listItemSubtitle}>{user.redemptions} canjes • ${user.totalSpent.toFixed(2)}</Text>
               </View>
             </View>
           ))}
