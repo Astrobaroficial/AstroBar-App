@@ -322,6 +322,57 @@ router.get("/transactions/my", authenticateToken, async (req, res) => {
   }
 });
 
+// Get transaction by ID
+router.get("/transactions/:id", authenticateToken, async (req, res) => {
+  try {
+    const { promotionTransactions, promotions, businesses } = await import("@shared/schema-mysql");
+    const { db } = await import("../db");
+    const { eq, and } = await import("drizzle-orm");
+
+    const transactionId = req.params.id;
+    const userId = req.user!.id;
+
+    const [transaction] = await db
+      .select()
+      .from(promotionTransactions)
+      .where(
+        and(
+          eq(promotionTransactions.id, transactionId),
+          eq(promotionTransactions.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!transaction) {
+      return res.status(404).json({ error: "Transacción no encontrada" });
+    }
+
+    const [promotion] = await db
+      .select()
+      .from(promotions)
+      .where(eq(promotions.id, transaction.promotionId))
+      .limit(1);
+
+    const [business] = await db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.id, transaction.businessId))
+      .limit(1);
+
+    res.json({
+      success: true,
+      transaction: {
+        ...transaction,
+        promotion: promotion || null,
+        business: business || null,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error loading transaction:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // BUSINESS OWNER ROUTES
 
 // Create promotion

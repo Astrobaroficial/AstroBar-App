@@ -56,23 +56,41 @@ export default function ConfirmPromotionScreen({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
+      // Primero aceptar la promoción para crear la transacción
       const response = await apiRequest("POST", `/api/promotions/${promotion.id}/accept`);
       const data = await response.json();
 
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setIsConfirmed(true);
+        const transactionId = data.transaction.id;
         
-        // Navigate to QR screen
-        navigation.replace("PromotionQR", {
-          transaction: data.transaction,
-          promotion,
-          business,
+        // Crear pago con Mercado Pago
+        const paymentResponse = await apiRequest("POST", "/api/mp/create-payment", { 
+          transactionId 
         });
+        const paymentData = await paymentResponse.json();
+        
+        if (!paymentData.success) {
+          throw new Error(paymentData.error || "Error al crear pago");
+        }
+        
+        // Abrir checkout de Mercado Pago
+        if (paymentData.initPoint) {
+          const { Linking } = await import("react-native");
+          await Linking.openURL(paymentData.initPoint);
+          
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          
+          // Navegar a pantalla de espera de pago
+          navigation.replace("PaymentPending", {
+            transaction: data.transaction,
+            promotion,
+            business,
+          });
+        }
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      alert(error.message || "Error al aceptar la promoción");
+      alert(error.message || "Error al procesar la promoción");
     } finally {
       setIsLoading(false);
     }
