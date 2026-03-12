@@ -169,7 +169,7 @@ export default function WalletScreen() {
               style={[styles.actionItem, { borderBottomColor: theme.border }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate('MercadoPagoConnect' as any);
+                navigation.navigate('BusinessMercadoPago');
               }}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>

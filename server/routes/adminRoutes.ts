@@ -392,6 +392,84 @@ router.get("/revenue/stats", authenticateToken, requireRole("admin", "super_admi
   }
 });
 
+// Get payment stats for admin panel
+router.get("/payment-stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
+  try {
+    const { db } = await import("../db");
+    const { promotionTransactions, businesses, users } = await import("@shared/schema-mysql");
+    const { eq, desc } = await import("drizzle-orm");
+
+    // Get all transactions
+    const allTransactions = await db.select().from(promotionTransactions);
+    
+    // Calculate stats
+    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);
+    const totalCommissions = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0);
+    const totalTransactions = allTransactions.length;
+    const pendingPayments = allTransactions.filter(t => t.status === 'pending').length;
+    const completedPayments = allTransactions.filter(t => t.status === 'redeemed').length;
+
+    // Count bars without MP
+    const allBusinesses = await db.select().from(businesses);
+    const mpAccountsResult: any = await db.execute(sql`
+      SELECT DISTINCT business_id FROM mercadopago_accounts WHERE is_active = true
+    `);
+    const barsWithMP = new Set((Array.isArray(mpAccountsResult[0]) ? mpAccountsResult[0] : mpAccountsResult).map((r: any) => r.business_id));
+    const barsWithoutMP = allBusinesses.filter(b => !barsWithMP.has(b.id)).length;
+
+    // Count customers with MP
+    const customersWithMPResult: any = await db.execute(sql`
+      SELECT COUNT(DISTINCT user_id) as count FROM customer_mercadopago_accounts WHERE is_active = true
+    `);
+    const customersWithMP = (Array.isArray(customersWithMPResult[0]) ? customersWithMPResult[0][0] : customersWithMPResult[0])?.count || 0;
+
+    // Average commission
+    const avgCommission = totalTransactions > 0 ? totalCommissions / totalRevenue : 0;
+
+    // Recent transactions
+    const recentTransactions = await db
+      .select()
+      .from(promotionTransactions)
+      .orderBy(desc(promotionTransactions.createdAt))
+      .limit(10);
+
+    const enrichedTransactions = await Promise.all(
+      recentTransactions.map(async (t) => {
+        const [business] = await db.select({ name: businesses.name }).from(businesses).where(eq(businesses.id, t.businessId)).limit(1);
+        const [user] = await db.select({ name: users.name }).from(users).where(eq(users.id, t.userId)).limit(1);
+        
+        return {
+          id: t.id,
+          businessName: business?.name || 'Bar',
+          customerName: user?.name || 'Cliente',
+          amount: t.amountPaid,
+          commission: t.platformCommission,
+          status: t.status,
+          createdAt: t.createdAt,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalCommissions,
+        totalTransactions,
+        pendingPayments,
+        completedPayments,
+        barsWithoutMP,
+        customersWithMP,
+        averageCommission: avgCommission,
+      },
+      recentTransactions: enrichedTransactions,
+    });
+  } catch (error: any) {
+    console.error('Payment stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get top users by redemptions
 router.get("/users/top", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
