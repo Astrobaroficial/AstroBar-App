@@ -224,7 +224,7 @@ export default function WalletScreen() {
             style={styles.actionItem}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate(user?.role === 'customer' ? 'MercadoPagoConnect' : 'StripeConnectStatus' as any);
+              navigation.navigate(user?.role === 'customer' ? 'MercadoPagoConnect' : 'MercadoPagoConnect' as any);
             }}
           >
             <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.successLight }]}>
@@ -232,7 +232,7 @@ export default function WalletScreen() {
             </View>
             <View style={styles.actionContent}>
               <ThemedText type="body">
-                {user?.role === 'customer' ? 'Tarjetas Guardadas' : 'Estado Stripe Connect'}
+                {user?.role === 'customer' ? 'Tarjetas Guardadas' : 'Estado Mercado Pago'}
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary }}>
                 {user?.role === 'customer' ? 'Gestionar tarjetas de crédito/débito' : 'Verificar cuenta de pagos'}
@@ -251,7 +251,7 @@ export default function WalletScreen() {
               {user?.role === 'customer' ? (
                 '• Todos los pagos se procesan con Mercado Pago\n• Tus tarjetas están protegidas y encriptadas\n• Recibes 10 puntos por cada promoción canjeada'
               ) : user?.role === 'admin' || user?.role === 'super_admin' ? (
-                '• Ingresos totales de comisiones de la plataforma\n• Pagos procesados con Stripe y Mercado Pago\n• Reportes detallados disponibles en el panel admin'
+                '• Ingresos totales de comisiones de la plataforma\n• Pagos procesados con Mercado Pago\n• Reportes detallados disponibles en el panel admin'
               ) : (
                 '• Recibes el 100% del precio de tus productos\n• La comisión se cobra adicional al cliente\n• Los retiros se procesan en 2-3 días hábiles'
               )}

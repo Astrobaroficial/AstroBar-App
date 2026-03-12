@@ -124,7 +124,7 @@ export default function AdminManagement() {
           <Text style={styles.cardDetail}>Propietario: {item.ownerName}</Text>
           <Text style={styles.cardDetail}>Teléfono: {item.phone}</Text>
           <Text style={styles.cardDetail}>Email: {item.email || 'N/A'}</Text>
-          <Text style={styles.cardDetail}>Stripe: {item.stripeAccountId ? 'Conectado' : 'No conectado'}</Text>
+          <Text style={styles.cardDetail}>Mercado Pago: {item.mercadoPagoAccountId ? 'Conectado' : 'No conectado'}</Text>
           <Text style={styles.cardDetail}>Verificación: {item.verificationStatus}</Text>
           <Text style={styles.cardDetail}>Registro: {new Date(item.createdAt).toLocaleDateString()}</Text>
         </View>

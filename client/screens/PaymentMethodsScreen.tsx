@@ -62,11 +62,11 @@ export default function PaymentMethodsScreen({ navigation }: any) {
         setConnectStatus(data);
       } else {
         console.error('Connect status error:', response.status, response.statusText);
-        Alert.alert('Error', 'No se pudo obtener el estado de Stripe');
+        Alert.alert('Error', 'No se pudo obtener el estado de Mercado Pago');
       }
     } catch (error) {
       console.error('Error fetching Connect status:', error);
-      Alert.alert('Error', 'No se pudo obtener el estado de Stripe');
+      Alert.alert('Error', 'No se pudo obtener el estado de Mercado Pago');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -153,7 +153,7 @@ export default function PaymentMethodsScreen({ navigation }: any) {
 
   const refreshOnboarding = async () => {
     if (!connectStatus?.accountId) {
-      Alert.alert('Error', 'No hay cuenta Stripe para refrescar');
+      Alert.alert('Error', 'No hay cuenta Mercado Pago para refrescar');
       return;
     }
     setOnboardingLoading(true);
@@ -184,7 +184,7 @@ export default function PaymentMethodsScreen({ navigation }: any) {
 
   const openDashboard = async () => {
     if (!connectStatus?.accountId) {
-      Alert.alert('Error', 'No hay cuenta Stripe para abrir dashboard');
+      Alert.alert('Error', 'No hay cuenta Mercado Pago para abrir dashboard');
       return;
     }
     try {
@@ -282,7 +282,7 @@ export default function PaymentMethodsScreen({ navigation }: any) {
         </View>
       </View>
 
-      {/* Stripe Connect Status */}
+      {/* Mercado Pago Connect Status */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Cuenta Bancaria</Text>
         
@@ -290,10 +290,10 @@ export default function PaymentMethodsScreen({ navigation }: any) {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="bank-outline" size={24} color="#6B7280" />
-              <Text style={styles.cardTitle}>Configurar Stripe para Retiros</Text>
+              <Text style={styles.cardTitle}>Configurar Mercado Pago para Retiros</Text>
             </View>
             <Text style={styles.cardDescription}>
-              Configura Stripe Connect para recibir retiros automaticos de tus ventas.
+              Configura Mercado Pago para recibir retiros automaticos de tus ventas.
             </Text>
             <TouchableOpacity 
               style={styles.primaryButton}
@@ -409,9 +409,9 @@ export default function PaymentMethodsScreen({ navigation }: any) {
         <View style={styles.infoCard}>
           <Ionicons name="information-circle-outline" size={24} color="#3B82F6" />
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Pagos Seguros con Stripe</Text>
+            <Text style={styles.infoTitle}>Pagos Seguros con Mercado Pago</Text>
             <Text style={styles.infoText}>
-              Utilizamos Stripe para procesar todos los pagos de forma segura. 
+              Utilizamos Mercado Pago para procesar todos los pagos de forma segura. 
               Tus datos bancarios están protegidos con encriptación de nivel bancario.
             </Text>
           </View>

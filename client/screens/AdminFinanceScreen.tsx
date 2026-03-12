@@ -19,7 +19,7 @@ interface FinanceMetrics {
   successfulPayments: number;
   failedPayments: number;
   refunds: number;
-  stripeFeesTotal: number;
+  platformFeesTotal: number;
   twilioFeesTotal: number;
   operatingCosts: number;
   netProfit: number;
@@ -33,7 +33,7 @@ interface BalanceSheet {
   assets: {
     cash: number;
     pendingReceivables: number;
-    stripeBalance: number;
+    mercadoPagoBalance: number;
     total: number;
   };
   liabilities: {
@@ -215,8 +215,8 @@ export default function AdminFinanceScreen() {
         <Text style={styles.sectionTitle}>Costos Operativos</Text>
         <View style={styles.costBreakdown}>
           <View style={styles.costItem}>
-            <Text style={styles.costLabel}>Tarifas Stripe</Text>
-            <Text style={styles.costValue}>{formatCurrency(metrics?.stripeFeesTotal || 0)}</Text>
+            <Text style={styles.costLabel}>Tarifas Mercado Pago</Text>
+            <Text style={styles.costValue}>{formatCurrency(metrics?.platformFeesTotal || 0)}</Text>
           </View>
           <View style={styles.costItem}>
             <Text style={styles.costLabel}>SMS Twilio</Text>
@@ -247,8 +247,8 @@ export default function AdminFinanceScreen() {
           <Text style={styles.balanceValue}>{formatCurrency(balanceSheet?.assets.pendingReceivables || 0)}</Text>
         </View>
         <View style={styles.balanceItem}>
-          <Text style={styles.balanceLabel}>Balance Stripe</Text>
-          <Text style={styles.balanceValue}>{formatCurrency(balanceSheet?.assets.stripeBalance || 0)}</Text>
+          <Text style={styles.balanceLabel}>Balance Mercado Pago</Text>
+          <Text style={styles.balanceValue}>{formatCurrency(balanceSheet?.assets.mercadoPagoBalance || 0)}</Text>
         </View>
         <View style={[styles.balanceItem, styles.balanceTotal]}>
           <Text style={styles.balanceTotalLabel}>Total Activos</Text>

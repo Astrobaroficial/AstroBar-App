@@ -1095,7 +1095,7 @@ export default function ProfileScreen() {
               5. Pagos y Comisiones
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              5.1. Los pagos se procesan a trav�s de Stripe, un proveedor de servicios de pago de terceros.{"\n\n"}
+              5.1. Los pagos se procesan a trav�s de Mercado Pago, un proveedor de servicios de pago de terceros.{"\n\n"}
               5.2. El precio total incluye:{"\n"}
               � Precio del producto/servicio (100% para el bar){"\n"}
               � Comisi�n de plataforma (5%-30% adicional){"\n\n"}
@@ -1275,7 +1275,7 @@ export default function ProfileScreen() {
               1. Informaci�n que Recopilamos
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Recopilamos: nombre, n�mero de tel�fono, email, historial de promociones canjeadas, datos de pago (procesados de forma segura por Stripe), ubicaci�n (solo cuando usas la app), y preferencias de usuario.
+              Recopilamos: nombre, n�mero de tel�fono, email, historial de promociones canjeadas, datos de pago (procesados de forma segura por Mercado Pago), ubicaci�n (solo cuando usas la app), y preferencias de usuario.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
@@ -1289,7 +1289,7 @@ export default function ProfileScreen() {
               3. Compartir Informaci�n
             </ThemedText>
             <ThemedText type="body" style={styles.legalText}>
-              Compartimos informaci�n limitada con: establecimientos (nombre para validar c�digos QR), procesadores de pago (Stripe), y autoridades cuando la ley lo requiera. No vendemos tus datos a terceros.
+              Compartimos informaci�n limitada con: establecimientos (nombre para validar c�digos QR), procesadores de pago (Mercado Pago), y autoridades cuando la ley lo requiera. No vendemos tus datos a terceros.
             </ThemedText>
 
             <ThemedText type="h4" style={styles.legalTitle}>
