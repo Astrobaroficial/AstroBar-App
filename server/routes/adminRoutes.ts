@@ -399,11 +399,12 @@ router.get("/revenue/stats", authenticateToken, requireRole("admin", "super_admi
         SUM(business_revenue) as businessRevenue,
         AVG(amount_paid) as avgTransaction
       FROM promotion_transactions
-      WHERE status = 'redeemed'
+      WHERE status IN ('redeemed', 'pending')
     `);
     const stats = Array.isArray(result[0]) ? result[0][0] : result[0];
     res.json({ success: true, stats });
   } catch (error: any) {
+    console.error('Revenue stats error:', error);
     res.status(500).json({ error: error.message });
   }
 });
