@@ -10,7 +10,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/contexts/ToastContext';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
-import { apiRequest } from '@/lib/query-client';
+import { api } from '@/lib/api';
 
 export default function AddPaymentCardScreen() {
   const { theme } = useTheme();
@@ -69,7 +69,7 @@ export default function AddPaymentCardScreen() {
 
     try {
       const [month, year] = expiryDate.split('/');
-      const response = await apiRequest('POST', '/api/user/payment-methods', {
+      const response = await api.post('/user/payment-methods', {
         cardNumber: cardNumber.replace(/\s/g, ''),
         cardholderName,
         expiryMonth: parseInt(month),
@@ -78,13 +78,11 @@ export default function AddPaymentCardScreen() {
         isDefault,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.data.success) {
         showToast('Tarjeta agregada exitosamente', 'success');
         navigation.goBack();
       } else {
-        showToast(data.error || 'Error al agregar tarjeta', 'error');
+        showToast(response.data.error || 'Error al agregar tarjeta', 'error');
       }
     } catch (error: any) {
       showToast(error.message || 'Error al agregar tarjeta', 'error');

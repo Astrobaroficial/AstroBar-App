@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -11,7 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
-import AddPaymentCardScreen from '@/screens/AddPaymentCardScreen';
+import { api } from '@/lib/api';
 
 interface PaymentCard {
   id: string;
@@ -45,11 +45,10 @@ export default function CustomerPaymentMethodsScreen() {
 
   const loadPaymentMethods = async () => {
     try {
-      const response = await apiRequest('GET', '/api/user/payment-methods');
-      const data = await response.json();
-      if (data.success) {
-        setCards(data.cards || []);
-        setMpConnected(data.mpConnected === true);
+      const response = await api.get('/user/payment-methods');
+      if (response.data.success) {
+        setCards(response.data.cards || []);
+        setMpConnected(response.data.mpConnected === true);
       }
     } catch (error) {
       console.error('Error loading payment methods:', error);
@@ -76,9 +75,8 @@ export default function CustomerPaymentMethodsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await apiRequest('DELETE', `/api/user/payment-methods/${cardId}`);
-              const data = await response.json();
-              if (data.success) {
+              const response = await api.delete(`/user/payment-methods/${cardId}`);
+              if (response.data.success) {
                 showToast('Tarjeta eliminada', 'success');
                 loadPaymentMethods();
               }
