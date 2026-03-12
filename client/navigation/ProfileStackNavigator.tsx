@@ -8,6 +8,7 @@ import AddAddressScreen from "@/screens/AddAddressScreen";
 import LocationPickerScreen from "@/screens/LocationPickerScreen";
 import PaymentMethodsScreen from "@/screens/PaymentMethodsScreen";
 import WalletScreen from "@/screens/WalletScreen";
+import CustomerWalletScreen from "@/screens/CustomerWalletScreen";
 import MyBusinessesScreen from "@/screens/MyBusinessesScreen";
 import SupportScreen from "@/screens/SupportScreen";
 import TermsScreen from "@/screens/TermsScreen";
@@ -32,6 +33,7 @@ export type ProfileStackParamList = {
   CustomerPaymentMethods: undefined;
   AddPaymentCard: undefined;
   Wallet: undefined;
+  CustomerWallet: undefined;
   MyBusinesses: undefined;
   Support: undefined;
   Terms: undefined;
@@ -97,6 +99,11 @@ export default function ProfileStackNavigator() {
         name="Wallet"
         component={WalletScreen}
         options={{ headerTitle: "Mi Billetera" }}
+      />
+      <Stack.Screen
+        name="CustomerWallet"
+        component={CustomerWalletScreen}
+        options={{ headerTitle: "Mi Billetera", headerShown: false }}
       />
       <Stack.Screen
         name="MyBusinesses"

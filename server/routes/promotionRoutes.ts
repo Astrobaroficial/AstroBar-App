@@ -860,7 +860,8 @@ router.post("/:id/pay", authenticateToken, async (req, res) => {
   }
 });
 
-
+// Redeem promotion with QR code (business owner scans)
+router.post("/redeem", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     const { promotionTransactions, userPoints } = await import("@shared/schema-mysql");
     const { db } = await import("../db");

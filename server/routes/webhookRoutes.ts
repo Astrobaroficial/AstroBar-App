@@ -1,137 +1,157 @@
-import express from 'express';
-import crypto from 'crypto';
+import express from "express";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
+import { promotionTransactions } from "@shared/schema-mysql";
 
 const router = express.Router();
 
+const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || "";
+
 /**
  * Webhook de Mercado Pago
- * Recibe notificaciones de pagos
+ * Recibe notificaciones cuando cambia el estado de un pago
+ * 
+ * Tipos de notificaciones:
+ * - payment: Cambio en estado de pago
+ * - merchant_order: Cambio en orden
  */
-router.post('/mercadopago', async (req, res) => {
+router.post("/webhook", async (req, res) => {
   try {
-    console.log('🔔 Webhook de Mercado Pago recibido');
+    console.log("🔔 Webhook MP recibido:", JSON.stringify(req.body, null, 2));
     
-    const { action, data } = req.body;
+    const { type, action, data } = req.body;
 
-    // Validar que sea una notificación de pago
-    if (action !== 'payment.created' && action !== 'payment.updated') {
-      console.log('⏭️ Acción ignorada:', action);
-      return res.json({ success: true });
+    // Responder rápido a MP (200 OK)
+    res.status(200).send("OK");
+
+    // Procesar notificación de forma asíncrona
+    if (type === "payment" || action === "payment.created" || action === "payment.updated") {
+      await processPaymentNotification(data?.id);
     }
-
-    if (!data?.id) {
-      console.log('⚠️ Sin ID de pago en webhook');
-      return res.json({ success: true });
-    }
-
-    const paymentId = data.id;
-    console.log(`💳 Procesando pago: ${paymentId}`);
-
-    // Obtener detalles del pago desde Mercado Pago
-    const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    if (!mpAccessToken) {
-      console.error('❌ MERCADO_PAGO_ACCESS_TOKEN no configurado');
-      return res.status(500).json({ error: 'Mercado Pago no configurado' });
-    }
-
-    const axios = await import('axios');
-    const paymentResponse = await axios.default.get(
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${mpAccessToken}`,
-        },
-      }
-    );
-
-    const payment = paymentResponse.data;
-    console.log(`📊 Estado del pago: ${payment.status}`);
-
-    // Buscar transacción por paymentId
-    const { promotionTransactions } = await import('@shared/schema-mysql');
-    const { db } = await import('../db');
-    const { eq } = await import('drizzle-orm');
-
-    // Nota: Necesitamos agregar paymentId a la tabla promotionTransactions
-    // Por ahora, usamos metadata para buscar
-    const [transaction] = await db
-      .select()
-      .from(promotionTransactions)
-      .where(eq(promotionTransactions.id, payment.external_reference || ''))
-      .limit(1);
-
-    if (!transaction) {
-      console.log('⚠️ Transacción no encontrada para pago:', paymentId);
-      return res.json({ success: true });
-    }
-
-    // Actualizar estado según respuesta de Mercado Pago
-    if (payment.status === 'approved') {
-      console.log('✅ Pago aprobado');
-      await db
-        .update(promotionTransactions)
-        .set({ status: 'confirmed' })
-        .where(eq(promotionTransactions.id, transaction.id));
-    } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
-      console.log('❌ Pago rechazado/cancelado');
-      await db
-        .update(promotionTransactions)
-        .set({ status: 'cancelled' })
-        .where(eq(promotionTransactions.id, transaction.id));
-    } else if (payment.status === 'pending') {
-      console.log('⏳ Pago pendiente');
-      await db
-        .update(promotionTransactions)
-        .set({ status: 'pending' })
-        .where(eq(promotionTransactions.id, transaction.id));
-    }
-
-    res.json({ success: true });
-  } catch (error: any) {\n    console.error('❌ Error procesando webhook:', error.message);
-    res.status(500).json({ error: error.message });
+  } catch (error: any) {
+    console.error("❌ Error en webhook MP:", error);
+    // Siempre responder 200 para que MP no reintente
+    res.status(200).send("OK");
   }
 });
 
 /**
- * Verificar estado de pago
- * GET /webhooks/payment-status/:paymentId
+ * Procesar notificación de pago
  */
-router.get('/payment-status/:paymentId', async (req, res) => {
+async function processPaymentNotification(paymentId: string) {
+  if (!paymentId) {
+    console.log("⚠️ Webhook sin payment ID");
+    return;
+  }
+
   try {
-    const { paymentId } = req.params;
-    const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    console.log(`🔍 Consultando pago ${paymentId} en MP...`);
 
-    if (!mpAccessToken) {
-      return res.status(500).json({ error: 'Mercado Pago no configurado' });
-    }
-
-    const axios = await import('axios');
-    const response = await axios.default.get(
+    // Obtener detalles del pago desde MP
+    const paymentResponse = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
         headers: {
-          Authorization: `Bearer ${mpAccessToken}`,
+          Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
         },
       }
     );
 
-    const payment = response.data;
+    if (!paymentResponse.ok) {
+      throw new Error(`MP API error: ${paymentResponse.status}`);
+    }
 
-    res.json({
-      success: true,
-      payment: {
-        id: payment.id,
-        status: payment.status,
-        statusDetail: payment.status_detail,
-        amount: payment.transaction_amount,
-        description: payment.description,
-        createdAt: payment.date_created,
-      },
+    const payment = await paymentResponse.json();
+    console.log(`💳 Pago ${paymentId}:`, {
+      status: payment.status,
+      status_detail: payment.status_detail,
+      external_reference: payment.external_reference,
+      transaction_amount: payment.transaction_amount,
     });
+
+    const transactionId = payment.external_reference;
+    if (!transactionId) {
+      console.log("⚠️ Pago sin external_reference");
+      return;
+    }
+
+    // Obtener transacción de la BD
+    const { sql } = await import("drizzle-orm");
+    const result: any = await db.execute(sql`
+      SELECT id, status, mp_payment_id
+      FROM promotion_transactions
+      WHERE id = ${transactionId}
+      LIMIT 1
+    `);
+
+    if (!result[0] || result[0].length === 0) {
+      console.log(`⚠️ Transacción ${transactionId} no encontrada en BD`);
+      return;
+    }
+
+    const transaction = result[0][0];
+    console.log(`📦 Transacción actual:`, {
+      id: transaction.id,
+      status: transaction.status,
+      mp_payment_id: transaction.mp_payment_id,
+    });
+
+    // Actualizar según estado del pago
+    let newStatus = transaction.status;
+    let updateData: any = {
+      mp_payment_id: paymentId,
+    };
+
+    switch (payment.status) {
+      case "approved":
+        newStatus = "pending_redemption";
+        console.log(`✅ Pago aprobado - Transacción ${transactionId} lista para canje`);
+        break;
+
+      case "pending":
+        newStatus = "pending_payment";
+        console.log(`⏳ Pago pendiente - Transacción ${transactionId}`);
+        break;
+
+      case "in_process":
+        newStatus = "pending_payment";
+        console.log(`🔄 Pago en proceso - Transacción ${transactionId}`);
+        break;
+
+      case "rejected":
+      case "cancelled":
+        newStatus = "cancelled";
+        console.log(`❌ Pago ${payment.status} - Transacción ${transactionId} cancelada`);
+        break;
+
+      case "refunded":
+      case "charged_back":
+        newStatus = "refunded";
+        console.log(`💸 Pago reembolsado - Transacción ${transactionId}`);
+        break;
+
+      default:
+        console.log(`⚠️ Estado desconocido: ${payment.status}`);
+        return;
+    }
+
+    // Solo actualizar si cambió el estado
+    if (newStatus !== transaction.status) {
+      updateData.status = newStatus;
+      
+      await db.execute(sql`
+        UPDATE promotion_transactions
+        SET status = ${newStatus}, mp_payment_id = ${paymentId}
+        WHERE id = ${transactionId}
+      `);
+
+      console.log(`✅ Transacción ${transactionId} actualizada: ${transaction.status} → ${newStatus}`);
+    } else {
+      console.log(`ℹ️ Transacción ${transactionId} ya está en estado ${newStatus}`);
+    }
   } catch (error: any) {
-    console.error('Error getting payment status:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error(`❌ Error procesando pago ${paymentId}:`, error.message);
   }
-});
+}
 
 export default router;

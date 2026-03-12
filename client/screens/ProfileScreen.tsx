@@ -501,12 +501,12 @@ export default function ProfileScreen() {
           />
           {user?.role === "customer" && (
             <SettingsItem
-              icon="credit-card"
+              icon="wallet"
               label="Mi Billetera"
-              value="Tarjetas, pagos e historial"
+              value="Vincular Mercado Pago"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("Wallet" as any);
+                navigation.navigate("CustomerWallet" as any);
               }}
             />
           )}
