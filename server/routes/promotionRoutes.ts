@@ -636,7 +636,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       return res.json({ success: true, message: "Promoción eliminada" });
     }
 
-    // Business owner can only delete their own expired promotions
+    // Business owner can only delete their own promotions
     if (userRole === 'business_owner') {
       const [business] = await db
         .select()
@@ -653,12 +653,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
         return res.status(403).json({ error: "No tienes acceso a esta promoción" });
       }
 
-      // Check if promotion is expired
-      const now = new Date();
-      if (promotion.endTime > now) {
-        return res.status(400).json({ error: "Solo puedes eliminar promociones expiradas" });
-      }
-
+      // Business owner can delete any of their promotions (active or expired)
       await db
         .delete(promotions)
         .where(eq(promotions.id, promotionId));
