@@ -9,11 +9,12 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { api } from "@/lib/api";
+import { apiRequest } from "@/lib/query-client";
 
 export default function PromotionCartScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();`n  const styles = getStyles(theme);
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const navigation = useNavigation<any>();
   
   const [items, setItems] = useState<any[]>([]);
@@ -26,8 +27,9 @@ export default function PromotionCartScreen() {
 
   const loadCart = async () => {
     try {
-      const { data } = await api.get("/cart");
-      setItems(data.items);
+      const response = await apiRequest("GET", "/api/cart");
+      const data = await response.json();
+      setItems(data.items || []);
     } catch (error) {
       console.error("Error loading cart:", error);
     } finally {
@@ -37,7 +39,7 @@ export default function PromotionCartScreen() {
 
   const removeItem = async (id: string) => {
     try {
-      await api.delete(`/cart/${id}`);
+      await apiRequest("DELETE", "/api/cart/" + id);
       setItems(items.filter(item => item.id !== id));
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (error: any) {
@@ -54,36 +56,34 @@ export default function PromotionCartScreen() {
 
   const handleCheckout = async () => {
     if (items.length === 0) {
-      Alert.alert("Carrito vacío", "Agrega promociones para continuar");
+      Alert.alert("Carrito vacio", "Agrega promociones para continuar");
       return;
     }
 
     setProcessing(true);
     try {
-      // Accept all promotions
-      const acceptPromises = items.map(item =>
-        api.post("/promotions/accept", {
+      const acceptPromises = items.map(async item => {
+        const response = await apiRequest("POST", "/api/promotions/accept", {
           promotionId: item.promotion_id,
           type: item.type,
-        })
-      );
+        });
+        return response.json();
+      });
 
       const results = await Promise.all(acceptPromises);
-      const userPromotionIds = results.map(r => r.data.userPromotionId);
+      const userPromotionIds = results.map(r => r.userPromotionId);
 
-      // Clear cart
-      await api.delete("/cart");
+      await apiRequest("DELETE", "/api/cart");
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
-      // Navigate to payment with all IDs
       navigation.replace("Payment", {
         userPromotionIds,
         amount: calculateTotal().toFixed(2),
-        promoName: `${items.length} promociones`,
+        promoName: items.length + " promociones",
       });
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "No se pudo procesar el carrito");
+      Alert.alert("Error", error.message || "No se pudo procesar el carrito");
     } finally {
       setProcessing(false);
     }
@@ -92,7 +92,7 @@ export default function PromotionCartScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[theme.gradientStart || '#000000', theme.gradientEnd || '#1A1A1A']}
+        colors={[theme.gradientStart || "#000000", theme.gradientEnd || "#1A1A1A"]}
         style={styles.container}
       >
         <ThemedText>Cargando...</ThemedText>
@@ -102,7 +102,7 @@ export default function PromotionCartScreen() {
 
   return (
     <LinearGradient
-      colors={[theme.gradientStart || '#000000', theme.gradientEnd || '#1A1A1A']}
+      colors={[theme.gradientStart || "#000000", theme.gradientEnd || "#1A1A1A"]}
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
@@ -110,7 +110,10 @@ export default function PromotionCartScreen() {
           <Feather name="arrow-left" size={24} color={theme.text} />
         </Pressable>
         <ThemedText type="h3">Carrito</ThemedText>
-        <Pressable onPress={() => api.delete("/cart").then(loadCart)}>
+        <Pressable onPress={async () => {
+          await apiRequest("DELETE", "/api/cart");
+          loadCart();
+        }}>
           <Feather name="trash-2" size={20} color={theme.textSecondary} />
         </Pressable>
       </View>
@@ -125,7 +128,7 @@ export default function PromotionCartScreen() {
           <View style={styles.emptyState}>
             <Feather name="shopping-cart" size={64} color={theme.textSecondary} />
             <ThemedText type="h3" style={{ marginTop: Spacing.lg, color: theme.textSecondary }}>
-              Carrito vacío
+              Carrito vacio
             </ThemedText>
             <ThemedText type="body" style={{ marginTop: Spacing.sm, color: theme.textSecondary }}>
               Agrega promociones para comenzar

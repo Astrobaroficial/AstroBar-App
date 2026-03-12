@@ -131,6 +131,11 @@ import customerMercadopagoRoutes from './routes/customerMercadopagoRoutes';
 
 app.use('/api/customer-mp', customerMercadopagoRoutes);
 
+// Favorites routes
+import favoriteRoutes from './routes/favoriteRoutes';
+
+app.use('/api/favorites', favoriteRoutes);
+
 // Webhook routes
 import webhookRoutes from './routes/webhookRoutes';
 

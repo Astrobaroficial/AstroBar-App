@@ -35,7 +35,6 @@ import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { BusinessCard } from "@/components/BusinessCard";
-import { CartButton } from "@/components/CartButton";
 import { BusinessCardSkeleton } from "@/components/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -853,11 +852,6 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
-
-      <CartButton
-        onPress={() => navigation.navigate("Cart")}
-        bottomOffset={tabBarHeight}
-      />
     </View>
   );
 }

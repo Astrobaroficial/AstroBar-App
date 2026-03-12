@@ -9,7 +9,7 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
   try {
     const { users, businesses, promotions, promotionTransactions } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { eq, sql } = await import("drizzle-orm");
 
     const allUsers = await db.select().from(users);
     const allBusinesses = await db.select().from(businesses);
@@ -19,7 +19,17 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const totalPromotions = allPromotions.length;
     const pausedBusinesses = allBusinesses.filter(b => !b.isActive).length;
     const totalBars = allBusinesses.length;
-    const totalUsers = allUsers.filter(u => u.role === 'customer').length;
+    const totalUsers = allUsers.length; // TODOS los usuarios, no solo customers
+
+    // Calcular ingresos
+    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);
+    const platformCommission = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0);
+    const totalTransactionsCount = allTransactions.length;
+    const avgTicket = totalTransactionsCount > 0 ? totalRevenue / totalTransactionsCount : 0;
+
+    // Tasa de aceptación
+    const redeemedCount = allTransactions.filter(t => t.status === 'redeemed').length;
+    const acceptanceRate = totalTransactionsCount > 0 ? Math.round((redeemedCount / totalTransactionsCount) * 100) : 0;
 
     res.json({
       success: true,
@@ -28,9 +38,15 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
       totalUsers,
       pausedBusinesses,
       totalBusinesses: totalBars,
+      totalRevenue,
+      platformCommission,
+      totalTransactions: totalTransactionsCount,
+      avgTicket,
+      acceptanceRate,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
+    console.error('Dashboard metrics error:', error);
     res.status(500).json({ error: error.message });
   }
 });
