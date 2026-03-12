@@ -165,8 +165,9 @@ if (isProduction) {
 
 // Error handling
 app.use((err: any, req: any, res: any, next: any) => {
-  
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('❌ ERROR:', err.message);
+  console.error('Stack:', err.stack);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
 // 404 handler
@@ -177,26 +178,28 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, async () => {
+  console.log('🚀 Starting AstroBar API...');
+  console.log(`📍 PORT: ${PORT}`);
+  console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV}`);
   
-  
-  
-  
-  
-  // Initialize audit logs table
-  const { createAuditTable } = await import('./routes/auditRoutes');
-  await createAuditTable();
-  
-  // Start business hours cron job
-  const { startBusinessHoursCron } = await import('./businessHoursCron');
-  startBusinessHoursCron();
-  
-  if (!process.env.TWILIO_ACCOUNT_SID) {
+  try {
+    // Initialize audit logs table
+    console.log('📝 Initializing audit logs table...');
+    const { createAuditTable } = await import('./routes/auditRoutes');
+    await createAuditTable();
+    console.log('✅ Audit logs table initialized');
     
-  }
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    // Start business hours cron job
+    console.log('⏰ Starting business hours cron job...');
+    const { startBusinessHoursCron } = await import('./businessHoursCron');
+    startBusinessHoursCron();
+    console.log('✅ Business hours cron job started');
     
-  }
-  if (!process.env.EXPO_ACCESS_TOKEN) {
-    
+    console.log('✅ AstroBar API is running!');
+    console.log(`🌙 Listening on http://localhost:${PORT}`);
+  } catch (error: any) {
+    console.error('❌ STARTUP ERROR:', error.message);
+    console.error('Stack:', error.stack);
+    process.exit(1);
   }
 });
