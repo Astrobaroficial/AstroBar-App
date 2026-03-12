@@ -777,6 +777,7 @@ router.post("/:id/pay", authenticateToken, async (req, res) => {
       userId,
       businessId: promotion.businessId,
       qrCode,
+      mpPaymentId: paymentResult.paymentId,
       status: "confirmed",
       amountPaid: totalAmount,
       platformCommission,

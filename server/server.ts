@@ -126,6 +126,11 @@ import mercadopagoRoutes from './routes/mercadopagoRoutes';
 
 app.use('/api/mp', mercadopagoRoutes);
 
+// Webhook routes
+import webhookRoutes from './routes/webhookRoutes';
+
+app.use('/webhooks', webhookRoutes);
+
 // Favorites routes removed
 
 // Stripe Connect routes removed

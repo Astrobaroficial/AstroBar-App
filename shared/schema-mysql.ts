@@ -657,11 +657,12 @@ export const promotionTransactions = mysqlTable("promotion_transactions", {
   userId: varchar("user_id", { length: 255 }).notNull(),
   businessId: varchar("business_id", { length: 255 }).notNull(),
   qrCode: varchar("qr_code", { length: 255 }).notNull().unique(),
-  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, confirmed, cancelled, redeemed, expired
-  amountPaid: int("amount_paid").notNull(), // en centavos
-  platformCommission: int("platform_commission").notNull(), // en centavos
-  businessRevenue: int("business_revenue").notNull(), // en centavos
-  canCancelUntil: timestamp("can_cancel_until"), // 60 segundos después de crear
+  mpPaymentId: varchar("mp_payment_id", { length: 255 }),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  amountPaid: int("amount_paid").notNull(),
+  platformCommission: int("platform_commission").notNull(),
+  businessRevenue: int("business_revenue").notNull(),
+  canCancelUntil: timestamp("can_cancel_until"),
   redeemedAt: timestamp("redeemed_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(
