@@ -21,9 +21,9 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const totalBars = allBusinesses.length;
     const totalUsers = allUsers.length; // TODOS los usuarios, no solo customers
 
-    // Calcular ingresos
-    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);
-    const platformCommission = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0);
+    // Calcular ingresos (convertir de centavos a pesos)
+    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0) / 100;
+    const platformCommission = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0) / 100;
     const totalTransactionsCount = allTransactions.length;
     const avgTicket = totalTransactionsCount > 0 ? totalRevenue / totalTransactionsCount : 0;
 
@@ -394,10 +394,10 @@ router.get("/revenue/stats", authenticateToken, requireRole("admin", "super_admi
     const result = await db.execute(sql`
       SELECT 
         COUNT(*) as totalTransactions,
-        SUM(amount_paid) as totalRevenue,
-        SUM(platform_commission) as platformRevenue,
-        SUM(business_revenue) as businessRevenue,
-        AVG(amount_paid) as avgTransaction
+        SUM(amount_paid) / 100 as totalRevenue,
+        SUM(platform_commission) / 100 as platformRevenue,
+        SUM(business_revenue) / 100 as businessRevenue,
+        AVG(amount_paid) / 100 as avgTransaction
       FROM promotion_transactions
       WHERE status IN ('redeemed', 'pending')
     `);
@@ -453,10 +453,10 @@ router.get("/wallet-stats", authenticateToken, requireRole("admin", "super_admin
     res.json({
       success: true,
       stats: {
-        totalEarnings: Number(total?.totalEarnings || 0),
-        thisMonthEarnings: Number(month?.thisMonthEarnings || 0),
+        totalEarnings: Number(total?.totalEarnings || 0) / 100,
+        thisMonthEarnings: Number(month?.thisMonthEarnings || 0) / 100,
         totalTransactions: Number(total?.totalTransactions || 0),
-        pendingPayouts: Number(pending?.pendingPayouts || 0),
+        pendingPayouts: Number(pending?.pendingPayouts || 0) / 100,
         platformCommission: Number(commission?.avgCommission || 0).toFixed(1),
         averageOrderValue: 0, // No usado en admin wallet
       },
@@ -477,9 +477,9 @@ router.get("/payment-stats", authenticateToken, requireRole("admin", "super_admi
     // Get all transactions
     const allTransactions = await db.select().from(promotionTransactions);
     
-    // Calculate stats
-    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0);
-    const totalCommissions = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0);
+    // Calculate stats (convertir de centavos a pesos)
+    const totalRevenue = allTransactions.reduce((sum, t) => sum + (Number(t.amountPaid) || 0), 0) / 100;
+    const totalCommissions = allTransactions.reduce((sum, t) => sum + (Number(t.platformCommission) || 0), 0) / 100;
     const totalTransactions = allTransactions.length;
     const pendingPayments = allTransactions.filter(t => t.status === 'pending').length;
     const completedPayments = allTransactions.filter(t => t.status === 'redeemed').length;
@@ -517,8 +517,8 @@ router.get("/payment-stats", authenticateToken, requireRole("admin", "super_admi
           id: t.id,
           businessName: business?.name || 'Bar',
           customerName: user?.name || 'Cliente',
-          amount: t.amountPaid,
-          commission: t.platformCommission,
+          amount: t.amountPaid / 100,
+          commission: t.platformCommission / 100,
           status: t.status,
           createdAt: t.createdAt,
         };
@@ -550,7 +550,7 @@ router.get("/users/top", authenticateToken, requireRole("admin", "super_admin"),
   try {
     const { db } = await import("../db");
     const result = await db.execute(sql`
-      SELECT u.id, u.name, u.phone, COUNT(pt.id) as redemptions, SUM(pt.amount_paid) as totalSpent
+      SELECT u.id, u.name, u.phone, COUNT(pt.id) as redemptions, SUM(pt.amount_paid) / 100 as totalSpent
       FROM users u
       JOIN promotion_transactions pt ON u.id = pt.user_id
       WHERE pt.status = 'redeemed'
