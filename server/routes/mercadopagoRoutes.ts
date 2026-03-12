@@ -8,10 +8,10 @@ import { v4 as uuidv4 } from "uuid";
 const router = express.Router();
 
 // Configuración de Mercado Pago
-const MP_CLIENT_ID = process.env.MERCADOPAGO_CLIENT_ID || "";
-const MP_CLIENT_SECRET = process.env.MERCADOPAGO_CLIENT_SECRET || "";
-const MP_REDIRECT_URI = process.env.MERCADOPAGO_REDIRECT_URI || "https://astrobar-backend.onrender.com/api/mp/callback";
-const MP_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || ""; // Token de la plataforma
+const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
+const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
+const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-backend.onrender.com/api/mp/callback";
+const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token de la plataforma
 
 // 1. OAUTH - Conectar cuenta MP del bar
 router.get("/connect", authenticateToken, requireRole("business_owner"), async (req, res) => {

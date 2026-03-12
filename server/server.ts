@@ -9,7 +9,7 @@ import { validateEnv } from './env';
 // Clear module cache to force fresh DB connection
 delete require.cache[require.resolve('./db')];
 
-// Validate environment variables at startup so we never run with bad Stripe/Twilio keys
+// Validate environment variables at startup
 validateEnv();
 
 const app = express();
@@ -190,9 +190,6 @@ app.listen(PORT, async () => {
   const { startBusinessHoursCron } = await import('./businessHoursCron');
   startBusinessHoursCron();
   
-  if (!process.env.STRIPE_SECRET_KEY) {
-    
-  }
   if (!process.env.TWILIO_ACCOUNT_SID) {
     
   }
