@@ -66,7 +66,7 @@ export default function HeatmapScreen() {
           averageUsersPerBusiness: businessesWithUsers.length > 0 
             ? Math.round(businessesWithUsers.reduce((sum: number, b: any) => sum + b.nearbyUsers, 0) / businessesWithUsers.length)
             : 0,
-          peakHours: [], // Datos reales no disponibles
+          peakHours: [], // Real data not available yet
           topBusinesses
         });
 
@@ -232,16 +232,16 @@ export default function HeatmapScreen() {
         </View>
 
         {/* Horarios pico */}
-        {demandData?.peakHours && demandData.peakHours.length > 0 && (
-          <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
-            <View style={styles.sectionHeader}>
-              <Feather name="clock" size={20} color={AstroBarColors.primary} />
-              <ThemedText type="h3" style={styles.sectionTitle}>
-                Horarios de Mayor Actividad
-              </ThemedText>
-            </View>
-            
-            {demandData.peakHours.map((peak, index) => (
+        <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <Feather name="clock" size={20} color={AstroBarColors.primary} />
+            <ThemedText type="h3" style={styles.sectionTitle}>
+              Horarios de Mayor Actividad
+            </ThemedText>
+          </View>
+          
+          {demandData?.peakHours && demandData.peakHours.length > 0 ? (
+            demandData.peakHours.map((peak, index) => (
               <View key={peak.hour} style={styles.peakHourRow}>
                 <ThemedText type="body" style={styles.hourText}>
                   {formatHour(peak.hour)}
@@ -261,9 +261,16 @@ export default function HeatmapScreen() {
                   {peak.users}
                 </ThemedText>
               </View>
-            ))}
-          </View>
-        )}
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Feather name="clock" size={32} color={theme.textSecondary} />
+              <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: 8 }}>
+                Datos insuficientes para análisis horario
+              </ThemedText>
+            </View>
+          )}
+        </View>
 
         {/* Información adicional */}
         <View style={[styles.infoCard, { backgroundColor: AstroBarColors.primary + '10' }]}>
