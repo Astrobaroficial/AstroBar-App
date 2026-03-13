@@ -22,8 +22,7 @@ interface DemandData {
   }>;
 }
 
-// Styles defined at bottom of file - verified for build
-const HeatmapScreen = () => {
+export default function HeatmapScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -461,5 +460,3 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
 });
-
-export default HeatmapScreen;
