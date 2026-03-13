@@ -6,7 +6,7 @@ import AdminDashboard from "@/screens/AdminDashboard";
 import AdminManagement from "@/screens/AdminManagement";
 import AdminOperations from "@/screens/AdminOperations";
 import AdminSettings from "@/screens/AdminSettings";
-import HeatmapScreen from "@/screens/HeatmapScreen";
+import HeatmapScreenNew from "@/screens/HeatmapScreenNew";
 import RankingScreen from "@/screens/RankingScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
@@ -66,7 +66,7 @@ export default function AdminTabNavigator() {
       />
       <Tab.Screen
         name="Analytics"
-        component={HeatmapScreen}
+        component={HeatmapScreenNew}
         options={{
           title: "Análisis",
           tabBarIcon: ({ color, size }) => (

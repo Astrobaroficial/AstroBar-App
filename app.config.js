@@ -46,13 +46,6 @@ export default {
       "expo-secure-store",
       "@react-native-community/datetimepicker",
       [
-        "@stripe/stripe-react-native",
-        {
-          merchantIdentifier: "merchant.com.astrobar.app",
-          enableGooglePay: true
-        }
-      ],
-      [
         "expo-location",
         {
           locationAlwaysAndWhenInUsePermission: "Necesitamos tu ubicación para mostrarte bares cercanos y calcular rutas."
