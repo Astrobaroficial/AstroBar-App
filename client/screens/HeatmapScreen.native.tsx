@@ -16,7 +16,7 @@ const SAMPLE_ZONES = [
   { latitude: -34.6092, longitude: -58.4370, heat_score: 48, total_purchases: 22, name: 'Almagro' },
 ];
 
-export default function HeatmapScreen() {
+export default function HeatmapScreenInteractive() {
   const [loading, setLoading] = useState(true);
   const [heatmap, setHeatmap] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -259,7 +259,7 @@ export default function HeatmapScreen() {
 
 
 
-const getStyles = (theme: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0E27',
@@ -334,7 +334,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   barMarker: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#FF6B35',
     width: 36,
     height: 36,
     borderRadius: 18,

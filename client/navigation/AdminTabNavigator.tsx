@@ -6,7 +6,7 @@ import AdminDashboard from "@/screens/AdminDashboard";
 import AdminManagement from "@/screens/AdminManagement";
 import AdminOperations from "@/screens/AdminOperations";
 import AdminSettings from "@/screens/AdminSettings";
-import HeatmapScreen from "@/screens/HeatmapScreen";
+import HeatmapScreen from "@/screens/HeatmapScreen.native";
 import RankingScreen from "@/screens/RankingScreen";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
