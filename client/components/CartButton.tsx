@@ -10,7 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useCart } from "@/contexts/CartContext";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 
 interface CartButtonProps {
@@ -21,9 +21,12 @@ interface CartButtonProps {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function CartButton({ onPress, bottomOffset = 0 }: CartButtonProps) {
-  const { itemCount, subtotal, cart } = useCart();
+  const { getItemCount, getTotal, items } = useUnifiedCart();
   const insets = useSafeAreaInsets();
   const scale = useSharedValue(1);
+
+  const itemCount = getItemCount();
+  const subtotal = getTotal() / 100;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -37,7 +40,7 @@ export function CartButton({ onPress, bottomOffset = 0 }: CartButtonProps) {
     scale.value = withSpring(1, { damping: 15, stiffness: 200 });
   };
 
-  if (!cart || itemCount === 0) {
+  if (items.length === 0) {
     return null;
   }
 

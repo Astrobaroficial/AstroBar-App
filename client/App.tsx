@@ -24,6 +24,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { BusinessProvider } from "@/contexts/BusinessContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { OrderCartProvider } from "@/contexts/OrderCartContext";
+import { UnifiedCartProvider } from "@/contexts/UnifiedCartContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import {
@@ -168,9 +169,8 @@ export default function App() {
               <AppProvider>
                   <AuthProvider>
                     <BusinessProvider>
-                      <CartProvider>
-                        <OrderCartProvider>
-                          <ToastProvider>
+                      <UnifiedCartProvider>
+                        <ToastProvider>
                             <ThemedScreenWrapper>
                               <AppThemedShell>
                                 <RootStackNavigator />
@@ -187,10 +187,9 @@ export default function App() {
                               onDecline={handleDeclineNotifications}
                             />
                           </ToastProvider>
-                        </OrderCartProvider>
-                      </CartProvider>
-                    </BusinessProvider>
-                  </AuthProvider>
+                        </UnifiedCartProvider>
+                      </BusinessProvider>
+                    </AuthProvider>
                 </AppProvider>
               <StatusBar style="auto" />
             </KeyboardProvider>

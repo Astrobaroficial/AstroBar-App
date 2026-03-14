@@ -16,14 +16,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
-import { useOrderCart } from '@/contexts/OrderCartContext';
+import { useUnifiedCart } from '@/contexts/UnifiedCartContext';
 
 export default function OrderCartScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const navigation = useNavigation();
-  const { items, removeItem, updateQuantity, updateNotes, getTotal, clearCart } = useOrderCart();
+  const { items, removeItem, updateQuantity, updateNotes, getTotal, clearCart } = useUnifiedCart();
 
   const [platformCommission] = useState(0.15); // 15% por defecto, se obtiene del backend
 
@@ -92,21 +92,21 @@ export default function OrderCartScreen() {
         showsVerticalScrollIndicator={false}
       >
         {items.map((item) => (
-          <View key={item.productId} style={[styles.itemCard, { backgroundColor: theme.card }, Shadows.sm]}>
+          <View key={item.id} style={[styles.itemCard, { backgroundColor: theme.card }, Shadows.sm]}>
             {item.image && (
               <Image source={{ uri: item.image }} style={styles.itemImage} />
             )}
             <View style={styles.itemInfo}>
               <ThemedText type="body" style={{ fontWeight: '600' }}>
-                {item.productName}
+                {item.name}
               </ThemedText>
               <ThemedText type="small" style={{ color: AstroBarColors.primary, marginTop: 4 }}>
-                ${(item.productPrice / 100).toFixed(2)} c/u
+                ${(item.price / 100).toFixed(2)} c/u
               </ThemedText>
               
               <View style={styles.quantityContainer}>
                 <Pressable
-                  onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+                  onPress={() => updateQuantity(item.id, item.quantity - 1)}
                   style={[styles.quantityButton, { backgroundColor: theme.border }]}
                 >
                   <Feather name="minus" size={16} color={theme.text} />
@@ -115,7 +115,7 @@ export default function OrderCartScreen() {
                   {item.quantity}
                 </ThemedText>
                 <Pressable
-                  onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+                  onPress={() => updateQuantity(item.id, item.quantity + 1)}
                   style={[styles.quantityButton, { backgroundColor: AstroBarColors.primary }]}
                 >
                   <Feather name="plus" size={16} color="#FFFFFF" />
@@ -126,7 +126,7 @@ export default function OrderCartScreen() {
                 placeholder="Notas especiales (opcional)"
                 placeholderTextColor={theme.textSecondary}
                 value={item.notes || ''}
-                onChangeText={(text) => updateNotes(item.productId, text)}
+                onChangeText={(text) => updateNotes(item.id, text)}
                 style={[styles.notesInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
                 multiline
               />
@@ -134,9 +134,9 @@ export default function OrderCartScreen() {
 
             <View style={styles.itemActions}>
               <ThemedText type="h3" style={{ color: AstroBarColors.primary }}>
-                ${((item.productPrice * item.quantity) / 100).toFixed(2)}
+                ${((item.price * item.quantity) / 100).toFixed(2)}
               </ThemedText>
-              <Pressable onPress={() => removeItem(item.productId)} style={{ marginTop: Spacing.sm }}>
+              <Pressable onPress={() => removeItem(item.id)} style={{ marginTop: Spacing.sm }}>
                 <Feather name="x" size={20} color={AstroBarColors.error} />
               </Pressable>
             </View>
