@@ -19,7 +19,7 @@ import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { Product } from "@/types";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -39,7 +39,7 @@ export default function ProductDetailScreen() {
   const navigation = useNavigation<ProductDetailNavigationProp>();
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { addToCart, cart, getCartItem } = useCart();
+  const { addItem, items, currentBusinessId, clearCart } = useUnifiedCart();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -80,13 +80,10 @@ export default function ProductDetailScreen() {
       setProduct(productFromParams);
     }
 
-    const existingItem = getCartItem(productId);
+    const existingItem = items.find(item => item.productId === productId);
     if (existingItem) {
       setQuantity(existingItem.quantity);
-      setNote(existingItem.note || "");
-      if (existingItem.unitAmount) {
-        setUnitAmount(existingItem.unitAmount.toString());
-      }
+      setNote(existingItem.notes || "");
     }
   }, [productId, businessId]);
 
@@ -96,39 +93,46 @@ export default function ProductDetailScreen() {
     if (product.requiresNote && !note.trim()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       showToast(
-        "Por favor agrega una especificación para este producto.",
+        "Por favor agrega una especificaciï¿½n para este producto.",
         "warning",
       );
       return;
     }
 
-    if (cart && cart.businessId !== businessId) {
+    if (currentBusinessId && currentBusinessId !== businessId) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setShowBusinessChangeModal(true);
       return;
     }
 
-    await addToCart(
-      product,
+    addItem({
+      id: productId,
+      type: 'product',
+      name: product.name,
+      price: product.price * 100,
       businessId,
       businessName,
-      quantity,
-      note.trim() || undefined,
-      product.isWeightBased ? parseFloat(unitAmount) || 1 : undefined,
-    );
+      image: product.image,
+      notes: note.trim() || undefined,
+      productId,
+    });
     navigation.goBack();
   };
 
   const handleConfirmBusinessChange = async () => {
     if (!product) return;
-    await addToCart(
-      product,
+    clearCart();
+    addItem({
+      id: productId,
+      type: 'product',
+      name: product.name,
+      price: product.price * 100,
       businessId,
       businessName,
-      quantity,
-      note.trim() || undefined,
-      product.isWeightBased ? parseFloat(unitAmount) || 1 : undefined,
-    );
+      image: product.image,
+      notes: note.trim() || undefined,
+      productId,
+    });
     setShowBusinessChangeModal(false);
     navigation.goBack();
   };
@@ -259,7 +263,7 @@ export default function ProductDetailScreen() {
             <View style={styles.noteLabelRow}>
               <ThemedText type="h4">
                 {product.requiresNote
-                  ? "Especificación (requerida)"
+                  ? "Especificaciï¿½n (requerida)"
                   : "Nota (opcional)"}
               </ThemedText>
               {product.requiresNote ? (
@@ -353,8 +357,8 @@ export default function ProductDetailScreen() {
 
       <ConfirmModal
         visible={showBusinessChangeModal}
-        title="¿Cambiar de negocio?"
-        message="Ya tienes productos de otro negocio en tu carrito. ¿Deseas vaciar el carrito y agregar este producto?"
+        title="ï¿½Cambiar de negocio?"
+        message="Ya tienes productos de otro negocio en tu carrito. ï¿½Deseas vaciar el carrito y agregar este producto?"
         confirmText="Cambiar"
         cancelText="Cancelar"
         confirmColor={AstroBarColors.error}

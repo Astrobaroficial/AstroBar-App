@@ -11,7 +11,7 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { Badge } from "@/components/Badge";
 import { useTheme } from "@/hooks/useTheme";
-import { useCart } from "@/contexts/CartContext";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { Product } from "@/types";
 
@@ -24,11 +24,11 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function ProductCard({ product, onPress }: ProductCardProps) {
   const { theme } = useTheme();
-  const { isProductInCart, getCartItem } = useCart();
+  const { items } = useUnifiedCart();
   const scale = useSharedValue(1);
 
-  const inCart = isProductInCart(product.id);
-  const cartItem = getCartItem(product.id);
+  const cartItem = items.find(item => item.productId === product.id);
+  const inCart = !!cartItem;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
