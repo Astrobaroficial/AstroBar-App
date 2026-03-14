@@ -21,7 +21,7 @@ export default function OrderPaymentScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { total, items } = route.params;
-  const { clearCart } = useOrderCart();
+  const { clearCart } = useUnifiedCart();
 
   const [loading, setLoading] = useState(false);
   const [checkingMP, setCheckingMP] = useState(true);

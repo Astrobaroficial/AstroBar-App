@@ -23,7 +23,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BusinessProvider } from "@/contexts/BusinessContext";
 import { CartProvider } from "@/contexts/CartContext";
-import { OrderCartProvider } from "@/contexts/OrderCartContext";
 import { UnifiedCartProvider } from "@/contexts/UnifiedCartContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { ToastProvider } from "@/contexts/ToastContext";
