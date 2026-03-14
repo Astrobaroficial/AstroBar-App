@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
+import { WebView } from 'react-native-webview';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
@@ -27,6 +28,8 @@ export default function BusinessMercadoPagoScreen() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
+  const [webViewVisible, setWebViewVisible] = useState(false);
+  const [authUrl, setAuthUrl] = useState('');
 
   useEffect(() => {
     loadMercadoPagoStatus();
@@ -63,15 +66,8 @@ export default function BusinessMercadoPagoScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        const result = await WebBrowser.openBrowserAsync(data.authUrl);
-        
-        if (result.type === 'success' || result.type === 'cancel') {
-          setTimeout(() => {
-            loadMercadoPagoStatus();
-            showToast('¡Cuenta conectada exitosamente!', 'success');
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }, 1500);
-        }
+        setAuthUrl(data.authUrl);
+        setWebViewVisible(true);
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
       }
@@ -80,6 +76,15 @@ export default function BusinessMercadoPagoScreen() {
       showToast(error.message || 'Error al conectar', 'error');
     } finally {
       setConnecting(false);
+    }
+  };
+
+  const handleWebViewNavigationStateChange = (navState: any) => {
+    if (navState.url.includes('astrobar://mp-connected')) {
+      setWebViewVisible(false);
+      loadMercadoPagoStatus();
+      showToast('¡Cuenta conectada exitosamente!', 'success');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
@@ -359,6 +364,27 @@ export default function BusinessMercadoPagoScreen() {
           </View>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={webViewVisible}
+        animationType="slide"
+        onRequestClose={() => setWebViewVisible(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={[styles.webViewHeader, { backgroundColor: theme.card }]}>
+            <Pressable onPress={() => setWebViewVisible(false)} style={styles.closeButton}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
+            <View style={{ width: 24 }} />
+          </View>
+          <WebView
+            source={{ uri: authUrl }}
+            onNavigationStateChange={handleWebViewNavigationStateChange}
+            style={{ flex: 1 }}
+          />
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -498,5 +524,16 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  webViewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  closeButton: {
+    padding: Spacing.sm,
   },
 });
