@@ -12,7 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 import { Linking } from "react-native";
-import { useOrderCart } from "@/contexts/OrderCartContext";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();

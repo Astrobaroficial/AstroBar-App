@@ -17,7 +17,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
-import { useOrderCart } from "@/contexts/OrderCartContext";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 
 interface Product {
   id: string;
@@ -52,7 +52,7 @@ export default function BarMenuScreen() {
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [toast, setToast] = useState<string | null>(null);
-  const { addItem, getItemCount, currentBusinessId, clearCart } = useOrderCart();
+  const { addItem, getItemCount, currentBusinessId, clearCart } = useUnifiedCart();
 
   useEffect(() => {
     loadMenu();
