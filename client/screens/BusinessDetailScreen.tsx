@@ -296,260 +296,47 @@ export default function BusinessDetailScreen() {
               </View>
             </View>
 
-            {/* Menu Button */}
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                navigation.navigate('BarMenu' as any, { businessId: business.id });
-              }}
-              style={[
-                styles.menuButton,
-                { backgroundColor: AstroBarColors.primary },
-                Shadows.md,
-              ]}
-            >
-              <Feather name="book-open" size={20} color="#FFFFFF" />
-              <ThemedText type="body" style={styles.menuButtonText}>
-                Ver Men� Completo
-              </ThemedText>
-              <Feather name="chevron-right" size={20} color="#FFFFFF" />
-            </Pressable>
-
-            {/* Promotions Section */}
-            {promotions.length > 0 && (
-              <View style={styles.promotionsSection}>
-                <ThemedText type="h3" style={styles.sectionTitle}>
-                  Promociones Activas ?
-                </ThemedText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.promotionsScroll}
-                >
-                  {promotions.map((promo) => {
-                    const discount = promo.discountPercentage || 0;
-                    const promoPrice = (promo.promoPrice / 100).toFixed(2);
-                    const originalPrice = (promo.originalPrice / 100).toFixed(2);
-                    const stockRemaining = promo.stockRemaining || 0;
-                    const isFlash = promo.type === 'flash';
-
-                    return (
-                      <Pressable
-                        key={promo.id}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          navigation.navigate('ConfirmPromotion', {
-                            promotion: promo,
-                            business: business,
-                          });
-                        }}
-                        style={[
-                          styles.promoCard,
-                          { backgroundColor: theme.card },
-                          isFlash && styles.promoCardFlash,
-                        ]}
-                      >
-                        {isFlash && (
-                          <View style={styles.flashBadge}>
-                            <Feather name="zap" size={12} color="#FFFFFF" />
-                            <ThemedText type="caption" style={styles.flashBadgeText}>
-                              FLASH
-                            </ThemedText>
-                          </View>
-                        )}
-                        <View style={styles.discountBadge}>
-                          <ThemedText type="h3" style={styles.discountText}>
-                            {discount}%
-                          </ThemedText>
-                          <ThemedText type="caption" style={styles.discountLabel}>
-                            OFF
-                          </ThemedText>
-                        </View>
-                        <ThemedText type="body" style={styles.promoTitle} numberOfLines={2}>
-                          {promo.title}
-                        </ThemedText>
-                        <View style={styles.promoPriceRow}>
-                          <ThemedText type="small" style={styles.originalPrice}>
-                            ${originalPrice}
-                          </ThemedText>
-                          <ThemedText type="h3" style={styles.promoPrice}>
-                            ${promoPrice}
-                          </ThemedText>
-                        </View>
-                        <View style={styles.promoStock}>
-                          <Feather name="users" size={12} color={theme.textSecondary} />
-                          <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 4 }}>
-                            {stockRemaining} disponibles
-                          </ThemedText>
-                        </View>
-                        <View style={[styles.promoButton, { backgroundColor: isFlash ? '#FFD700' : AstroBarColors.primary }]}>
-                          <ThemedText type="small" style={styles.promoButtonText}>
-                            ACEPTAR
-                          </ThemedText>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Future Promotions Section (when bar is closed or no active promos) */}
-            {futurePromotions.length > 0 && (
-              <View style={styles.promotionsSection}>
-                <ThemedText type="h3" style={styles.sectionTitle}>
-                  Pr�ximas Promociones ??
-                </ThemedText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.promotionsScroll}
-                >
-                  {futurePromotions.map((promo) => {
-                    const startDate = new Date(promo.startTime);
-                    const promoPrice = (promo.promoPrice / 100).toFixed(2);
-                    const originalPrice = (promo.originalPrice / 100).toFixed(2);
-                    const discount = promo.discountPercentage || 0;
-
-                    return (
-                      <View
-                        key={promo.id}
-                        style={[
-                          styles.promoCard,
-                          { backgroundColor: theme.card, opacity: 0.9 },
-                        ]}
-                      >
-                        <View style={styles.futureBadge}>
-                          <Feather name="clock" size={12} color="#FFFFFF" />
-                          <ThemedText type="caption" style={styles.futureBadgeText}>
-                            PR�XIMAMENTE
-                          </ThemedText>
-                        </View>
-                        <View style={styles.discountBadge}>
-                          <ThemedText type="h3" style={styles.discountText}>
-                            {discount}%
-                          </ThemedText>
-                          <ThemedText type="caption" style={styles.discountLabel}>
-                            OFF
-                          </ThemedText>
-                        </View>
-                        <ThemedText type="body" style={styles.promoTitle} numberOfLines={2}>
-                          {promo.title}
-                        </ThemedText>
-                        <View style={styles.promoPriceRow}>
-                          <ThemedText type="small" style={styles.originalPrice}>
-                            ${originalPrice}
-                          </ThemedText>
-                          <ThemedText type="h3" style={styles.promoPrice}>
-                            ${promoPrice}
-                          </ThemedText>
-                        </View>
-                        <View style={styles.futureDate}>
-                          <Feather name="calendar" size={12} color={theme.textSecondary} />
-                          <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 4 }}>
-                            {startDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </ThemedText>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            )}
-
-            {categories.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoriesScroll}
-                contentContainerStyle={styles.categoriesContent}
+            {/* Action Buttons */}
+            <View style={styles.actionButtonsContainer}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  navigation.navigate('ActivePromotions' as any, { businessId: business.id });
+                }}
+                style={[
+                  styles.menuButton,
+                  { backgroundColor: '#FFD700' },
+                  Shadows.md,
+                ]}
               >
-                <Pressable
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setSelectedCategory(null);
-                  }}
-                  style={[
-                    styles.categoryChip,
-                    {
-                      backgroundColor: !selectedCategory
-                        ? AstroBarColors.primary
-                        : theme.backgroundSecondary,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    type="small"
-                    style={{
-                      color: !selectedCategory ? "#FFFFFF" : theme.text,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Todos
-                  </ThemedText>
-                </Pressable>
-                {categories.map((cat) => (
-                  <Pressable
-                    key={cat}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      setSelectedCategory(cat);
-                    }}
-                    style={[
-                      styles.categoryChip,
-                      {
-                        backgroundColor:
-                          selectedCategory === cat
-                            ? AstroBarColors.primary
-                            : theme.backgroundSecondary,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      type="small"
-                      style={{
-                        color:
-                          selectedCategory === cat ? "#FFFFFF" : theme.text,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {cat}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : null}
+                <Feather name="zap" size={20} color="#000000" />
+                <ThemedText type="body" style={[styles.menuButtonText, { color: '#000000' }]}>
+                  Ver Promociones
+                </ThemedText>
+                <Feather name="chevron-right" size={20} color="#000000" />
+              </Pressable>
 
-            <View style={styles.productsSection}>
-              <ThemedText type="h3" style={styles.productsSectionTitle}>
-                {business.type === "market" ? "Productos" : "Men�"}
-              </ThemedText>
-              {isLoading ? (
-                <>
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                </>
-              ) : (
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onPress={() =>
-                      navigation.navigate("ProductDetail", {
-                        productId: product.id,
-                        businessId: business.id,
-                        businessName: business.name,
-                        product: product,
-                      })
-                    }
-                  />
-                ))
-              )}
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  navigation.navigate('BarMenu' as any, { businessId: business.id });
+                }}
+                style={[
+                  styles.menuButton,
+                  { backgroundColor: AstroBarColors.primary },
+                  Shadows.md,
+                ]}
+              >
+                <Feather name="book-open" size={20} color="#FFFFFF" />
+                <ThemedText type="body" style={styles.menuButtonText}>
+                  Ver Menú Completo
+                </ThemedText>
+                <Feather name="chevron-right" size={20} color="#FFFFFF" />
+              </Pressable>
             </View>
           </>
         ) : null}
       </ScrollView>
-
       <CartButton onPress={() => navigation.navigate("OrderCart")} />
     </View>
   );
@@ -690,6 +477,11 @@ const getStyles = (theme: any) => StyleSheet.create({
     fontWeight: '700',
     flex: 1,
     textAlign: 'center',
+  },
+  actionButtonsContainer: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
   promotionsSection: {
     marginBottom: Spacing.xl,

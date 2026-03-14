@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +21,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 
 type ActivePromotionsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -28,8 +29,12 @@ export default function ActivePromotionsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation<ActivePromotionsScreenNavigationProp>();
+  const route = useRoute<any>();
+  const businessId = route.params?.businessId;
+  const { addItem, currentBusinessId } = useUnifiedCart();
   
   const [activeTransaction, setActiveTransaction] = useState<any>(null);
+  const [businessPromotions, setBusinessPromotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -37,8 +42,12 @@ export default function ActivePromotionsScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
-    loadActivePromotion();
-  }, []);
+    if (businessId) {
+      loadBusinessPromotions();
+    } else {
+      loadActivePromotion();
+    }
+  }, [businessId]);
 
   useEffect(() => {
     if (!activeTransaction) return;
@@ -84,9 +93,29 @@ export default function ActivePromotionsScreen() {
     }
   };
 
+  const loadBusinessPromotions = async () => {
+    try {
+      const response = await apiRequest('GET', `/api/promotions?businessId=${businessId}`);
+      const data = await response.json();
+
+      if (data.success && data.promotions) {
+        setBusinessPromotions(data.promotions);
+      }
+    } catch (error) {
+      console.error('Error loading business promotions:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
-    loadActivePromotion();
+    if (businessId) {
+      loadBusinessPromotions();
+    } else {
+      loadActivePromotion();
+    }
   };
 
   const handleCancel = async () => {
@@ -116,6 +145,87 @@ export default function ActivePromotionsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={AstroBarColors.primary} />
+      </View>
+    );
+  }
+
+  if (businessId) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.md, backgroundColor: AstroBarColors.primary }]}>
+          <Pressable onPress={() => navigation.goBack()}>
+            <Feather name="arrow-left" size={24} color="#FFFFFF" />
+          </Pressable>
+          <ThemedText type="h3" style={{ color: '#FFFFFF' }}>
+            Promociones
+          </ThemedText>
+          <View style={{ width: 24 }} />
+        </View>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        >
+          <View style={{ padding: Spacing.lg }}>
+            {businessPromotions.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: Spacing.xl * 2 }}>
+                <Feather name="tag" size={64} color={theme.textSecondary} />
+                <ThemedText type="h3" style={{ marginTop: Spacing.lg }}>
+                  Sin promociones activas
+                </ThemedText>
+              </View>
+            ) : (
+              businessPromotions.map((promo) => {
+                const canAdd = !currentBusinessId || currentBusinessId === businessId;
+                return (
+                  <Pressable
+                    key={promo.id}
+                    onPress={() => {
+                      if (!canAdd) {
+                        alert('Solo puedes agregar promociones del mismo bar');
+                        return;
+                      }
+                      try {
+                        addItem({
+                          id: `promo-${promo.id}`,
+                          type: 'promotion',
+                          name: promo.title,
+                          price: promo.promoPrice,
+                          businessId: businessId,
+                          businessName: promo.businessName || 'Bar',
+                          image: promo.image,
+                          promotionId: promo.id,
+                          originalPrice: promo.originalPrice,
+                        });
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        alert('Promoción agregada al carrito');
+                      } catch (error: any) {
+                        alert(error.message);
+                      }
+                    }}
+                    style={[styles.promoCard, { backgroundColor: theme.card, marginBottom: Spacing.md, padding: Spacing.lg, borderRadius: 12, opacity: canAdd ? 1 : 0.5 }]}
+                  >
+                    <ThemedText type="h3">{promo.title}</ThemedText>
+                    <ThemedText style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
+                      {promo.description}
+                    </ThemedText>
+                    <View style={{ flexDirection: 'row', marginTop: Spacing.md, gap: Spacing.sm, alignItems: 'center' }}>
+                      <ThemedText style={{ textDecorationLine: 'line-through', color: theme.textSecondary }}>
+                        ${(promo.originalPrice / 100).toFixed(2)}
+                      </ThemedText>
+                      <ThemedText type="h3" style={{ color: '#4CAF50' }}>
+                        ${(promo.promoPrice / 100).toFixed(2)}
+                      </ThemedText>
+                    </View>
+                    <View style={{ marginTop: Spacing.md, backgroundColor: AstroBarColors.primary, paddingVertical: Spacing.sm, borderRadius: 8, alignItems: 'center' }}>
+                      <ThemedText style={{ color: '#FFFFFF', fontWeight: '700' }}>AGREGAR AL CARRITO</ThemedText>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </View>
+        </ScrollView>
       </View>
     );
   }

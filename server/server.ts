@@ -136,6 +136,11 @@ import favoriteRoutes from './routes/favoriteRoutes';
 
 app.use('/api/favorites', favoriteRoutes);
 
+// Migration routes (temporal)
+import migrationRoutes from './routes/migrationRoutes';
+
+app.use('/api/migrations', migrationRoutes);
+
 // Webhook routes
 import webhookRoutes from './routes/webhookRoutes';
 

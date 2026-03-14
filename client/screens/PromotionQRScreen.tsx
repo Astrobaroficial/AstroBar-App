@@ -74,6 +74,9 @@ export default function PromotionQRScreen({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         alert("Promoción cancelada exitosamente");
         navigation.goBack();
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        alert(data.error || "Error al cancelar");
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

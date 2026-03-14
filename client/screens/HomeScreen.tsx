@@ -630,57 +630,58 @@ export default function HomeScreen() {
             {/* Bar Grid */}
             <View style={styles.gridSection}>
               {bars.slice(0, 4).map((business, index) => (
-                <Pressable
-                  key={business.id}
-                  onPress={() =>
-                    navigation.navigate("BusinessDetail", {
-                      businessId: business.id,
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.gridCard,
-                    {
-                      backgroundColor: theme.colors.surface,
-                      opacity: pressed ? 0.9 : 1,
-                    },
-                  ]}
-                >
-                  <Image
-                    source={{ uri: business.bannerImage }}
-                    style={styles.gridImage}
-                    contentFit="cover"
-                  />
-                  <View style={styles.gridInfo}>
-                    <ThemedText
-                      type="small"
-                      style={styles.gridName}
-                      numberOfLines={1}
-                    >
-                      {business.name}
-                    </ThemedText>
-                    <View style={styles.gridMeta}>
-                      <View style={styles.ratingSmall}>
-                        <ThemedText type="caption">
-                          {business.rating}
-                        </ThemedText>
-                        <Feather
-                          name="star"
-                          size={10}
-                          color="#FFB800"
-                          style={{ marginLeft: 2 }}
-                        />
+                <View key={business.id} style={styles.gridCard}>
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate("BusinessDetail", {
+                        businessId: business.id,
+                      })
+                    }
+                    style={({ pressed }) => [
+                      styles.gridCardInner,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        opacity: pressed ? 0.9 : 1,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: business.bannerImage }}
+                      style={styles.gridImage}
+                      contentFit="cover"
+                    />
+                    <View style={styles.gridInfo}>
+                      <ThemedText
+                        type="small"
+                        style={styles.gridName}
+                        numberOfLines={1}
+                      >
+                        {business.name}
+                      </ThemedText>
+                      <View style={styles.gridMeta}>
+                        <View style={styles.ratingSmall}>
+                          <ThemedText type="caption">
+                            {business.rating}
+                          </ThemedText>
+                          <Feather
+                            name="star"
+                            size={10}
+                            color="#FFB800"
+                            style={{ marginLeft: 2 }}
+                          />
+                        </View>
                       </View>
+                      {getDistanceText(business) && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                          <Feather name="map-pin" size={10} color={theme.colors.text.secondary} />
+                          <ThemedText type="caption" style={{ color: theme.colors.text.secondary, marginLeft: 2 }}>
+                            {getDistanceText(business)}
+                          </ThemedText>
+                        </View>
+                      )}
                     </View>
-                    {getDistanceText(business) && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                        <Feather name="map-pin" size={10} color={theme.colors.text.secondary} />
-                        <ThemedText type="caption" style={{ color: theme.colors.text.secondary, marginLeft: 2 }}>
-                          {getDistanceText(business)}
-                        </ThemedText>
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
+                  </Pressable>
+                </View>
               ))}
             </View>
 
@@ -1076,10 +1077,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: Spacing.xl,
-    gap: Spacing.md,
+    marginHorizontal: -Spacing.xs,
   },
   gridCard: {
-    width: "48%",
+    width: "50%",
+    paddingHorizontal: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+  gridCardInner: {
     borderRadius: BorderRadius.lg,
     overflow: "hidden",
   },

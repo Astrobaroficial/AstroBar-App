@@ -105,12 +105,15 @@ export default function BarMenuScreen() {
   const addItemToCart = (product: Product) => {
     try {
       addItem({
-        productId: product.id,
-        productName: product.name,
-        productPrice: product.price,
+        id: product.id,
+        type: 'product',
+        name: product.name,
+        price: Math.round(product.price * 100),
+        quantity: 1,
         businessId: businessId,
         businessName: menuData?.business.name || '',
         image: product.image,
+        productId: product.id,
       });
       showToast(`✓ ${product.name} agregado`);
     } catch (error: any) {
