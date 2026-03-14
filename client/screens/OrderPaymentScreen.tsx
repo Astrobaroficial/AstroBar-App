@@ -5,7 +5,6 @@ import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/nativ
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +12,7 @@ import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/them
 import { apiRequest } from "@/lib/query-client";
 import { Linking } from "react-native";
 import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
+import MercadoPagoWebView from "@/components/MercadoPagoWebView";
 
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();
@@ -27,6 +27,8 @@ export default function OrderPaymentScreen() {
   const [checkingMP, setCheckingMP] = useState(true);
   const [mpConnected, setMpConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [authUrl, setAuthUrl] = useState("");
 
   useEffect(() => {
     checkMercadoPagoStatus();
@@ -60,20 +62,8 @@ export default function OrderPaymentScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        // Usar Custom Tabs en lugar de navegador externo
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.authUrl,
-          'astrobar://mp-callback'
-        );
-        
-        if (result.type === 'success') {
-          // Verificar el estado después de la autenticación
-          setTimeout(() => {
-            checkMercadoPagoStatus();
-          }, 1500);
-        } else if (result.type === 'cancel') {
-          Alert.alert("Cancelado", "Conexión con Mercado Pago cancelada");
-        }
+        setAuthUrl(data.authUrl);
+        setShowWebView(true);
       } else {
         Alert.alert("Error", "No se pudo conectar con Mercado Pago");
       }
@@ -83,6 +73,18 @@ export default function OrderPaymentScreen() {
     } finally {
       setConnecting(false);
     }
+  };
+
+  const handleWebViewSuccess = () => {
+    setShowWebView(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert("¡Éxito!", "Cuenta de Mercado Pago conectada");
+    checkMercadoPagoStatus();
+  };
+
+  const handleWebViewCancel = () => {
+    setShowWebView(false);
+    Alert.alert("Cancelado", "Conexión con Mercado Pago cancelada");
   };
 
   const handlePayment = async () => {
@@ -116,6 +118,16 @@ export default function OrderPaymentScreen() {
       setLoading(false);
     }
   };
+
+  if (showWebView && authUrl) {
+    return (
+      <MercadoPagoWebView
+        authUrl={authUrl}
+        onSuccess={handleWebViewSuccess}
+        onCancel={handleWebViewCancel}
+      />
+    );
+  }
 
   if (checkingMP) {
     return (
