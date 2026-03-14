@@ -60,12 +60,19 @@ export default function OrderPaymentScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        const result = await WebBrowser.openBrowserAsync(data.authUrl);
+        // Usar Custom Tabs en lugar de navegador externo
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.authUrl,
+          'astrobar://mp-callback'
+        );
         
-        if (result.type === 'success' || result.type === 'cancel') {
+        if (result.type === 'success') {
+          // Verificar el estado después de la autenticación
           setTimeout(() => {
             checkMercadoPagoStatus();
           }, 1500);
+        } else if (result.type === 'cancel') {
+          Alert.alert("Cancelado", "Conexión con Mercado Pago cancelada");
         }
       } else {
         Alert.alert("Error", "No se pudo conectar con Mercado Pago");
