@@ -550,7 +550,7 @@ export default function BusinessDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <CartButton onPress={() => navigation.navigate("Cart")} />
+      <CartButton onPress={() => navigation.navigate("OrderCart")} />
     </View>
   );
 }
