@@ -72,26 +72,26 @@ export default function MapScreen() {
 
   const getDirections = async (bar: any) => {
     if (!location) {
-      console.log('No location available');
+      Alert.alert('Error', 'No se pudo obtener tu ubicación');
       return;
     }
 
     try {
-      console.log('Getting directions from:', location.coords.latitude, location.coords.longitude);
-      console.log('To:', bar.latitude, bar.longitude);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
       const origin = `${location.coords.latitude},${location.coords.longitude}`;
       const destination = `${bar.latitude},${bar.longitude}`;
 
-      console.log('Fetching directions from backend...');
       const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
       const data = await response.json();
 
-      console.log('Directions response:', data);
-
       if (data.success && data.route) {
         const points = decodePolyline(data.route.polyline);
-        console.log('Route points:', points.length);
+        
+        if (points.length === 0) {
+          Alert.alert('Error', 'No se pudo generar la ruta');
+          return;
+        }
         
         setRouteCoords(points);
         setRouteInfo({
@@ -99,24 +99,28 @@ export default function MapScreen() {
           duration: data.route.duration,
         });
 
-        console.log('Distance:', data.route.distance);
-        console.log('Duration:', data.route.duration);
-
-        // Fit map to route
+        // Ajustar el mapa para mostrar toda la ruta
         setTimeout(() => {
-          mapRef.current?.fitToCoordinates(points, {
-            edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
+          const allCoords = [
+            { latitude: location.coords.latitude, longitude: location.coords.longitude },
+            ...points,
+            { latitude: parseFloat(bar.latitude), longitude: parseFloat(bar.longitude) }
+          ];
+          
+          mapRef.current?.fitToCoordinates(allCoords, {
+            edgePadding: { top: 100, right: 50, bottom: 350, left: 50 },
             animated: true,
           });
         }, 100);
+        
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        console.log('Error response:', data);
         const errorMsg = data.details || data.hint || data.error || 'No se pudo encontrar una ruta';
         Alert.alert('Error', errorMsg);
       }
     } catch (err: any) {
       console.error('Error getting directions:', err);
-      Alert.alert('Error', 'Error al obtener direcciones. Verifica los logs del servidor.');
+      Alert.alert('Error', 'No se pudieron obtener las direcciones. Intenta nuevamente.');
     }
   };
 
@@ -255,12 +259,27 @@ export default function MapScreen() {
           </Marker>
         ))}
 
-        {routeCoords.length > 0 && (
-          <Polyline
-            coordinates={routeCoords}
-            strokeColor={AstroBarColors.primary}
-            strokeWidth={4}
-          />
+        {location && routeCoords.length > 0 && (
+          <>
+            <Marker
+              coordinate={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <View style={styles.userMarker}>
+                <View style={styles.userMarkerInner} />
+              </View>
+            </Marker>
+            
+            <Polyline
+              coordinates={routeCoords}
+              strokeColor={AstroBarColors.primary}
+              strokeWidth={5}
+              lineDashPattern={[0]}
+            />
+          </>
         )}
       </MapView>
 
@@ -429,5 +448,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
+  },
+  userMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: AstroBarColors.primary,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  userMarkerInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    top: 3,
+    left: 3,
   },
 });

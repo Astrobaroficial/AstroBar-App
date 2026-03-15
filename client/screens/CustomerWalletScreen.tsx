@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as WebBrowser from 'expo-web-browser';
+import { WebView } from 'react-native-webview';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
@@ -40,6 +40,8 @@ export default function CustomerWalletScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [filterTab, setFilterTab] = useState<'all' | 'completed' | 'pending'>('all');
+  const [showWebView, setShowWebView] = useState(false);
+  const [webViewUrl, setWebViewUrl] = useState('');
 
   useEffect(() => {
     loadMercadoPagoStatus();
@@ -97,15 +99,8 @@ export default function CustomerWalletScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        const result = await WebBrowser.openBrowserAsync(data.authUrl);
-        
-        if (result.type === 'success') {
-          setTimeout(() => {
-            loadMercadoPagoStatus();
-            showToast('¡Cuenta conectada exitosamente!', 'success');
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }, 1500);
-        }
+        setWebViewUrl(data.authUrl);
+        setShowWebView(true);
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
       }
@@ -114,6 +109,22 @@ export default function CustomerWalletScreen() {
       showToast(error.message || 'Error al conectar', 'error');
     } finally {
       setConnecting(false);
+    }
+  };
+
+  const handleWebViewNavigationStateChange = (navState: any) => {
+    const { url } = navState;
+    
+    // Detectar cuando Mercado Pago redirige de vuelta a tu callback URL
+    if (url.includes('/api/customer-mp/callback') || url.includes('success') || url.includes('code=')) {
+      setShowWebView(false);
+      setWebViewUrl('');
+      
+      setTimeout(() => {
+        loadMercadoPagoStatus();
+        showToast('¡Cuenta conectada exitosamente!', 'success');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }, 500);
     }
   };
 
@@ -431,6 +442,44 @@ export default function CustomerWalletScreen() {
         </View>
       </ScrollView>
 
+      {/* WebView Modal */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowWebView(false);
+          setWebViewUrl('');
+        }}
+      >
+        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.backgroundRoot }}>
+          <View style={[styles.webViewHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
+            <Pressable
+              style={[styles.closeWebViewButton, { backgroundColor: theme.backgroundSecondary }]}
+              onPress={() => {
+                setShowWebView(false);
+                setWebViewUrl('');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+          {webViewUrl ? (
+            <WebView
+              source={{ uri: webViewUrl }}
+              onNavigationStateChange={handleWebViewNavigationStateChange}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.webViewLoading}>
+                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                </View>
+              )}
+            />
+          ) : null}
+        </View>
+      </Modal>
+
       {/* Disconnect Modal */}
       <Modal
         visible={showDisconnectModal}
@@ -627,5 +676,29 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  webViewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  closeWebViewButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webViewLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
 });

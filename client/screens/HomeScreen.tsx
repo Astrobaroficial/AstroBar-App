@@ -76,7 +76,7 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      // Obtener ubicaciï¿½n del usuario
+      // Obtener ubicación del usuario
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
@@ -111,7 +111,7 @@ export default function HomeScreen() {
         minimumOrder: (b.min_order || 5000) / 100, // Convertir de centavos a pesos
         isOpen: b.isOpen ?? b.is_open ?? false,
         openingHours: [],
-        address: b.address || 'Autlï¿½n, Argentina',
+        address: b.address || 'Buenos Aires, Argentina',
         phone: b.phone || '',
         categories: b.categories ? b.categories.split(',') : [],
         acceptsCash: true,
@@ -174,7 +174,7 @@ export default function HomeScreen() {
       if (activeFilter) {
         switch (activeFilter) {
           case "cercano":
-            // Filtrar por distancia (implementar con geolocalizaciï¿½n)
+            // Filtrar por distancia (implementar con geolocalización)
             break;
           case "flash":
             // Filtrar bares con promociones flash activas
@@ -263,7 +263,7 @@ export default function HomeScreen() {
               AstroBar
             </ThemedText>
             <ThemedText type="body" style={styles.bannerSubtitle}>
-              Promociones Nocturnas ï¿½ Buenos Aires
+              Promociones Nocturnas • Buenos Aires
             </ThemedText>
           </LinearGradient>
         </Animated.View>
@@ -355,7 +355,7 @@ export default function HomeScreen() {
           <Feather name="search" size={20} color={theme.colors.text.secondary} />
           <TextInput
             style={[styles.searchInput, { color: theme.colors.text.primary }]}
-            placeholder="Buscar bar o promociï¿½n..."
+            placeholder="Buscar bar o promoción..."
             placeholderTextColor={theme.colors.text.secondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -685,7 +685,7 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {/* Mapa de Bares - Botï¿½n Principal */}
+            {/* Mapa de Bares - Botón Principal */}
             <Animated.View
               entering={FadeInDown.delay(300).springify()}
               style={styles.section}
@@ -732,7 +732,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Promociones Flash - Botï¿½n Secundario */}
+            {/* Promociones Flash - Botón Secundario */}
             <Animated.View
               entering={FadeInDown.delay(350).springify()}
               style={styles.section}
@@ -779,7 +779,7 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Promociones Comunes - BotÃ³n Terciario */}
+            {/* Promociones Comunes - Botón Terciario */}
             <Animated.View
               entering={FadeInDown.delay(400).springify()}
               style={styles.section}

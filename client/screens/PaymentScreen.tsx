@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Alert, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Pressable, Alert, ActivityIndicator, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
+import { WebView } from 'react-native-webview';
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -25,6 +25,8 @@ export default function PaymentScreen() {
   const [checkingMP, setCheckingMP] = useState(true);
   const [mpConnected, setMpConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [webViewUrl, setWebViewUrl] = useState('');
 
   useEffect(() => {
     checkMercadoPagoStatus();
@@ -58,13 +60,8 @@ export default function PaymentScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        const result = await WebBrowser.openBrowserAsync(data.authUrl);
-        
-        if (result.type === 'success' || result.type === 'cancel') {
-          setTimeout(() => {
-            checkMercadoPagoStatus();
-          }, 1500);
-        }
+        setWebViewUrl(data.authUrl);
+        setShowWebView(true);
       } else {
         Alert.alert("Error", "No se pudo conectar con Mercado Pago");
       }
@@ -73,6 +70,19 @@ export default function PaymentScreen() {
       Alert.alert("Error", error.message || "No se pudo conectar");
     } finally {
       setConnecting(false);
+    }
+  };
+
+  const handleWebViewNavigationStateChange = (navState: any) => {
+    const { url } = navState;
+    
+    if (url.includes('/api/customer-mp/callback') || url.includes('success') || url.includes('code=')) {
+      setShowWebView(false);
+      setWebViewUrl('');
+      
+      setTimeout(() => {
+        checkMercadoPagoStatus();
+      }, 500);
     }
   };
 
@@ -252,6 +262,44 @@ export default function PaymentScreen() {
           </>
         )}
       </View>
+
+      {/* WebView Modal */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowWebView(false);
+          setWebViewUrl('');
+        }}
+      >
+        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.backgroundRoot }}>
+          <View style={[styles.webViewHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
+            <Pressable
+              style={[styles.closeWebViewButton, { backgroundColor: theme.backgroundSecondary }]}
+              onPress={() => {
+                setShowWebView(false);
+                setWebViewUrl('');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+          {webViewUrl ? (
+            <WebView
+              source={{ uri: webViewUrl }}
+              onNavigationStateChange={handleWebViewNavigationStateChange}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.webViewLoading}>
+                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                </View>
+              )}
+            />
+          ) : null}
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -333,5 +381,29 @@ const getStyles = (theme: any) => StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
+  },
+  webViewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  closeWebViewButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webViewLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
 });
