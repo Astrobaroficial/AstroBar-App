@@ -11,7 +11,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
-import { Linking } from "react-native";
 
 export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
@@ -99,20 +98,41 @@ export default function PaymentScreen() {
       }
       
       if (data.initPoint) {
-        await Linking.openURL(data.initPoint);
-        
-        setTimeout(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Alert.alert("¡Pago exitoso!", "Tu promoción está lista", [
-            { text: "Ver QR", onPress: () => navigation.replace("PromotionQR", { transactionId: userPromotionId }) }
-          ]);
-        }, 3000);
+        setWebViewUrl(data.initPoint);
+        setShowWebView(true);
       }
     } catch (error: any) {
       console.error("Payment error:", error);
       Alert.alert("Error", error.message || "No se pudo procesar el pago");
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentWebViewNavigationStateChange = (navState: any) => {
+    const { url } = navState;
+    
+    if (url.includes('astrobar://payment-success')) {
+      setShowWebView(false);
+      setWebViewUrl('');
+      setLoading(false);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("¡Pago exitoso!", "Tu promoción está lista", [
+        { text: "Ver QR", onPress: () => navigation.replace("PromotionQR", { transactionId: userPromotionId }) }
+      ]);
+    } else if (url.includes('astrobar://payment-failure')) {
+      setShowWebView(false);
+      setWebViewUrl('');
+      setLoading(false);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Pago fallido", "No se pudo completar el pago. Intenta nuevamente.");
+    } else if (url.includes('astrobar://payment-pending')) {
+      setShowWebView(false);
+      setWebViewUrl('');
+      setLoading(false);
+      
+      Alert.alert("Pago pendiente", "Tu pago está siendo procesado. Te notificaremos cuando esté listo.");
     }
   };
 
@@ -263,23 +283,25 @@ export default function PaymentScreen() {
         )}
       </View>
 
-      {/* WebView Modal */}
+      {/* WebView Modal para Checkout Pro */}
       <Modal
         visible={showWebView}
         animationType="slide"
         onRequestClose={() => {
           setShowWebView(false);
           setWebViewUrl('');
+          setLoading(false);
         }}
       >
         <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.backgroundRoot }}>
           <View style={[styles.webViewHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
+            <ThemedText type="h4">Pagar con Mercado Pago</ThemedText>
             <Pressable
               style={[styles.closeWebViewButton, { backgroundColor: theme.backgroundSecondary }]}
               onPress={() => {
                 setShowWebView(false);
                 setWebViewUrl('');
+                setLoading(false);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
             >
@@ -289,11 +311,14 @@ export default function PaymentScreen() {
           {webViewUrl ? (
             <WebView
               source={{ uri: webViewUrl }}
-              onNavigationStateChange={handleWebViewNavigationStateChange}
+              onNavigationStateChange={handlePaymentWebViewNavigationStateChange}
               startInLoadingState
               renderLoading={() => (
                 <View style={styles.webViewLoading}>
                   <ActivityIndicator size="large" color={AstroBarColors.primary} />
+                  <ThemedText type="body" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
+                    Cargando Mercado Pago...
+                  </ThemedText>
                 </View>
               )}
             />
