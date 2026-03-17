@@ -82,8 +82,14 @@ export default function MapScreen() {
       const origin = `${location.coords.latitude},${location.coords.longitude}`;
       const destination = `${bar.latitude},${bar.longitude}`;
 
+      console.log('🗺️ Requesting directions...');
+      console.log('  From:', origin);
+      console.log('  To:', destination);
+
       const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
       const data = await response.json();
+
+      console.log('📥 Response:', JSON.stringify(data, null, 2));
 
       if (data.success && data.route) {
         const points = decodePolyline(data.route.polyline);
@@ -92,6 +98,8 @@ export default function MapScreen() {
           Alert.alert('Error', 'No se pudo generar la ruta');
           return;
         }
+        
+        console.log('✅ Route decoded:', points.length, 'points');
         
         setRouteCoords(points);
         setRouteInfo({
@@ -115,12 +123,21 @@ export default function MapScreen() {
         
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        const errorMsg = data.details || data.hint || data.error || 'No se pudo encontrar una ruta';
-        Alert.alert('Error', errorMsg);
+        console.error('❌ Error response:', data);
+        const errorMsg = data.hint || data.details || data.error || 'No se pudo encontrar una ruta';
+        Alert.alert('Error', errorMsg + '\n\nRevisa los logs del servidor para más detalles.');
       }
     } catch (err: any) {
-      console.error('Error getting directions:', err);
-      Alert.alert('Error', 'No se pudieron obtener las direcciones. Intenta nuevamente.');
+      console.error('❌ Exception getting directions:', err);
+      Alert.alert(
+        'Error de Conexión', 
+        'No se pudieron obtener las direcciones.\n\n' +
+        'Posibles causas:\n' +
+        '• API de Directions no habilitada en Google Cloud\n' +
+        '• Restricciones en la API Key\n' +
+        '• Problema de conexión\n\n' +
+        'Error: ' + (err.message || 'Desconocido')
+      );
     }
   };
 
