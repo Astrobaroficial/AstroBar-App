@@ -4,7 +4,7 @@ components\SmartOrderButton.tsx:97:    console.log('SmartOrderButton pressed:', 
 constants\api.ts:13:    console.log('✅ Using EXPO_PUBLIC_BACKEND_URL from config:', expoBackendUrl);
 constants\api.ts:21:    console.log('Using EXPO_PUBLIC_BACKEND_URL from env:', trimmed);
 constants\api.ts:27:    console.log('🔧 Development mode: using localhost:5000');
-constants\api.ts:37:  console.log('⚠️ Using fallback URL: https://AstroBar-app.replit.app');
+constants\api.ts:37:  console.log('⚠️ Using fallback URL: https://astrobar-app-production.up.railway.app');
 constants\api.ts:93:console.log("🔗 API Configuration:", {
 contexts\AuthContext.tsx:93:      console.log("Biometric check error:", error);
 contexts\BusinessContext.tsx:65:        console.log("No businesses found for user");

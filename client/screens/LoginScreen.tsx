@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   ScrollView,
   Share,
-  Platform,
   Dimensions,
   FlatList,
   TextInput,
@@ -19,6 +18,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -28,7 +28,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { LinearGradient } from "expo-linear-gradient";
 import { useToast } from "@/contexts/ToastContext";
 import { apiRequest } from "@/lib/query-client";
 
@@ -61,7 +60,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
 
-  // Default to SMS to avoid "código inválido" before sending code
   const [loginMode, setLoginMode] = useState<"sms" | "password">("sms");
   const [phone, setPhone] = useState("");
   const [identifier, setIdentifier] = useState("");
@@ -70,9 +68,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [errors, setErrors] = useState<{ phone?: string; identifier?: string; password?: string }>({});
-  const [featuredBusinesses, setFeaturedBusinesses] = useState<
-    FeaturedBusiness[]
-  >([]);
+  const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([]);
   const [showBiometricOption, setShowBiometricOption] = useState(false);
 
   useEffect(() => {
@@ -92,9 +88,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const checkBiometricLogin = async () => {
     if (biometricAvailable) {
-      const storedPhone = await import(
-        "@react-native-async-storage/async-storage"
-      ).then((m) => m.default.getItem("@astrobar_biometric_phone"));
+      const storedPhone = await import("@react-native-async-storage/async-storage")
+        .then((m) => m.default.getItem("@astrobar_biometric_phone"));
       setShowBiometricOption(!!storedPhone);
     }
   };
@@ -102,8 +97,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const formatPhoneDisplay = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 6)
-      return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
+    if (numbers.length <= 6) return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
     return `${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6, 10)}`;
   };
 
@@ -115,46 +109,32 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const validate = () => {
     const newErrors: { phone?: string; identifier?: string; password?: string } = {};
-
     if (loginMode === "sms") {
       if (!phone) {
-        newErrors.phone = "El teléfono es requerido";
+        newErrors.phone = "El telÃ©fono es requerido";
       } else if (phone.length < 10) {
-        newErrors.phone = "Ingresa 10 dígitos";
+        newErrors.phone = "Ingresa 10 dÃ­gitos";
       }
     } else {
-      if (!identifier) {
-        newErrors.identifier = "Correo o teléfono es requerido";
-      }
-      if (!password) {
-        newErrors.password = "La contraseña es requerida";
-      }
+      if (!identifier) newErrors.identifier = "Correo o telÃ©fono es requerido";
+      if (!password) newErrors.password = "La contraseÃ±a es requerida";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handlePasswordLogin = async () => {
     if (!validate()) return;
-
     setIsLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     try {
-      const digits = identifier.replace(/\D/g, "");
-      const normalizedPhone = digits.length === 10
-        ? `+54${digits}`
-        : identifier.replace(/\s+/g, "");
       const result = await loginWithPassword(identifier, password);
-
       if (result?.requiresVerification) {
-        showToast("Verifica tu teléfono para continuar", "info");
-        navigation.navigate("VerifyPhone", { phone: normalizedPhone });
+        showToast("Verifica tu telÃ©fono para continuar", "info");
+        navigation.navigate("VerifyPhone", { phone: identifier });
       }
     } catch (error: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(error.message || "Error al iniciar sesión", "error");
+      showToast(error.message || "Error al iniciar sesiÃ³n", "error");
     } finally {
       setIsLoading(false);
     }
@@ -162,90 +142,43 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const handlePhoneLogin = async () => {
     if (!validate()) return;
-
     setIsLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     try {
-      const digits = phone.replace(/\D/g, "");
-      const normalizedPhone = digits.length === 10 ? `+54${digits}` : `+${digits}`;
+      const normalizedPhone = `+54${phone}`;
       const result = await requestPhoneLogin(normalizedPhone);
-
       if (result?.userNotFound) {
-        showToast("No encontramos tu cuenta. Regístrate primero.", "info");
+        showToast("No encontramos tu cuenta. RegÃ­strate primero.", "info");
         navigation.navigate("Signup", { phone: normalizedPhone });
         return;
       }
-
       if (result?.requiresVerification) {
         navigation.navigate("VerifyPhone", { phone: normalizedPhone });
       }
     } catch (error: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(error.message || "Error al enviar código", "error");
+      showToast(error.message || "Error al enviar cÃ³digo", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBiometricLogin = async () => {
-    setIsBiometricLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    try {
-      const success = await loginWithBiometric();
-      if (!success) {
-        showToast("No se pudo verificar tu identidad", "error");
-      }
-    } catch (error) {
-      showToast("Error con autenticación biométrica", "error");
-    } finally {
-      setIsBiometricLoading(false);
-    }
-  };
-
-  const handleShare = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await Share.share({
-        message:
-          "Descubre AstroBar - Tu plataforma de promociones nocturnas en Buenos Aires. Encuentra las mejores promos en bares. Descarga ahora: https://astrobar.com.ar",
-        title: "AstroBar - Promociones Nocturnas",
-      });
-    } catch (error) {
-      console.log("Error sharing:", error);
-    }
-  };
-
-  const getBiometricIcon = () => {
-    if (biometricType === "face") return "smile";
-    return "lock";
-  };
-
-  const getBiometricLabel = () => {
-    if (biometricType === "face") return "Face ID";
-    return "Huella digital";
-  };
-
   return (
-    <ImageBackground
-      source={astrobarBgImage}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <View
-        style={[styles.themeToggleContainer, { top: insets.top + Spacing.md }]}
-      >
+    <ImageBackground source={astrobarBgImage} style={styles.container} resizeMode="cover">
+      {/* Overlay con degradado espacial */}
+      <LinearGradient 
+        colors={['rgba(15, 23, 42, 0.8)', 'rgba(30, 27, 75, 0.7)', 'rgba(88, 28, 135, 0.5)']}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={[styles.themeToggleContainer, { top: insets.top + Spacing.md }]}>
         <ThemeToggleButton />
       </View>
+
       <KeyboardAvoidingView style={styles.overlay} behavior="padding">
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            {
-              paddingTop: insets.top + Spacing.xl,
-              paddingBottom: insets.bottom + Spacing.xl,
-            },
+            { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -256,140 +189,71 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               style={styles.logo}
               resizeMode="contain"
             />
-            <ThemedText type="hero" style={styles.appName}>
-              AstroBar
-            </ThemedText>
-            <ThemedText type="body" style={styles.slogan}>
-              Conectando bares con usuarios
-            </ThemedText>
+            <ThemedText type="hero" style={styles.appName}>AstroBar</ThemedText>
+            <ThemedText type="body" style={styles.slogan}>Conectando bares con usuarios</ThemedText>
           </View>
 
-          <BlurView
-            intensity={80}
-            tint="light"
-            style={[styles.formCard, Shadows.lg]}
-          >
-            <ThemedText type="h3" style={styles.formTitle}>
-              Bienvenido a AstroBar
-            </ThemedText>
+          <BlurView intensity={40} tint="dark" style={[styles.formCard, Shadows.lg]}>
+            <ThemedText type="h3" style={styles.formTitle}>Bienvenido a AstroBar</ThemedText>
             <ThemedText type="body" style={styles.formSubtitle}>
               {loginMode === "password" 
-                ? "Usa tu correo o teléfono con contraseña" 
-                : "Te enviaremos un código SMS para verificar"}
+                ? "Usa tu correo o telÃ©fono con contraseÃ±a" 
+                : "Te enviaremos un cÃ³digo SMS para verificar"}
             </ThemedText>
 
             {loginMode === "password" ? (
               <>
                 <View style={styles.inputWrapper}>
-                  <ThemedText type="small" style={styles.inputLabel}>
-                    Correo o teléfono
-                  </ThemedText>
+                  <ThemedText type="small" style={styles.inputLabel}>Correo o telÃ©fono</ThemedText>
                   <View style={[styles.inputBox, errors.identifier ? styles.inputBoxError : null]}>
-                    <Feather
-                      name="user"
-                      size={20}
-                      color="#666666"
-                      style={styles.inputBoxIcon}
-                    />
+                    <Feather name="user" size={20} color="#BBB" style={styles.inputBoxIcon} />
                     <TextInput
-                      placeholder="correo@ejemplo.com o +52..."
+                      placeholder="correo@ejemplo.com"
                       value={identifier}
-                      onChangeText={(text) => {
-                        setIdentifier(text);
-                        if (errors.identifier) setErrors((prev) => ({ ...prev, identifier: "" }));
-                      }}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      placeholderTextColor="#999999"
+                      onChangeText={(text) => setIdentifier(text)}
+                      placeholderTextColor="#777"
                       style={styles.textInput}
-                      selectionColor={AstroBarColors.primary}
-                      testID="input-identifier"
                     />
                   </View>
-                  {errors.identifier ? (
-                    <ThemedText type="caption" style={styles.inputError}>
-                      {errors.identifier}
-                    </ThemedText>
-                  ) : null}
                 </View>
-
                 <View style={styles.inputWrapper}>
-                  <ThemedText type="small" style={styles.inputLabel}>
-                    Contraseña
-                  </ThemedText>
+                  <ThemedText type="small" style={styles.inputLabel}>ContraseÃ±a</ThemedText>
                   <View style={[styles.inputBox, errors.password ? styles.inputBoxError : null]}>
-                    <Feather
-                      name="lock"
-                      size={20}
-                      color="#666666"
-                      style={styles.inputBoxIcon}
-                    />
+                    <Feather name="lock" size={20} color="#BBB" style={styles.inputBoxIcon} />
                     <TextInput
-                      placeholder="Tu contraseña"
+                      placeholder="Tu contraseÃ±a"
                       value={password}
-                      onChangeText={(text) => {
-                        setPassword(text);
-                        if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
-                      }}
                       secureTextEntry={!showPassword}
-                      placeholderTextColor="#999999"
+                      onChangeText={(text) => setPassword(text)}
+                      placeholderTextColor="#777"
                       style={styles.textInput}
-                      selectionColor={AstroBarColors.primary}
-                      testID="input-password"
                     />
                     <Pressable onPress={() => setShowPassword(!showPassword)}>
-                      <Feather
-                        name={showPassword ? "eye-off" : "eye"}
-                        size={20}
-                        color="#666666"
-                      />
+                      <Feather name={showPassword ? "eye-off" : "eye"} size={20} color="#BBB" />
                     </Pressable>
                   </View>
-                  {errors.password ? (
-                    <ThemedText type="caption" style={styles.inputError}>
-                      {errors.password}
-                    </ThemedText>
-                  ) : null}
                 </View>
               </>
             ) : (
               <View style={styles.inputWrapper}>
-                <ThemedText type="small" style={styles.inputLabel}>
-                  Número de teléfono
-                </ThemedText>
+                <ThemedText type="small" style={styles.inputLabel}>NÃºmero de telÃ©fono</ThemedText>
                 <View style={styles.phoneInputContainer}>
                   <View style={styles.countryCode}>
-                    <ThemedText type="body" style={styles.countryCodeText}>
-                      +54
-                    </ThemedText>
+                    <ThemedText type="body" style={styles.countryCodeText}>+54</ThemedText>
                   </View>
                   <View style={styles.inputBox}>
-                    <Feather
-                      name="phone"
-                      size={20}
-                      color="#666666"
-                      style={styles.inputBoxIcon}
-                    />
+                    <Feather name="phone" size={20} color="#BBB" style={styles.inputBoxIcon} />
                     <TextInput
                       placeholder="317 123 4567"
                       value={formatPhoneDisplay(phone)}
                       onChangeText={handlePhoneChange}
                       keyboardType="phone-pad"
-                      autoComplete="tel"
-                      placeholderTextColor="#999999"
+                      placeholderTextColor="#777"
                       style={styles.textInput}
-                      selectionColor={AstroBarColors.primary}
                       maxLength={12}
-                      testID="input-phone"
                     />
                   </View>
                 </View>
-                {errors.phone ? (
-                  <ThemedText type="caption" style={styles.inputError}>
-                    {errors.phone}
-                  </ThemedText>
-                ) : null}
               </View>
             )}
 
@@ -401,174 +265,27 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                loginMode === "password" ? "Iniciar sesión" : "Enviar código SMS"
+                <ThemedText style={{color: '#FFF', fontWeight: 'bold'}}>
+                  {loginMode === "password" ? "Iniciar sesiÃ³n" : "Enviar cÃ³digo SMS"}
+                </ThemedText>
               )}
             </Button>
 
             <Pressable
-              onPress={() => {
-                setLoginMode(loginMode === "password" ? "sms" : "password");
-                setErrors({});
-              }}
+              onPress={() => setLoginMode(loginMode === "password" ? "sms" : "password")}
               style={styles.switchModeButton}
             >
-              <Feather
-                name={loginMode === "password" ? "message-circle" : "key"}
-                size={16}
-                color={AstroBarColors.primary}
-              />
               <ThemedText type="small" style={styles.switchModeText}>
-                {loginMode === "password" 
-                  ? "Iniciar con código SMS" 
-                  : "Iniciar con contraseña"}
+                {loginMode === "password" ? "Iniciar con cÃ³digo SMS" : "Iniciar con contraseÃ±a"}
               </ThemedText>
             </Pressable>
-
-            {showBiometricOption && biometricAvailable ? (
-              <>
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <ThemedText type="caption" style={styles.dividerText}>
-                    o usa
-                  </ThemedText>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <Pressable
-                  onPress={handleBiometricLogin}
-                  disabled={isBiometricLoading}
-                  style={[styles.biometricButton, Shadows.sm]}
-                  testID="button-biometric"
-                >
-                  {isBiometricLoading ? (
-                    <ActivityIndicator
-                      color={AstroBarColors.primary}
-                      size="small"
-                    />
-                  ) : (
-                    <>
-                      <View style={styles.biometricIcon}>
-                        <Feather
-                          name={getBiometricIcon()}
-                          size={22}
-                          color={AstroBarColors.primary}
-                        />
-                      </View>
-                      <ThemedText type="body" style={styles.biometricText}>
-                        Entrar con {getBiometricLabel()}
-                      </ThemedText>
-                    </>
-                  )}
-                </Pressable>
-              </>
-            ) : null}
           </BlurView>
 
-          {featuredBusinesses.length > 0 ? (
-            <View style={styles.featuredSection}>
-              <ThemedText type="body" style={styles.featuredTitle}>
-                Negocios destacados
-              </ThemedText>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={featuredBusinesses}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.featuredList}
-                renderItem={({ item }) => (
-                  <Pressable style={styles.featuredCard}>
-                    {item.image ? (
-                      <Image
-                        source={{ uri: item.image }}
-                        style={styles.featuredImage}
-                        resizeMode="cover"
-                        onError={() => {
-                          // Handle image load error silently
-                        }}
-                      />
-                    ) : (
-                      <PlaceholderImage
-                        width={140}
-                        height={100}
-                        icon="image"
-                        style={styles.featuredImage}
-                      />
-                    )}
-                    <LinearGradient
-                      colors={["transparent", "rgba(0,0,0,0.8)"]}
-                      style={styles.featuredGradient}
-                    >
-                      <ThemedText
-                        type="small"
-                        style={styles.featuredName}
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </ThemedText>
-                      <View style={styles.featuredMeta}>
-                        <Feather
-                          name="star"
-                          size={12}
-                          color={AstroBarColors.primary}
-                        />
-                        <ThemedText
-                          type="caption"
-                          style={styles.featuredRating}
-                        >
-                          {((item.rating || 0) / 10).toFixed(1)}
-                        </ThemedText>
-                        {item.deliveryTime ? (
-                          <ThemedText
-                            type="caption"
-                            style={styles.featuredTime}
-                          >
-                            {item.deliveryTime}
-                          </ThemedText>
-                        ) : null}
-                      </View>
-                    </LinearGradient>
-                  </Pressable>
-                )}
-              />
-            </View>
-          ) : null}
-
-          <Pressable onPress={handleShare} style={styles.shareButton}>
-            <Feather name="share-2" size={18} color="#FFFFFF" />
-            <ThemedText type="small" style={styles.shareText}>
-              Compartir AstroBar
-            </ThemedText>
-          </Pressable>
-
           <View style={styles.footer}>
-            <ThemedText type="body" style={styles.footerText}>
-              ¿No tienes cuenta?{" "}
-            </ThemedText>
+            <ThemedText type="body" style={styles.footerText}>Â¿No tienes cuenta? </ThemedText>
             <Pressable onPress={() => navigation.navigate("Signup")}>
-              <ThemedText type="body" style={styles.signupLink}>
-                Regístrate
-              </ThemedText>
+              <ThemedText type="body" style={styles.signupLink}>RegÃ­strate</ThemedText>
             </Pressable>
-          </View>
-
-          <View style={styles.contactInfo}>
-            <ThemedText type="caption" style={styles.contactText}>
-              ¿Problemas para entrar? Llámanos o escríbenos:
-            </ThemedText>
-            <View style={styles.contactButtons}>
-              <Pressable style={styles.contactButton}>
-                <Feather name="phone" size={16} color="#FFFFFF" />
-                <ThemedText type="caption" style={styles.contactButtonText}>
-                  Llamar
-                </ThemedText>
-              </Pressable>
-              <Pressable style={styles.contactButton}>
-                <Feather name="message-circle" size={16} color="#FFFFFF" />
-                <ThemedText type="caption" style={styles.contactButtonText}>
-                  WhatsApp
-                </ThemedText>
-              </Pressable>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -577,265 +294,72 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   themeToggleContainer: {
     position: "absolute",
     right: Spacing.lg,
     zIndex: 10,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 20,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.65)",
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.xl,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: Spacing.xl,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: Spacing.sm,
-  },
-  appName: {
-    color: "#FFFFFF",
-    marginBottom: Spacing.xs,
-  },
-  slogan: {
-    color: AstroBarColors.primary,
-    fontStyle: "italic",
-    fontWeight: "500",
-  },
+  overlay: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: Spacing.xl },
+  logoContainer: { alignItems: "center", marginBottom: Spacing.xl },
+  logo: { width: 100, height: 100, marginBottom: Spacing.sm, borderRadius: 50 },
+  appName: { color: "#FFFFFF", textShadowColor: AstroBarColors.primary, textShadowRadius: 10 },
+  slogan: { color: AstroBarColors.primary, fontWeight: "500", marginTop: 5 },
   formCard: {
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     marginBottom: Spacing.lg,
-    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
-  formTitle: {
-    textAlign: "center",
-    color: "#333333",
-    marginBottom: Spacing.xs,
-  },
-  formSubtitle: {
-    textAlign: "center",
-    color: "#666666",
-    marginBottom: Spacing.lg,
-    fontSize: 14,
-  },
-  inputWrapper: {
-    marginBottom: Spacing.md,
-  },
-  inputLabel: {
-    color: "#333333",
-    fontWeight: "600",
-    marginBottom: Spacing.xs,
-  },
-  phoneInputContainer: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
+  formTitle: { textAlign: "center", color: "#FFF", marginBottom: Spacing.xs },
+  formSubtitle: { textAlign: "center", color: "#BBB", marginBottom: Spacing.lg },
+  inputWrapper: { marginBottom: Spacing.md },
+  inputLabel: { color: "#EEE", fontWeight: "600", marginBottom: Spacing.xs },
+  phoneInputContainer: { flexDirection: "row", gap: Spacing.sm },
   countryCode: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#E0E0E0",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
     height: 52,
   },
-  countryCodeText: {
-    color: "#333333",
-    fontWeight: "600",
-  },
+  countryCodeText: { color: "#FFF", fontWeight: "600" },
   inputBox: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    borderColor: "#E0E0E0",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
     paddingHorizontal: Spacing.md,
     height: 52,
   },
-  inputBoxIcon: {
-    marginRight: Spacing.sm,
-  },
-  textInput: {
-    flex: 1,
-    height: "100%",
-    fontSize: 16,
-    color: "#333333",
-    letterSpacing: 1,
-  },
-  inputError: {
-    color: AstroBarColors.error,
-    marginTop: Spacing.xs,
-  },
-  inputBoxError: {
-    borderColor: AstroBarColors.error,
-  },
-  loginButton: {
-    marginTop: Spacing.sm,
-  },
-  switchModeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Spacing.md,
-    gap: Spacing.xs,
-    padding: Spacing.sm,
-  },
-  switchModeText: {
-    color: AstroBarColors.primary,
-    fontWeight: "500",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: Spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E0E0E0",
-  },
-  dividerText: {
-    color: "#888888",
-    marginHorizontal: Spacing.md,
-  },
-  biometricButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: Spacing.buttonHeight,
+  inputBoxIcon: { marginRight: Spacing.sm },
+  textInput: { flex: 1, fontSize: 16, color: "#FFF" },
+  inputBoxError: { borderColor: AstroBarColors.error },
+  loginButton: { 
+    marginTop: Spacing.sm, 
+    backgroundColor: '#8B5CF6', // Violeta intenso neÃ³n
+    height: 52,
     borderRadius: BorderRadius.md,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: AstroBarColors.primary,
-    gap: Spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#8B5CF6',
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5
   },
-  biometricIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: AstroBarColors.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  biometricText: {
-    fontWeight: "600",
-    color: AstroBarColors.primary,
-  },
-  shareButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  shareText: {
-    color: "#FFFFFF",
-    fontWeight: "500",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  footerText: {
-    color: "rgba(255,255,255,0.8)",
-  },
-  signupLink: {
-    color: AstroBarColors.primary,
-    fontWeight: "600",
-  },
-  contactInfo: {
-    alignItems: "center",
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.2)",
-  },
-  contactText: {
-    color: "rgba(255,255,255,0.7)",
-    marginBottom: Spacing.sm,
-  },
-  contactButtons: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  contactButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-  contactButtonText: {
-    color: "#FFFFFF",
-  },
-  featuredSection: {
-    marginBottom: Spacing.lg,
-  },
-  featuredTitle: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    marginBottom: Spacing.sm,
-    textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-  },
-  featuredList: {
-    paddingRight: Spacing.md,
-    gap: Spacing.md,
-  },
-  featuredCard: {
-    width: 140,
-    height: 100,
-    borderRadius: BorderRadius.lg,
-    overflow: "hidden",
-    backgroundColor: "#333",
-  },
-  featuredImage: {
-    width: "100%",
-    height: "100%",
-  },
-  featuredGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: Spacing.sm,
-  },
-  featuredName: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 12,
-  },
-  featuredMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 2,
-  },
-  featuredRating: {
-    color: "#FFFFFF",
-    fontSize: 10,
-  },
-  featuredTime: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 10,
-    marginLeft: 4,
-  },
+  switchModeButton: { marginTop: Spacing.md, alignItems: 'center' },
+  switchModeText: { color: '#A78BFA', fontWeight: "500" },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
+  footerText: { color: "#BBB" },
+  signupLink: { color: '#8B5CF6', fontWeight: "bold", marginLeft: 5 },
 });
