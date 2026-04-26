@@ -18,7 +18,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://astrobar-backend.onrender.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://astrobar-app-production-4821.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDLejpcrNJNHzQIduWuot5QAoepitVk2zY"
       }
     }

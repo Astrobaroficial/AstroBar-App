@@ -59,7 +59,7 @@ export default {
       eas: {
         projectId: "8c58541f-bf02-4e36-bcf9-a2e64b126a5b"
       },
-      EXPO_PUBLIC_BACKEND_URL: "https://astrobar-backend.onrender.com"
+      EXPO_PUBLIC_BACKEND_URL: "https://astrobar-app-production-4821.up.railway.app"
     },
     owner: "caskiuzs-organization"
   }

@@ -35,7 +35,7 @@ export const getApiBaseUrl = (): string => {
 
   // Production fallback
   
-  return "https://astrobar-backend.onrender.com";
+  return "https://astrobar-app-production-4821.up.railway.app";
 };
 
 export const API_CONFIG = {
