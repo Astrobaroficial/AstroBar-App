@@ -1,5 +1,5 @@
 # ============================================
-# AstroBar - Professional .gitignore
+# AstroBar - Professional .gitignore (MODIFIED)
 # ============================================
 
 # ============================================
@@ -20,16 +20,17 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
+# Quitamos package-lock.json de aquí para que Railway sepa qué versiones instalar
+# package-lock.json 
 
 # ============================================
-# Build Outputs
+# Build Outputs (MODIFIED: dist is now allowed)
 # ============================================
-dist/
+# dist/  <-- COMENTADO PARA QUE SE SUBA A GITHUB
 build/
 out/
 .next/
-web-build/
+# web-build/ <-- COMENTADO POR SEGURIDAD
 static-build/
 *.apk
 *.aab
@@ -62,7 +63,7 @@ backups/
 coverage/
 .nyc_output/
 test-*
-*test*
+# *test* <-- CUIDADO: esto podría ignorar archivos importantes, mejor ser específico
 !*.test.ts
 diagnose-*
 fix-*
