@@ -34,7 +34,6 @@ import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { ThemedScreenWrapper } from "@/components/ThemedScreenWrapper";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Conditional import for LocationPickerScreen
 let LocationPickerScreen: any = null;
 if (Platform.OS !== 'web') {
   LocationPickerScreen = require("@/screens/LocationPickerScreen").default;
@@ -61,15 +60,8 @@ export type RootStackParamList = {
   MyBusinesses: { openAddModal?: boolean; draft?: { name?: string; type?: string; address?: string; phone?: string } } | undefined;
   Terms: undefined;
   Privacy: undefined;
-  ConfirmPromotion: {
-    promotion: any;
-    business: any;
-  };
-  PromotionQR: {
-    transaction: any;
-    promotion: any;
-    business: any;
-  };
+  ConfirmPromotion: { promotion: any; business: any; };
+  PromotionQR: { transaction: any; promotion: any; business: any; };
   ScanQR: undefined;
   CreateFlashPromotion: undefined;
   CreateCommonPromotion: undefined;
@@ -85,7 +77,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootStackNavigator() {
   const screenOptions = useScreenOptions();
-  const { isAuthenticated, isLoading, pendingVerificationPhone, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return null;
@@ -102,6 +94,7 @@ export default function RootStackNavigator() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
+      {/* BYPASS: Si está autenticado, cargamos el flujo principal ignore el estado de verificación */}
       {isAuthenticated ? (
         <>
           <Stack.Screen
@@ -117,10 +110,7 @@ export default function RootStackNavigator() {
           <Stack.Screen
             name="ProductDetail"
             component={ProductDetailScreen}
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
+            options={{ presentation: "modal", headerShown: false }}
           />
           <Stack.Screen
             name="BusinessCategories"
