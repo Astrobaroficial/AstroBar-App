@@ -22,7 +22,7 @@ const router = express.Router();
 
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
-const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-backend.onrender.com/api/customer-mp/callback";
+const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/customer-mp/callback";
 
 // 1. CONECTAR CUENTA MP - Cliente
 router.get("/connect", authenticateToken, requireRole("customer"), async (req, res) => {

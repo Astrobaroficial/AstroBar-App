@@ -10,7 +10,7 @@ const router = express.Router();
 // Configuración de Mercado Pago
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
-const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-backend.onrender.com/api/mp/callback";
+const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/customer-mp/callback";
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token de la plataforma
 
 // 1. OAUTH - Conectar cuenta MP del bar
@@ -180,7 +180,7 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
       ],
       marketplace_fee: platformFee / 100, // Comisión de la plataforma en pesos
       external_reference: transaction.id,
-      notification_url: `https://astrobar-backend.onrender.com/api/mp/webhook`,
+      notification_url: `https://astrobar-app-production-4821.up.railway.app/api/mp/webhook`,
       back_urls: {
         success: `astrobar://payment-success`,
         failure: `astrobar://payment-failure`,
