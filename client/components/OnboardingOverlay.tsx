@@ -17,7 +17,6 @@ import Animated, {
   withDelay,
   withRepeat,
   FadeIn,
-  FadeOut,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +28,15 @@ import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/them
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const ONBOARDING_KEY = "@AstroBar_onboarding_completed";
 
+// 🎨 Paleta de colores corporativos extraída de tu nueva identidad visual
+const CORPORATE_COLORS = {
+  orange: "#F16A30",       // Naranja de la marca
+  darkPurple: "#1A042B",   // Púrpura oscuro para el fondo degradado (Superior)
+  deepPurple: "#11011E",   // Púrpura ultra profundo (Inferior)
+  glassBorder: "rgba(241, 106, 48, 0.15)", // Borde de vidrio con sutil naranja
+  textMuted: "#D3C2DC"     // Texto secundario suavizado en tonos lavanda/gris
+};
+
 interface OnboardingSlide {
   id: number;
   title: string;
@@ -39,50 +47,49 @@ interface OnboardingSlide {
   points?: string[];
 }
 
-// Unificamos la data adaptando las cadenas de texto crudas a filas independientes para evitar colisiones
+// 📝 Textos reestructurados en base a la información de tu presentación corporativa
 const slides: OnboardingSlide[] = [
   {
     id: 1,
-    title: "AstroBar",
-    subtitle: "Tu app de entregas local",
+    title: "¿Quiénes somos?",
+    subtitle: "AstroBar Plataforma",
     description:
-      "Descubre las mejores promociones nocturnas en bares de Buenos Aires. Promos flash y ofertas exclusivas.",
-    icon: "heart",
-    iconColor: "#ff4757",
+      "Una plataforma digital diseñada para evolucionar la forma en que conectás con los establecimientos gastronómicos de la ciudad, transformando tus salidas en beneficios exclusivos.",
+    icon: "users",
+    iconColor: CORPORATE_COLORS.orange,
   },
   {
     id: 2,
-    title: "AstroBar",
-    subtitle: 'En Nahuatl significa "vivir"',
+    title: "Misión y Visión",
+    subtitle: "Nuestra meta",
     description:
-      '"Vivir es conectar"\n\nConectamos a la comunidad entera con los mejores sabores nocturnos y locales que amamos.',
-    icon: "compass",
-    iconColor: "#00f2fe",
+      'Facilitamos encuentros memorables y accesibles optimizando la relación entre vos y los comercios locales.\n\nBuscamos ser la aplicación indispensable en tu teléfono en cada salida gastronómica.',
+    icon: "target",
+    iconColor: CORPORATE_COLORS.orange,
   },
   {
     id: 3,
-    title: "Cómo usar AstroBar",
-    subtitle: "Es muy fácil",
-    description: "Sigue estos pasos rápidos para empezar a disfrutar:",
-    icon: "check-circle",
-    iconColor: "#39ff14",
+    title: "Público Objetivo",
+    subtitle: "Para amantes de la gastronomía",
+    description: "Un ecosistema colaborativo ideal para vos si buscás:",
+    icon: "award",
+    iconColor: CORPORATE_COLORS.orange,
     points: [
-      "1. Explora bares y promociones",
-      "2. Agrega productos al carrito",
-      "3. Paga con tarjeta o efectivo",
-      "4. Recibe directo en tu puerta",
+      "1. Descubrir locales desde tu smartphone",
+      "2. Acceso ágil a beneficios exclusivos",
+      "3. Potenciar el valor de cada salida",
+      "4. Formar parte de una comunidad activa",
     ],
   },
 ];
 
-// Componente para animar de fondo la constelación de estrellas de AstroBar
 function StarFieldEffect({ x, y, size, delay }: { x: number; y: number; size: number; delay: number }) {
   const opacity = useSharedValue(0.1);
 
   useEffect(() => {
     opacity.value = withDelay(
       delay,
-      withRepeat(withTiming(0.85, { duration: 1200 + Math.random() * 1000 }), -1, true)
+      withRepeat(withTiming(0.7, { duration: 1500 + Math.random() * 1000 }), -1, true)
     );
   }, []);
 
@@ -141,12 +148,12 @@ function SlideContent({
     <View style={[styles.slideContainer, { paddingTop: insets.top + Spacing.md }]}>
       <Animated.View style={[styles.slideContent, animatedStyle]}>
         
-        {/* Tarjeta Cristal Tecnológica Flotante */}
-        <BlurView intensity={30} tint="dark" style={styles.glassCard}>
+        {/* Tarjeta Cristal con tono y bordes ajustados a la nueva marca */}
+        <BlurView intensity={25} tint="dark" style={styles.glassCard}>
           
-          {/* Contenedor circular con aura neón */}
-          <View style={[styles.iconContainer, { shadowColor: slide.iconColor, borderColor: slide.iconColor + "40" }]}>
-            <Feather name={slide.icon} size={42} color={slide.iconColor} />
+          {/* Contenedor circular con aura en naranja corporativo */}
+          <View style={[styles.iconContainer, { shadowColor: slide.iconColor, borderColor: "rgba(241, 106, 48, 0.3)" }]}>
+            <Feather name={slide.icon} size={40} color={slide.iconColor} />
           </View>
 
           <ThemedText type="h1" style={styles.title}>
@@ -157,13 +164,12 @@ function SlideContent({
             {slide.subtitle}
           </ThemedText>
 
-          <View style={[styles.divider, { backgroundColor: slide.iconColor + "60", shadowColor: slide.iconColor }]} />
+          <View style={[styles.divider, { backgroundColor: slide.iconColor + "50", shadowColor: slide.iconColor }]} />
 
           <ThemedText type="body" style={styles.description}>
             {slide.description}
           </ThemedText>
 
-          {/* Renderizado limpio de pasos para evitar superposición en el slide final */}
           {slide.points && (
             <View style={styles.pointsWrapper}>
               {slide.points.map((item, idx) => (
@@ -186,12 +192,12 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    const generated = Array.from({ length: 40 }).map((_, i) => ({
+    const generated = Array.from({ length: 30 }).map((_, i) => ({
       id: i,
       x: Math.random() * SCREEN_WIDTH,
       y: Math.random() * SCREEN_HEIGHT,
-      size: Math.random() * 2.5 + 1,
-      delay: Math.random() * 1800,
+      size: Math.random() * 2 + 1,
+      delay: Math.random() * 1500,
     }));
     setStars(generated);
   }, []);
@@ -224,20 +230,21 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
       entering={FadeIn.duration(300)}
       style={styles.overlay}
     >
-      {/* Fondo espacial unificado continuo */}
-      <LinearGradient colors={["#0b111e", "#05080f"]} style={StyleSheet.absoluteFillObject} />
+      {/* 🔮 Fondo degradado corporativo unificado de la marca (Púrpura profundo) */}
+      <LinearGradient 
+        colors={[CORPORATE_COLORS.darkPurple, CORPORATE_COLORS.deepPurple]} 
+        style={StyleSheet.absoluteFillObject} 
+      />
       
-      {/* Capa de estrellas espaciales parpadeando */}
+      {/* Capa sutil de polvo estelar parpadeando */}
       {stars.map((s) => (
         <StarFieldEffect key={s.id} x={s.x} y={s.y} size={s.size} delay={s.delay} />
       ))}
 
-      {/* Contenido interactivo */}
       <Pressable style={styles.touchArea} onPress={handleNext}>
         <SlideContent slide={slides[currentSlide]} isActive={true} />
       </Pressable>
 
-      {/* Footer estilizado sin superposiciones y adaptado a safe area */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <View style={styles.pagination}>
           {slides.map((_, index) => (
@@ -259,20 +266,21 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             <View style={styles.skipButtonPlaceholder} />
           )}
 
+          {/* Botón "Siguiente / Comenzar" con la nueva paleta de color naranja de AstroBar */}
           <Pressable
             onPress={handleNext}
             style={[
               styles.nextButton,
-              { backgroundColor: isLastSlide ? "#39ff14" : AstroBarColors.primary }
+              { backgroundColor: CORPORATE_COLORS.orange }
             ]}
           >
-            <ThemedText type="body" style={[styles.nextText, { color: isLastSlide ? "#05080f" : "#FFFFFF" }]}>
+            <ThemedText type="body" style={[styles.nextText, { color: "#FFFFFF" }]}>
               {isLastSlide ? "Comenzar" : "Siguiente"}
             </ThemedText>
             <Feather
               name={isLastSlide ? "check" : "arrow-right"}
               size={16}
-              color={isLastSlide ? "#05080f" : "#FFFFFF"}
+              color="#FFFFFF"
             />
           </Pressable>
         </View>
@@ -301,30 +309,55 @@ export async function resetOnboarding(): Promise<void> {
 const styles = StyleSheet.create({
   overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 },
   touchArea: { flex: 1 },
-  star: { position: "absolute", backgroundColor: "#FFFFFF" },
+  star: { position: "absolute", backgroundColor: "rgba(255, 255, 255, 0.4)" },
   slideContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: Spacing.xl },
   slideContent: { width: "100%", maxWidth: 350 },
-  glassCard: { width: "100%", borderRadius: BorderRadius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", overflow: "hidden", backgroundColor: "rgba(15, 23, 42, 0.2)" },
-  iconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(15,23,42,0.6)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.md, borderWidth: 1, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 8, elevation: 4 },
-  title: { color: "#FFFFFF", fontSize: 28, fontWeight: "950", textAlign: "center", letterSpacing: 0.5 },
-  subtitle: { color: "#94a3b8", textAlign: "center", marginTop: 4, fontWeight: "600", fontSize: 14 },
-  divider: { width: 45, height: 2, borderRadius: 1, marginVertical: Spacing.md, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 3 },
-  description: { color: "#cbd5e1", textAlign: "center", lineHeight: 21, fontSize: 14, fontWeight: "500" },
   
-  // Estilos de la lista de puntos del paso 3 para blindarlo de colisiones
-  pointsWrapper: { width: "100%", marginTop: Spacing.md, gap: 6 },
-  pointRow: { width: "100%", paddingVertical: 6, paddingHorizontal: Spacing.sm, borderRadius: BorderRadius.sm, backgroundColor: "rgba(255, 255, 255, 0.03)" },
-  pointText: { color: "#e2e8f0", fontSize: 13, fontWeight: "600", textAlign: "left" },
+  // Tarjeta con borde naranja translúcido y fondo de cristal adaptado
+  glassCard: { 
+    width: "100%", 
+    borderRadius: BorderRadius.xl, 
+    padding: Spacing.xl, 
+    borderWidth: 1.5, 
+    borderColor: CORPORATE_COLORS.glassBorder, 
+    alignItems: "center", 
+    overflow: "hidden", 
+    backgroundColor: "rgba(26, 4, 43, 0.35)" 
+  },
+  iconContainer: { 
+    width: 80, 
+    height: 80, 
+    borderRadius: 40, 
+    backgroundColor: "rgba(26, 4, 43, 0.8)", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginBottom: Spacing.md, 
+    borderWidth: 1.5, 
+    shadowOffset: { width: 0, height: 0 }, 
+    shadowOpacity: 0.6, 
+    shadowRadius: 10, 
+    elevation: 5 
+  },
+  title: { color: "#FFFFFF", fontSize: 26, fontWeight: "900", textAlign: "center", letterSpacing: 0.5 },
+  subtitle: { color: CORPORATE_COLORS.textMuted, textAlign: "center", marginTop: 4, fontWeight: "700", fontSize: 13, textTransform: "uppercase", letterSpacing: 1 },
+  divider: { width: 45, height: 2.5, borderRadius: 1.25, marginVertical: Spacing.md, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 3 },
+  description: { color: "#F1EDF5", textAlign: "center", lineHeight: 22, fontSize: 14, fontWeight: "500" },
+  
+  pointsWrapper: { width: "100%", marginTop: Spacing.md, gap: 8 },
+  pointRow: { width: "100%", paddingVertical: 8, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, backgroundColor: "rgba(241, 106, 48, 0.06)", borderWidth: 0.5, borderColor: "rgba(241, 106, 48, 0.1)" },
+  pointText: { color: "#F1EDF5", fontSize: 13, fontWeight: "600", textAlign: "left" },
 
   footer: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, backgroundColor: "transparent" },
   pagination: { flexDirection: "row", justifyContent: "center", marginBottom: Spacing.md },
-  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: "rgba(255, 255, 255, 0.2)", marginHorizontal: 4 },
-  dotActive: { backgroundColor: "#00f2fe", width: 18 },
+  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: "rgba(255, 255, 255, 0.15)", marginHorizontal: 4 },
+  
+  // El indicador de la paginación activa se tiñe de color naranja corporativo
+  dotActive: { backgroundColor: CORPORATE_COLORS.orange, width: 18 },
   buttons: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" },
-  skipButton: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.sm, backgroundColor: "rgba(255,255,255,0.05)" },
+  skipButton: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.sm, backgroundColor: "rgba(255,255,255,0.04)" },
   skipButtonPlaceholder: { width: 60 },
-  skipText: { color: "#94a3b8", fontWeight: "700", fontSize: 13 },
-  nextButton: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: Spacing.xl, borderRadius: BorderRadius.md, gap: 6, ...Shadows.sm },
+  skipText: { color: CORPORATE_COLORS.textMuted, fontWeight: "700", fontSize: 13 },
+  nextButton: { flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: Spacing.xl, borderRadius: BorderRadius.md, gap: 8, ...Shadows.sm },
   nextText: { fontWeight: "800", fontSize: 14 },
-  tapHint: { color: "rgba(255,255,255,0.4)", textAlign: "center", marginTop: Spacing.sm, fontWeight: '500', fontSize: 12 },
+  tapHint: { color: "rgba(255,255,255,0.3)", textAlign: "center", marginTop: Spacing.sm, fontWeight: '500', fontSize: 11 },
 });
