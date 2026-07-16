@@ -1,22 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover" />
-  <title>AstroBar - Promociones Nocturnas</title>
-  <meta name="description" content="AstroBar - Plataforma de promociones nocturnas que conecta bares con usuarios en Buenos Aires, Argentina." />
-  <meta name="theme-color" content="#1A1A2E" />
-  <meta property="og:title" content="AstroBar - Promociones Nocturnas" />
-  <meta property="og:description" content="Conectando bares con usuarios en Buenos Aires 🌙" />
-  <meta property="og:type" content="website" />
-  <style>
-    html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
-    #root { display: flex; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargar AstroBar App</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #1a1a2e 0%, #0f172a 100%);
+            color: #ffffff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            max-width: 380px;
+            padding: 40px 24px;
+            background: rgba(17, 23, 38, 0.75);
+            border: 2px solid rgba(0, 242, 254, 0.2);
+            border-radius: 28px;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            margin: 20px;
+        }
+        .logo-container {
+            margin-bottom: 24px;
+        }
+        .logo {
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00f2fe, #39ff14);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            margin: 0;
+        }
+        .tagline {
+            color: #00f2fe;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        p {
+            color: #cbd5e1;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 35px;
+        }
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #00f2fe;
+            color: #05080f;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 16px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-download:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.6);
+            background: #39ff14;
+        }
+        .info-step {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
-  <noscript>Necesitas habilitar JavaScript para usar AstroBar.</noscript>
-  <div id="root"></div>
+
+    <div class="container">
+        <div class="logo-container">
+            <h1 class="logo">ASTROBAR</h1>
+            <div class="tagline">Promociones Nocturnas</div>
+        </div>
+        
+        <p>Escaneá el código, descargá nuestra aplicación oficial directamente en tu dispositivo y empezá a disfrutar de los mejores beneficios en tus bares favoritos de Buenos Aires.</p>
+        
+        <!-- Enlace que busca el APK que pusiste al lado del index.html -->
+        <a href="./astrobar.apk" download="AstroBar.apk" class="btn-download">
+            🚀 Descargar App (.APK)
+        </a>
+
+        <div class="info-step">
+            * Al descargar, si tu celular lo solicita, permití la instalación de "Fuentes desconocidas" o "Aplicaciones externas" en los ajustes de seguridad.
+        </div>
+    </div>
+
 </body>
 </html>
