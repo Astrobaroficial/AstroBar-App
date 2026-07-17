@@ -8,10 +8,11 @@ import { MercadoPagoConfig, Preference } from 'mercadopago'; // ✅ Mantener SDK
 
 const router = express.Router();
 
-// Configuración de Mercado Pago
+// Configuración de Mercado Pago unificada con tu dominio -4821 activo
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
-const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/customer-mp/callback";
+// Corregido: Apunta al callback de OAuth para vincular locales
+const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/mercadopago/callback";
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token de la plataforma AstroBar
 
 // 1. OAUTH - Conectar cuenta MP del bar
@@ -160,7 +161,7 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
 
     console.log(`💰 Split: Usuario paga $${totalAmount/100} | Bar recibe $${businessAmount/100} | Plataforma $${platformFee/100} (${(commissionRate*100).toFixed(0)}%)`);
 
-    // ✅ REFACTORIZACIÓN: Usamos el inicializador oficial dinámico pasándole las credenciales del bar
+    // ✅ Inicialización dinámica pasándole las credenciales de la subcuenta del bar
     const barClient = new MercadoPagoConfig({ accessToken: mpAccount.accessToken });
     const mpPreference = new Preference(barClient);
 
@@ -175,9 +176,10 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
             currency_id: 'ARS'
           },
         ],
-        marketplace_fee: platformFee / 100, // Comisión retenida para tu cuenta de plataforma
+        marketplace_fee: platformFee / 100, // Comisión retenida para tu cuenta de plataforma corporativa
         external_reference: String(transaction.id),
-        notification_url: `https://astrobar-app-production-4821.up.railway.app/api/mp/webhook`,
+        // Apuntamos al endpoint del webhook en producción
+        notification_url: `https://astrobar-app-production-4821.up.railway.app/api/mercadopago/webhook`,
         back_urls: {
           success: `astrobar://payment-success`,
           failure: `astrobar://payment-failure`,
