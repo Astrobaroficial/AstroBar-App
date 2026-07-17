@@ -15,7 +15,7 @@ router.get("/test", (req, res) => {
 });
 
 // ==========================================
-// 1. RUTAS PROTEGIDAS ESPECÍFICAS (Irán primero)
+// 1. RUTAS PROTEGIDAS ESPECÍFICAS
 // ==========================================
 
 router.get("/my-businesses", authenticateToken, requireRole("business_owner"), async (req, res) => {
@@ -592,6 +592,38 @@ router.delete("/products/:id", authenticateToken, requireRole("business_owner"),
     res.json({ success: true, message: "Producto eliminado" });
   } catch (error: any) {
     console.error('Delete product error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// 🛠️ DELETE BUSINESS (NUEVA RUTA DE ELIMINACIÓN)
+// Borrado lógico para no romper relaciones/claves foráneas en la BD 💎
+// ==========================================
+router.delete("/:id", authenticateToken, requireRole("admin"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscamos si el bar existe
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
+    if (!business) {
+      return res.status(404).json({ error: "El bar que intentas eliminar no existe" });
+    }
+
+    // Cambiamos isActive a false para ocultarlo sin perder registros financieros importantes
+    await db
+      .update(businesses)
+      .set({ 
+        isActive: false, 
+        updatedAt: new Date() 
+      })
+      .where(eq(businesses.id, id));
+
+    console.log(`🗑️ Bar eliminado lógicamente (Desactivado): ${business.name} (${id})`);
+    
+    res.json({ success: true, message: "El bar fue eliminado con éxito del sistema" });
+  } catch (error: any) {
+    console.error('Delete business error:', error);
     res.status(500).json({ error: error.message });
   }
 });
