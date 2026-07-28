@@ -49,7 +49,7 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
   const { theme } = useTheme();
   const isDark = theme.background === "#000000" || theme.background === "black" || theme.background === "#121212";
 
-  // Colores dedicados para cada icono para darle personalidad
+  // Colores dedicados para cada icono
   const getIconColor = () => {
     if (danger) return AstroBarColors.error;
     if (isDark) {
@@ -58,6 +58,7 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
         case "wallet": return "#39ff14";      // Verde neón
         case "dollar-sign": return "#39ff14"; // Verde neón
         case "briefcase": return "#3b82f6";   // Azul eléctrico
+        case "credit-card": return "#F16A30"; // Naranja corporativo
         case "moon": return "#a55eea";        // Violeta
         case "bell": return "#ff9f43";        // Naranja
         case "globe": return "#45aaf2";       // Celeste
@@ -126,8 +127,6 @@ export default function ProfileScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [editProfile, setEditProfile] = useState({
     name: user?.name || "",
@@ -137,7 +136,6 @@ export default function ProfileScreen() {
     newPassword: "",
     confirmPassword: ""
   });
-  const [showAddressesModal, setShowAddressesModal] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<Notifications.PermissionStatus>("undetermined");
   const [userStats, setUserStats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -361,7 +359,6 @@ export default function ProfileScreen() {
   };
 
   // Variables de diseño unificadas AstroBar
-  const bgContainer = isDark ? '#0b111e' : '#f5f5f5'; 
   const bgSurface = isDark ? '#111927' : '#ffffff';   
   const bgElement = isDark ? '#1f293d' : '#f5f5f5';   
   const textTitle = isDark ? '#ffffff' : '#333333';
@@ -471,6 +468,15 @@ export default function ProfileScreen() {
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   navigation.navigate("PaymentHistory");
+                }}
+              />
+              <SettingsItem
+                icon="credit-card"
+                label="Vincular Mercado Pago"
+                value="Cobros automáticos"
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("BusinessMercadoPago" as any);
                 }}
               />
             </>
@@ -641,7 +647,7 @@ export default function ProfileScreen() {
         </ThemedText>
       </ScrollView>
 
-      {/* 📥 MODALS TOTALMENTE REDISEÑADOS CON SOPORTE OSCURO */}
+      {/* 📥 MODAL CERRAR SESIÓN */}
       <Modal visible={showLogoutModal} transparent animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowLogoutModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: bgSurface, borderColor: borderStyle, borderWidth: isDark ? 1 : 0 }]}>
@@ -662,6 +668,7 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
 
+      {/* 📥 MODAL TEMA */}
       <Modal visible={showThemeModal} transparent animationType="fade" onRequestClose={() => setShowThemeModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowThemeModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: bgSurface, borderColor: borderStyle, borderWidth: isDark ? 1 : 0 }]}>
@@ -701,6 +708,7 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
 
+      {/* 📥 MODAL NOTIFICACIONES */}
       <Modal visible={showNotificationsModal} transparent animationType="fade" onRequestClose={() => setShowNotificationsModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowNotificationsModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: bgSurface, borderColor: borderStyle, borderWidth: isDark ? 1 : 0 }]}>
@@ -736,7 +744,7 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
 
-      {/* MODAL EDITAR PERFIL ACTUALIZADO */}
+      {/* 📥 MODAL EDITAR PERFIL */}
       <Modal visible={showEditProfileModal} transparent animationType="fade" onRequestClose={() => setShowEditProfileModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowEditProfileModal(false)}>
           <ScrollView contentContainerStyle={{flexGrow: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}} keyboardShouldPersistTaps="handled">
@@ -852,7 +860,7 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
 
-      {/* SECCIÓN RESTO DE MODALS (IDIOMA, DIRECCIONES) MATCHEADOS */}
+      {/* 📥 MODAL IDIOMA */}
       <Modal visible={showLanguageModal} transparent animationType="fade" onRequestClose={() => setShowLanguageModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowLanguageModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: bgSurface, borderColor: borderStyle, borderWidth: isDark ? 1 : 0 }]}>
@@ -907,6 +915,7 @@ const styles = StyleSheet.create({
   themeOptions: { width: "100%", gap: Spacing.sm, marginBottom: Spacing.md },
   themeOption: { flexDirection: "row", alignItems: "center", padding: Spacing.md, borderRadius: BorderRadius.md, borderWidth: 1.5 },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", paddingVertical: Spacing.md, marginBottom: Spacing.md },
+  strikeInfoCard: { flexDirection: "row", alignItems: "center", padding: Spacing.md, borderRadius: BorderRadius.md, width: "100%" },
   comingSoon: { textAlign: "center", marginBottom: Spacing.md },
   statsCard: { padding: Spacing.xl, borderRadius: BorderRadius.lg, marginBottom: Spacing.lg },
   statsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg },
