@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "crypto";
 import { authenticateToken, requireRole } from "../authMiddleware";
 import { mercadopagoAccounts, promotionTransactions, businesses, promotions } from "@shared/schema-mysql";
 import { db } from "../db";
@@ -14,8 +15,16 @@ const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
 const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/mercadopago/callback";
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token Maestro de AstroBar
 
+// Función auxiliar para codificación Base64URL requerida por PKCE
+function base64UrlEncode(buffer: Buffer): string {
+  return buffer.toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
 // ==========================================
-// 1. OAUTH - Iniciar vinculación de cuenta MP del bar
+// 1. OAUTH - Iniciar vinculación de cuenta MP del bar (con PKCE 🛡️)
 // ==========================================
 router.get("/connect", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
@@ -25,8 +34,15 @@ router.get("/connect", authenticateToken, requireRole("business_owner"), async (
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    // Construcción de la URL de autorización oficial de Mercado Pago
-    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${business.id}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}`;
+    // 1. Generar PKCE verifier y challenge
+    const codeVerifier = base64UrlEncode(crypto.randomBytes(32));
+    const codeChallenge = base64UrlEncode(crypto.createHash("sha256").update(codeVerifier).digest());
+
+    // 2. Guardar temporalmente el codeVerifier en la base de datos para usarlo en el callback
+    await db.update(businesses).set({ mpCodeVerifier: codeVerifier }).where(eq(businesses.id, business.id));
+
+    // 3. Construcción de la URL de autorización con PKCE habilitado
+    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${business.id}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
     // Si la llamada acepta HTML o viene de redirección directa de navegador:
     if (req.headers.accept && req.headers.accept.includes("text/html")) {
@@ -52,7 +68,14 @@ router.get("/callback", async (req, res) => {
       return res.status(400).send("Código de autorización o negocio faltante.");
     }
 
-    // Intercambio de código temporal por Access Token del Vendedor
+    // Obtener el negocio para recuperar su code_verifier guardado
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, businessId as string)).limit(1);
+
+    if (!business || !business.mpCodeVerifier) {
+      return res.status(400).send("Sesión de autorización inválida o expirada.");
+    }
+
+    // Intercambio de código temporal + PKCE verifier por Access Token del Vendedor
     const tokenResponse = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -62,6 +85,7 @@ router.get("/callback", async (req, res) => {
         code,
         grant_type: "authorization_code",
         redirect_uri: MP_REDIRECT_URI,
+        code_verifier: business.mpCodeVerifier, // 👈 Enviamos el código PKCE obligatorio
       }),
     });
 
@@ -72,7 +96,8 @@ router.get("/callback", async (req, res) => {
       throw new Error(tokenData.message || "No se pudo obtener el token de acceso de Mercado Pago.");
     }
 
-    // Eliminar vinculación previa si existía para este bar
+    // Limpiar el verifier usado y eliminar vinculaciones previas
+    await db.update(businesses).set({ mpCodeVerifier: null }).where(eq(businesses.id, businessId as string));
     await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, businessId as string));
 
     // Guardar nuevas credenciales de la subcuenta en la base de datos
