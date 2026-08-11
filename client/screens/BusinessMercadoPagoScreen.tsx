@@ -6,13 +6,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
-import { WebView } from 'react-native-webview';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/contexts/ToastContext';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
 import { apiRequest } from '@/lib/query-client';
+
+// Habilita a Expo a manejar el retorno de la sesión OAuth
+WebBrowser.maybeCompleteAuthSession();
 
 interface MercadoPagoAccount {
   mpUserId: string;
@@ -28,8 +30,6 @@ export default function BusinessMercadoPagoScreen() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
-  const [webViewVisible, setWebViewVisible] = useState(false);
-  const [authUrl, setAuthUrl] = useState('');
 
   useEffect(() => {
     loadMercadoPagoStatus();
@@ -64,10 +64,19 @@ export default function BusinessMercadoPagoScreen() {
     try {
       const response = await apiRequest('GET', '/api/mp/connect');
       const data = await response.json();
-      
+
       if (data.success && data.authUrl) {
-        setAuthUrl(data.authUrl);
-        setWebViewVisible(true);
+        // 🚀 Abrir el enlace en el NAVEGADOR NATIVO DEL SISTEMA (Solución al error de Mercado Pago)
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.authUrl,
+          'astrobar://mp-connected'
+        );
+
+        if (result.type === 'success') {
+          showToast('¡Cuenta conectada exitosamente!', 'success');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          loadMercadoPagoStatus();
+        }
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
       }
@@ -79,23 +88,14 @@ export default function BusinessMercadoPagoScreen() {
     }
   };
 
-  const handleWebViewNavigationStateChange = (navState: any) => {
-    if (navState.url.includes('astrobar://mp-connected')) {
-      setWebViewVisible(false);
-      loadMercadoPagoStatus();
-      showToast('¡Cuenta conectada exitosamente!', 'success');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
   const handleDisconnectMercadoPago = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowDisconnectModal(false);
-    
+
     try {
       const response = await apiRequest('POST', '/api/mp/disconnect');
       const data = await response.json();
-      
+
       if (data.success) {
         setMpAccount(null);
         showToast('Cuenta desconectada', 'success');
@@ -203,10 +203,10 @@ export default function BusinessMercadoPagoScreen() {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
-              <Feather 
-                name={mpAccount ? "link-2" : "link"} 
-                size={20} 
-                color="#FFFFFF" 
+              <Feather
+                name={mpAccount ? "link-2" : "link"}
+                size={20}
+                color="#FFFFFF"
               />
               <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600', marginLeft: Spacing.sm }}>
                 {mpAccount ? 'Desconectar Mercado Pago' : 'Conectar Mercado Pago'}
@@ -218,7 +218,7 @@ export default function BusinessMercadoPagoScreen() {
         {/* Info Section */}
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
           <ThemedText type="h4" style={styles.sectionTitle}>¿Por qué conectar?</ThemedText>
-          
+
           <View style={styles.stepItem}>
             <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.primaryLight }]}>
               <ThemedText type="body" style={{ color: AstroBarColors.primary, fontWeight: '600' }}>
@@ -271,7 +271,7 @@ export default function BusinessMercadoPagoScreen() {
         {/* Benefits */}
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
           <ThemedText type="h4" style={styles.sectionTitle}>Beneficios</ThemedText>
-          
+
           <View style={styles.benefitItem}>
             <View style={[styles.benefitIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
               <Feather name="dollar-sign" size={20} color={AstroBarColors.primary} />
@@ -364,27 +364,6 @@ export default function BusinessMercadoPagoScreen() {
           </View>
         </Pressable>
       </Modal>
-
-      <Modal
-        visible={webViewVisible}
-        animationType="slide"
-        onRequestClose={() => setWebViewVisible(false)}
-      >
-        <View style={{ flex: 1 }}>
-          <View style={[styles.webViewHeader, { backgroundColor: theme.card }]}>
-            <Pressable onPress={() => setWebViewVisible(false)} style={styles.closeButton}>
-              <Feather name="x" size={24} color={theme.text} />
-            </Pressable>
-            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
-            <View style={{ width: 24 }} />
-          </View>
-          <WebView
-            source={{ uri: authUrl }}
-            onNavigationStateChange={handleWebViewNavigationStateChange}
-            style={{ flex: 1 }}
-          />
-        </View>
-      </Modal>
     </LinearGradient>
   );
 }
@@ -431,7 +410,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    justifyContent: 'center',
+    justify.content: 'center',
     marginBottom: Spacing.lg,
   },
   section: {
@@ -524,16 +503,5 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  webViewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  closeButton: {
-    padding: Spacing.sm,
   },
 });
