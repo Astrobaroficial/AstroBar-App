@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    justify.content: 'center',
+    justifycontent: 'center',
     marginBottom: Spacing.lg,
   },
   section: {
