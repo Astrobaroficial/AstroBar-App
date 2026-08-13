@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as WebBrowser from 'expo-web-browser';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/contexts/ToastContext';
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from '@/constants/theme';
 import { apiRequest } from '@/lib/query-client';
-
-// Habilita a Expo a manejar el retorno de la sesión OAuth
-WebBrowser.maybeCompleteAuthSession();
 
 interface MercadoPagoAccount {
   mpUserId: string;
@@ -66,17 +62,8 @@ export default function BusinessMercadoPagoScreen() {
       const data = await response.json();
 
       if (data.success && data.authUrl) {
-        // 🚀 Abrir el enlace en el NAVEGADOR NATIVO DEL SISTEMA (Solución al error de Mercado Pago)
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.authUrl,
-          'astrobar://mp-connected'
-        );
-
-        if (result.type === 'success') {
-          showToast('¡Cuenta conectada exitosamente!', 'success');
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          loadMercadoPagoStatus();
-        }
+        // 🚀 Abrir directamente en el NAVEGADOR NATIVO EXTERNO (Chrome / Safari)
+        await Linking.openURL(data.authUrl);
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
       }
@@ -410,7 +397,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    justifycontent: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.lg,
   },
   section: {
