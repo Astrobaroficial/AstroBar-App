@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { WebView } from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
