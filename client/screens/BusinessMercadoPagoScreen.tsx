@@ -18,6 +18,9 @@ interface MercadoPagoAccount {
   connectedAt: string;
 }
 
+// ✅ Colores estáticos blindados para el fondo de pantalla
+const BACKGROUND_GRADIENT: [string, string] = ['#1a042b', '#11011e'];
+
 export default function BusinessMercadoPagoScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -62,7 +65,7 @@ export default function BusinessMercadoPagoScreen() {
       const data = await response.json();
 
       if (data.success && data.authUrl) {
-        // 🚀 Abrir directamente en el NAVEGADOR NATIVO EXTERNO (Chrome / Safari)
+        // 🚀 Abrir directamente en el NAVEGADOR NATIVO EXTERNO
         await Linking.openURL(data.authUrl);
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
@@ -99,8 +102,10 @@ export default function BusinessMercadoPagoScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+        colors={BACKGROUND_GRADIENT}
         style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AstroBarColors.primary} />
@@ -111,7 +116,7 @@ export default function BusinessMercadoPagoScreen() {
 
   return (
     <LinearGradient
-      colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+      colors={BACKGROUND_GRADIENT}
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -361,7 +366,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justify: 'center',
     alignItems: 'center',
   },
   scrollView: {
