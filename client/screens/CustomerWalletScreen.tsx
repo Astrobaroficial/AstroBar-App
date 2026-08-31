@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { WebView } from 'expo-web-browser';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
@@ -29,6 +28,9 @@ interface Transaction {
   redeemedAt: string | null;
 }
 
+// ✅ Colores estáticos blindados para el fondo de pantalla
+const BACKGROUND_GRADIENT: [string, string] = ['#1a042b', '#11011e'];
+
 export default function CustomerWalletScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -40,8 +42,6 @@ export default function CustomerWalletScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [filterTab, setFilterTab] = useState<'all' | 'completed' | 'pending'>('all');
-  const [showWebView, setShowWebView] = useState(false);
-  const [webViewUrl, setWebViewUrl] = useState('');
 
   useEffect(() => {
     loadMercadoPagoStatus();
@@ -99,8 +99,8 @@ export default function CustomerWalletScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        setWebViewUrl(data.authUrl);
-        setShowWebView(true);
+        // 🚀 Abrir directamente en el NAVEGADOR EXTERNO NATIVO
+        await Linking.openURL(data.authUrl);
       } else {
         showToast('Error al conectar Mercado Pago', 'error');
       }
@@ -109,22 +109,6 @@ export default function CustomerWalletScreen() {
       showToast(error.message || 'Error al conectar', 'error');
     } finally {
       setConnecting(false);
-    }
-  };
-
-  const handleWebViewNavigationStateChange = (navState: any) => {
-    const { url } = navState;
-    
-    // Detectar cuando Mercado Pago redirige de vuelta a tu callback URL
-    if (url.includes('/api/customer-mp/callback') || url.includes('success') || url.includes('code=')) {
-      setShowWebView(false);
-      setWebViewUrl('');
-      
-      setTimeout(() => {
-        loadMercadoPagoStatus();
-        showToast('¡Cuenta conectada exitosamente!', 'success');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }, 500);
     }
   };
 
@@ -152,8 +136,10 @@ export default function CustomerWalletScreen() {
   if (loading) {
     return (
       <LinearGradient
-        colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+        colors={BACKGROUND_GRADIENT}
         style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AstroBarColors.primary} />
@@ -164,7 +150,7 @@ export default function CustomerWalletScreen() {
 
   return (
     <LinearGradient
-      colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+      colors={BACKGROUND_GRADIENT}
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -183,7 +169,7 @@ export default function CustomerWalletScreen() {
         {/* Header */}
         <View style={[styles.headerCard, { backgroundColor: theme.card }, Shadows.md]}>
           <View style={[styles.iconContainer, { backgroundColor: AstroBarColors.primary }]}>
-            <Feather name="wallet" size={32} color="#FFFFFF" />
+            <Feather name="credit-card" size={32} color="#FFFFFF" />
           </View>
           <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: 'center' }}>
             Mi Billetera
@@ -442,44 +428,6 @@ export default function CustomerWalletScreen() {
         </View>
       </ScrollView>
 
-      {/* WebView Modal */}
-      <Modal
-        visible={showWebView}
-        animationType="slide"
-        onRequestClose={() => {
-          setShowWebView(false);
-          setWebViewUrl('');
-        }}
-      >
-        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: theme.backgroundRoot }}>
-          <View style={[styles.webViewHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-            <ThemedText type="h4">Conectar Mercado Pago</ThemedText>
-            <Pressable
-              style={[styles.closeWebViewButton, { backgroundColor: theme.backgroundSecondary }]}
-              onPress={() => {
-                setShowWebView(false);
-                setWebViewUrl('');
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-            >
-              <Feather name="x" size={24} color={theme.text} />
-            </Pressable>
-          </View>
-          {webViewUrl ? (
-            <WebView
-              source={{ uri: webViewUrl }}
-              onNavigationStateChange={handleWebViewNavigationStateChange}
-              startInLoadingState
-              renderLoading={() => (
-                <View style={styles.webViewLoading}>
-                  <ActivityIndicator size="large" color={AstroBarColors.primary} />
-                </View>
-              )}
-            />
-          ) : null}
-        </View>
-      </Modal>
-
       {/* Disconnect Modal */}
       <Modal
         visible={showDisconnectModal}
@@ -676,29 +624,5 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  webViewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-  },
-  closeWebViewButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  webViewLoading: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
   },
 });
