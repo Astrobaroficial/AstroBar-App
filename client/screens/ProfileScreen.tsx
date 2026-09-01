@@ -28,7 +28,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Badge } from "@/components/Badge";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { useApp, ThemeMode } from "@/contexts/AppContext";
+import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/contexts/ToastContext";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
@@ -49,7 +49,6 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
   const { theme } = useTheme();
   const isDark = theme.background === "#000000" || theme.background === "black" || theme.background === "#121212";
 
-  // Colores dedicados para cada icono
   const getIconColor = () => {
     if (danger) return AstroBarColors.error;
     if (isDark) {
@@ -58,7 +57,6 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
         case "dollar-sign": return "#39ff14"; // Verde neón
         case "briefcase": return "#3b82f6";   // Azul eléctrico
         case "credit-card": return "#F16A30"; // Naranja corporativo
-        case "moon": return "#a55eea";        // Violeta
         case "bell": return "#ff9f43";        // Naranja
         case "globe": return "#45aaf2";       // Celeste
         case "share-2": return "#2ed573";     // Verde
@@ -105,17 +103,11 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
   );
 }
 
-const themeOptions: { value: ThemeMode; label: string }[] = [
-  { value: "system", label: "Sistema" },
-  { value: "light", label: "Claro" },
-  { value: "dark", label: "Oscuro" }
-];
-
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const { theme, themeMode, setThemeMode } = useTheme();
+  const { theme } = useTheme();
   const { settings, updateSettings } = useApp();
   const { user, logout, updateUser } = useAuth();
   const { showToast } = useToast();
@@ -123,7 +115,6 @@ export default function ProfileScreen() {
   const [profileImageVersion, setProfileImageVersion] = useState(0);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showThemeModal, setShowThemeModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -190,15 +181,6 @@ export default function ProfileScreen() {
       setProfileImage(addCacheBuster(baseUrl, version));
     }
   }, [user?.profileImage]);
-
-  const getThemeLabel = (mode: ThemeMode) => {
-    switch (mode) {
-      case "system": return "Sistema";
-      case "light": return "Claro";
-      case "dark": return "Oscuro";
-      default: return "Sistema";
-    }
-  };
 
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -317,12 +299,6 @@ export default function ProfileScreen() {
     } catch (error) {
       return notificationStatus;
     }
-  };
-
-  const handleThemeSelect = async (mode: ThemeMode) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await setThemeMode(mode);
-    setShowThemeModal(false);
   };
 
   const handleNotificationsToggle = async (value: boolean) => {
@@ -568,15 +544,6 @@ export default function ProfileScreen() {
             PREFERENCIAS
           </ThemedText>
           <SettingsItem
-            icon="moon"
-            label="Tema"
-            value={getThemeLabel(themeMode)}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowThemeModal(true);
-            }}
-          />
-          <SettingsItem
             icon="bell"
             label="Notificaciones"
             value={settings.notificationsEnabled ? "Activadas" : "Desactivadas"}
@@ -663,46 +630,6 @@ export default function ProfileScreen() {
                 <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "700" }}>Cerrar sesión</ThemedText>
               </Pressable>
             </View>
-          </View>
-        </Pressable>
-      </Modal>
-
-      {/* 📥 MODAL TEMA */}
-      <Modal visible={showThemeModal} transparent animationType="fade" onRequestClose={() => setShowThemeModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowThemeModal(false)}>
-          <View style={[styles.modalContent, { backgroundColor: bgSurface, borderColor: borderStyle, borderWidth: isDark ? 1 : 0 }]}>
-            <View style={[styles.modalIcon, { backgroundColor: bgElement }]}>
-              <Feather name="moon" size={26} color={isDark ? '#00f2fe' : AstroBarColors.primary} />
-            </View>
-            <ThemedText type="h3" style={[styles.modalTitle, { color: textTitle }]}>Seleccionar tema</ThemedText>
-            <View style={styles.themeOptions}>
-              {themeOptions.map((option) => (
-                <Pressable
-                  key={option.value}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor: themeMode === option.value ? (isDark ? '#1a273a' : AstroBarColors.primaryLight) : bgElement,
-                      borderColor: themeMode === option.value ? (isDark ? '#00f2fe' : AstroBarColors.primary) : "transparent",
-                    }
-                  ]}
-                  onPress={() => handleThemeSelect(option.value)}
-                >
-                  <Feather
-                    name={option.value === "system" ? "smartphone" : option.value === "light" ? "sun" : "moon"}
-                    size={18}
-                    color={themeMode === option.value ? (isDark ? '#00f2fe' : AstroBarColors.primary) : textSub}
-                  />
-                  <ThemedText type="body" style={{ color: themeMode === option.value ? (isDark ? '#00f2fe' : AstroBarColors.primary) : textTitle, marginLeft: Spacing.sm, fontWeight: themeMode === option.value ? "700" : "500" }}>
-                    {option.label}
-                  </ThemedText>
-                  {themeMode === option.value ? <Feather name="check" size={18} color={isDark ? '#00f2fe' : AstroBarColors.primary} style={{ marginLeft: "auto" }} /> : null}
-                </Pressable>
-              ))}
-            </View>
-            <Pressable style={[styles.modalButtonFull, { backgroundColor: bgElement }]} onPress={() => setShowThemeModal(false)}>
-              <ThemedText type="body" style={{ color: textTitle, fontWeight: '600' }}>Cerrar</ThemedText>
-            </Pressable>
           </View>
         </Pressable>
       </Modal>

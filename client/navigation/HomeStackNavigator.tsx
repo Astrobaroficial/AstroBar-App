@@ -10,7 +10,6 @@ import ActivePromotionsScreen from "@/screens/ActivePromotionsScreen";
 import PromotionsListScreen from "@/screens/PromotionsListScreen";
 import PromotionDetailScreen from "@/screens/PromotionDetailScreen";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { Spacing, AstroBarColors } from "@/constants/theme";
 
@@ -50,7 +49,6 @@ export default function HomeStackNavigator() {
         component={HomeScreen}
         options={{
           headerTitle: () => <HeaderTitle />,
-          headerRight: () => <ThemeToggleButton />,
         }}
       />
       <Stack.Screen
