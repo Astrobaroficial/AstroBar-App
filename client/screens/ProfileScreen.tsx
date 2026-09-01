@@ -55,7 +55,6 @@ function SettingsItem({ icon, label, value, onPress, danger }: SettingsItemProps
     if (isDark) {
       switch (icon) {
         case "user": return "#00f2fe";        // Cian
-        case "wallet": return "#39ff14";      // Verde neón
         case "dollar-sign": return "#39ff14"; // Verde neón
         case "briefcase": return "#3b82f6";   // Azul eléctrico
         case "credit-card": return "#F16A30"; // Naranja corporativo
@@ -443,7 +442,7 @@ export default function ProfileScreen() {
           />
           {user?.role === "customer" && (
             <SettingsItem
-              icon="wallet"
+              icon="dollar-sign"
               label="Mi billetera"
               value="Vincular Mercado Pago"
               onPress={() => {
