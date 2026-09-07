@@ -1,7 +1,6 @@
 import express from "express";
-import crypto from "crypto";
 import { authenticateToken, requireRole } from "../authMiddleware";
-import { mercadopagoAccounts, promotionTransactions, businesses, promotions } from "@shared/schema-mysql";
+import { mercadopagoAccounts, promotionTransactions, businesses } from "@shared/schema-mysql";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -12,19 +11,12 @@ const router = express.Router();
 // Configuración de Mercado Pago unificada
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
-const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/mercadopago/callback";
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
+const MP_REDIRECT_URI = `${BASE_URL}/api/mp/callback`;
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token Maestro de AstroBar
 
-// Función auxiliar para codificación Base64URL requerida por PKCE
-function base64UrlEncode(buffer: Buffer): string {
-  return buffer.toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
-
 // ==========================================
-// 1. OAUTH - Iniciar vinculación de cuenta MP del bar (con PKCE 🛡️)
+// 1. OAUTH - Iniciar vinculación de cuenta MP del bar
 // ==========================================
 router.get("/connect", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
@@ -34,22 +26,16 @@ router.get("/connect", authenticateToken, requireRole("business_owner"), async (
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    // 1. Generar PKCE verifier y challenge
-    const codeVerifier = base64UrlEncode(crypto.randomBytes(32));
-    const codeChallenge = base64UrlEncode(crypto.createHash("sha256").update(codeVerifier).digest());
+    // Guardamos el ID del negocio en el parámetro 'state' de la URL de OAuth
+    const stateParam = encodeURIComponent(JSON.stringify({ businessId: business.id, userId: req.user!.id }));
 
-    // 2. Guardar temporalmente el codeVerifier en la base de datos para usarlo en el callback
-    await db.update(businesses).set({ mpCodeVerifier: codeVerifier }).where(eq(businesses.id, business.id));
+    // Construcción de la URL de autorización estándar de Mercado Pago (sin PKCE)
+    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${stateParam}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}`;
 
-    // 3. Construcción de la URL de autorización con PKCE habilitado
-    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${business.id}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-
-    // Si la llamada acepta HTML o viene de redirección directa de navegador:
     if (req.headers.accept && req.headers.accept.includes("text/html")) {
       return res.redirect(authUrl);
     }
 
-    // Si viene desde la App Móvil por API Client:
     res.json({ success: true, authUrl });
   } catch (error: any) {
     console.error("Error generating MP auth URL:", error);
@@ -62,20 +48,25 @@ router.get("/connect", authenticateToken, requireRole("business_owner"), async (
 // ==========================================
 router.get("/callback", async (req, res) => {
   try {
-    const { code, state: businessId } = req.query;
+    const { code, state } = req.query;
 
-    if (!code || !businessId) {
-      return res.status(400).send("Código de autorización o negocio faltante.");
+    if (!code || !state) {
+      return res.status(400).send("Código de autorización o estado faltante.");
     }
 
-    // Obtener el negocio para recuperar su code_verifier guardado
-    const [business] = await db.select().from(businesses).where(eq(businesses.id, businessId as string)).limit(1);
+    let businessId: string | null = null;
+    try {
+      const parsedState = JSON.parse(decodeURIComponent(state as string));
+      businessId = parsedState.businessId;
+    } catch (e) {
+      businessId = state as string; // Fallback si viene como id plano
+    }
 
-    if (!business || !business.mpCodeVerifier) {
+    if (!businessId) {
       return res.status(400).send("Sesión de autorización inválida o expirada.");
     }
 
-    // Intercambio de código temporal + PKCE verifier por Access Token del Vendedor
+    // Intercambio directo del código de autorización por el Access Token
     const tokenResponse = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,7 +76,6 @@ router.get("/callback", async (req, res) => {
         code,
         grant_type: "authorization_code",
         redirect_uri: MP_REDIRECT_URI,
-        code_verifier: business.mpCodeVerifier, // 👈 Enviamos el código PKCE obligatorio
       }),
     });
 
@@ -96,15 +86,13 @@ router.get("/callback", async (req, res) => {
       throw new Error(tokenData.message || "No se pudo obtener el token de acceso de Mercado Pago.");
     }
 
-    // Limpiar el verifier usado y eliminar vinculaciones previas
-    await db.update(businesses).set({ mpCodeVerifier: null }).where(eq(businesses.id, businessId as string));
-    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, businessId as string));
+    // Limpiar vinculaciones previas e insertar nuevas credenciales
+    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, businessId));
 
-    // Guardar nuevas credenciales de la subcuenta en la base de datos
     const accountId = uuidv4();
     await db.insert(mercadopagoAccounts).values({
       id: accountId,
-      businessId: businessId as string,
+      businessId: businessId,
       mpUserId: String(tokenData.user_id),
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
@@ -115,7 +103,7 @@ router.get("/callback", async (req, res) => {
 
     console.log(`✅ Cuenta de Mercado Pago conectada con éxito para el Bar ID: ${businessId}`);
 
-    // Página HTML de éxito amigable tanto para Web como para Celular
+    // Respuesta HTML exitosa para redirigir a la app
     res.send(`
       <!DOCTYPE html>
       <html lang="es">
@@ -164,7 +152,6 @@ router.get("/callback", async (req, res) => {
           <a href="astrobar://mp-connected?success=true" class="btn">Volver a AstroBar App</a>
         </div>
         <script>
-          // Intenta redirigir a la App automáticamente
           setTimeout(function() {
             window.location.href = "astrobar://mp-connected?success=true";
           }, 1500);
@@ -235,7 +222,7 @@ router.post("/disconnect", authenticateToken, requireRole("business_owner"), asy
 });
 
 // ==========================================
-// 5. CREAR PAGO CON SPLIT MARKETPLACE (SDK Oficial v2 💎)
+// 5. CREAR PAGO CON SPLIT MARKETPLACE
 // ==========================================
 router.post("/create-payment", authenticateToken, async (req, res) => {
   try {
@@ -270,9 +257,6 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
     const platformFee = Number(transaction.platformCommission) || (totalAmount * commissionRate); 
     const businessAmount = totalAmount - platformFee; 
 
-    console.log(`💰 Split Marketplace: Pago total $${totalAmount} | Bar recibe $${businessAmount} | Comisión AstroBar $${platformFee}`);
-
-    // Inicialización pasándole el token específico del bar (vendedor)
     const barClient = new MercadoPagoConfig({ accessToken: mpAccount.accessToken });
     const mpPreference = new Preference(barClient);
 
@@ -287,9 +271,9 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
             currency_id: 'ARS'
           },
         ],
-        marketplace_fee: platformFee, // Comisión de AstroBar que va a tu cuenta administradora
+        marketplace_fee: platformFee,
         external_reference: String(transaction.id),
-        notification_url: `https://astrobar-app-production-4821.up.railway.app/api/mercadopago/webhook`,
+        notification_url: `${BASE_URL}/api/mercadopago/webhook`,
         back_urls: {
           success: `astrobar://payment-success`,
           failure: `astrobar://payment-failure`,
@@ -323,7 +307,6 @@ router.post("/webhook", async (req, res) => {
     if (type === "payment" && data?.id) {
       const paymentId = data.id;
 
-      // Consulta del pago usando el Token Maestro de AstroBar
       const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
           "Authorization": `Bearer ${MP_ACCESS_TOKEN}`,
