@@ -79,7 +79,6 @@ export default function OrderPaymentScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        // Abrimos en el navegador seguro del sistema para evitar crasheos de WebView nativo
         await Linking.openURL(data.authUrl);
       } else {
         Alert.alert("Error", "No se pudo generar la URL de conexión con Mercado Pago");
@@ -95,7 +94,6 @@ export default function OrderPaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      // 1. Crear la orden en el servidor
       const response = await apiRequest("POST", "/api/orders/create", { 
         items,
         total,
@@ -109,7 +107,6 @@ export default function OrderPaymentScreen() {
 
       let checkoutUrl = data.initPoint;
 
-      // Fallback a /api/mp/create-payment si solo se recibió transactionId
       if (!checkoutUrl && data.transactionId) {
         const mpRes = await apiRequest("POST", "/api/mp/create-payment", {
           transactionId: data.transactionId
@@ -143,7 +140,6 @@ export default function OrderPaymentScreen() {
     }
   };
 
-  // Formato seguro de dinero
   const formattedTotal = typeof total === "number" 
     ? (total > 10000 ? total / 100 : total).toLocaleString("es-AR", { style: "currency", currency: "ARS" })
     : "$0,00";
@@ -372,7 +368,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.full,
     alignItems: "center",
-    justify.content: "center",
+    justifyContent: "center",
   },
   payButton: {
     flexDirection: "row",
