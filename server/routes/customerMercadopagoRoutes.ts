@@ -1,24 +1,9 @@
 import express from "express";
 import { authenticateToken, requireRole } from "../authMiddleware";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
-
-// Tabla para cuentas MP de clientes (necesita existir en BD)
-// CREATE TABLE customer_mercadopago_accounts (
-//   id VARCHAR(36) PRIMARY KEY,
-//   user_id VARCHAR(36) NOT NULL UNIQUE,
-//   mp_user_id VARCHAR(255) NOT NULL,
-//   access_token TEXT NOT NULL,
-//   refresh_token TEXT,
-//   public_key VARCHAR(255),
-//   expires_at DATETIME,
-//   is_active BOOLEAN DEFAULT true,
-//   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-//   FOREIGN KEY (user_id) REFERENCES users(id)
-// );
 
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
@@ -64,7 +49,7 @@ router.get("/callback", async (req, res) => {
     const tokenData = await tokenResponse.json();
 
     if (!tokenData.access_token) {
-      throw new Error("No se pudo obtener access_token");
+      throw new Error(tokenData.message || "No se pudo obtener access_token");
     }
 
     // Guardar en base de datos
@@ -73,10 +58,10 @@ router.get("/callback", async (req, res) => {
     
     await db.execute(sql`
       INSERT INTO customer_mercadopago_accounts 
-      (id, user_id, mp_user_id, access_token, refresh_token, public_key, expires_at, is_active)
+      (id, user_id, mp_user_id, access_token, refresh_token, public_key, expires_at, is_active, created_at)
       VALUES (${accountId}, ${userId}, ${tokenData.user_id}, ${tokenData.access_token}, 
               ${tokenData.refresh_token || null}, ${tokenData.public_key || null}, 
-              DATE_ADD(NOW(), INTERVAL ${tokenData.expires_in || 21600} SECOND), true)
+              DATE_ADD(NOW(), INTERVAL ${tokenData.expires_in || 21600} SECOND), true, NOW())
       ON DUPLICATE KEY UPDATE 
         access_token = ${tokenData.access_token},
         refresh_token = ${tokenData.refresh_token || null},
@@ -84,15 +69,33 @@ router.get("/callback", async (req, res) => {
         is_active = true
     `);
 
-    // Redirigir al frontend con éxito
-    res.redirect(`astrobar://mp-connected?success=true`);
+    // Redirigir al frontend con respuesta HTML limpia + Deep Link
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <title>Conexión Exitosa - AstroBar</title>
+      </head>
+      <body style="background-color:#11011E;color:#FFFFFF;font-family:sans-serif;text-align:center;padding-top:50px;">
+        <h2>¡Billetera Vinculada con Éxito! 🎉</h2>
+        <p>Redirigiendo a AstroBar App...</p>
+        <a href="astrobar://mp-connected?success=true" style="color:#F16A30;font-weight:bold;">Volver a la App</a>
+        <script>
+          setTimeout(function() {
+            window.location.href = "astrobar://mp-connected?success=true";
+          }, 1500);
+        </script>
+      </body>
+      </html>
+    `);
   } catch (error: any) {
     console.error("Error in MP callback:", error);
     res.redirect(`astrobar://mp-connected?success=false&error=${encodeURIComponent(error.message)}`);
   }
 });
 
-// 3. ESTADO DE CONEXIÓN - Cliente
+// 3. ESTADO DE CONEXIÓN - Cliente (Corregido y Normalizado)
 router.get("/status", authenticateToken, requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
@@ -105,17 +108,32 @@ router.get("/status", authenticateToken, requireRole("customer"), async (req, re
       LIMIT 1
     `);
 
-    if (!result[0] || result[0].length === 0) {
+    // Extraer filas de forma segura en MySQL
+    const rows = Array.isArray(result[0]) ? result[0] : result;
+
+    if (!rows || rows.length === 0) {
       return res.json({ success: true, connected: false });
     }
 
-    const account = result[0][0];
+    const account = rows[0];
+
+    // Verificar que la cuenta esté activa
+    if (!account.is_active) {
+      return res.json({ success: true, connected: false });
+    }
+
+    // Convertir fecha a string ISO de forma blindada
+    let connectedAtFormatted = new Date().toISOString();
+    if (account.created_at) {
+      connectedAtFormatted = new Date(account.created_at).toISOString();
+    }
+
     res.json({
       success: true,
       connected: true,
-      mpUserId: account.mp_user_id,
-      isActive: account.is_active,
-      connectedAt: account.created_at,
+      mpUserId: String(account.mp_user_id),
+      isActive: Boolean(account.is_active),
+      connectedAt: connectedAtFormatted,
     });
   } catch (error: any) {
     console.error("Error checking MP status:", error);
