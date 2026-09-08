@@ -46,6 +46,17 @@ export default function CustomerWalletScreen() {
   useEffect(() => {
     loadMercadoPagoStatus();
     loadTransactions();
+
+    // 🚀 Escuchador para cuando Mercado Pago redirige de regreso a la App vía Deep Link
+    const subscription = Linking.addEventListener('url', (event) => {
+      if (event.url.includes('mp-connected')) {
+        loadMercadoPagoStatus();
+        loadTransactions();
+        showToast('¡Mercado Pago vinculado con éxito!', 'success');
+      }
+    });
+
+    return () => subscription.remove();
   }, []);
 
   useFocusEffect(
