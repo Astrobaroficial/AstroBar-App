@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { ProfileStackParamList } from '@/navigation/ProfileStackNavigator';
-
-type WalletScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 import * as Haptics from 'expo-haptics';
 
+type WalletScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+
 import { ThemedText } from '@/components/ThemedText';
-import { Badge } from '@/components/Badge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -48,7 +47,28 @@ export default function WalletScreen() {
     if (user?.role === 'business_owner') {
       loadMercadoPagoStatus();
     }
+
+    // 🚀 Listener de Deep Linking para detectar el retorno automático desde el navegador
+    const subscription = Linking.addEventListener('url', (event) => {
+      if (event.url.includes('mp-connected')) {
+        loadMercadoPagoStatus();
+        loadWalletStats();
+        showToast('¡Cuenta de Mercado Pago vinculada exitosamente!', 'success');
+      }
+    });
+
+    return () => subscription.remove();
   }, [user?.role]);
+
+  // 🔄 Recarga automática cada vez que la pantalla toma foco en la app
+  useFocusEffect(
+    useCallback(() => {
+      loadWalletStats();
+      if (user?.role === 'business_owner') {
+        loadMercadoPagoStatus();
+      }
+    }, [user?.role])
+  );
 
   const loadWalletStats = async () => {
     try {
@@ -67,7 +87,6 @@ export default function WalletScreen() {
       }
     } catch (error) {
       console.error('Error loading wallet stats:', error);
-      showToast('Error al cargar estadísticas', 'error');
     } finally {
       setLoading(false);
     }
@@ -93,12 +112,11 @@ export default function WalletScreen() {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS'
-    }).format(amount); // Precio ya está en pesos
+    }).format(amount);
   };
 
   const openMercadoPago = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Abrir Mercado Pago en el navegador
     Linking.openURL('https://www.mercadopago.com.ar/balance');
   };
 
@@ -210,167 +228,167 @@ export default function WalletScreen() {
   // Vista para BARES (business_owner)
   if (user?.role === 'business_owner') {
     return (
-    <LinearGradient
-      colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: Spacing.lg,
-            paddingBottom: insets.bottom + Spacing.xl,
-          }
-        ]}
-        showsVerticalScrollIndicator={false}
+      <LinearGradient
+        colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        {/* Sales Card */}
-        <View style={[styles.balanceCard, { backgroundColor: '#4CAF50' }, Shadows.lg]}>
-          <View style={styles.balanceHeader}>
-            <Feather name="trending-up" size={24} color="#FFFFFF" />
-            <ThemedText type="body" style={{ color: '#FFFFFF', opacity: 0.9 }}>
-              Total Vendido
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: Spacing.lg,
+              paddingBottom: insets.bottom + Spacing.xl,
+            }
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Sales Card */}
+          <View style={[styles.balanceCard, { backgroundColor: '#4CAF50' }, Shadows.lg]}>
+            <View style={styles.balanceHeader}>
+              <Feather name="trending-up" size={24} color="#FFFFFF" />
+              <ThemedText type="body" style={{ color: '#FFFFFF', opacity: 0.9 }}>
+                Total Vendido
+              </ThemedText>
+            </View>
+            <ThemedText type="h1" style={{ color: '#FFFFFF', marginVertical: Spacing.sm }}>
+              {loading ? '...' : formatCurrency(stats?.totalEarnings || 0)}
             </ThemedText>
-          </View>
-          <ThemedText type="h1" style={{ color: '#FFFFFF', marginVertical: Spacing.sm }}>
-            {loading ? '...' : formatCurrency(stats?.totalEarnings || 0)}
-          </ThemedText>
-          <View style={styles.balanceFooter}>
-            <View style={styles.balanceItem}>
-              <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>Este mes</ThemedText>
-              <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                {loading ? '...' : formatCurrency(stats?.thisMonthEarnings || 0)}
-              </ThemedText>
-            </View>
-            <View style={styles.balanceItem}>
-              <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>Comisión</ThemedText>
-              <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                {loading ? '...' : `${stats?.platformCommission || 0}%`}
-              </ThemedText>
+            <View style={styles.balanceFooter}>
+              <View style={styles.balanceItem}>
+                <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>Este mes</ThemedText>
+                <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                  {loading ? '...' : formatCurrency(stats?.thisMonthEarnings || 0)}
+                </ThemedText>
+              </View>
+              <View style={styles.balanceItem}>
+                <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.8 }}>Comisión</ThemedText>
+                <ThemedText type="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                  {loading ? '...' : `${stats?.platformCommission || 0}%`}
+                </ThemedText>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: theme.card }, Shadows.sm]}>
-            <View style={[styles.statIcon, { backgroundColor: AstroBarColors.successLight }]}>
-              <Feather name="check-circle" size={20} color={AstroBarColors.success} />
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <View style={[styles.statCard, { backgroundColor: theme.card }, Shadows.sm]}>
+              <View style={[styles.statIcon, { backgroundColor: AstroBarColors.successLight }]}>
+                <Feather name="check-circle" size={20} color={AstroBarColors.success} />
+              </View>
+              <ThemedText type="h3" style={{ color: AstroBarColors.success }}>
+                {loading ? '...' : stats?.totalTransactions || 0}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Ventas</ThemedText>
             </View>
-            <ThemedText type="h3" style={{ color: AstroBarColors.success }}>
-              {loading ? '...' : stats?.totalTransactions || 0}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>Ventas</ThemedText>
+
+            <View style={[styles.statCard, { backgroundColor: theme.card }, Shadows.sm]}>
+              <View style={[styles.statIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
+                <Feather name="dollar-sign" size={20} color={AstroBarColors.primary} />
+              </View>
+              <ThemedText type="h3" style={{ color: AstroBarColors.primary }}>
+                {loading ? '...' : formatCurrency(stats?.averageOrderValue || 0)}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>Promedio</ThemedText>
+            </View>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: theme.card }, Shadows.sm]}>
-            <View style={[styles.statIcon, { backgroundColor: AstroBarColors.primaryLight }]}>
-              <Feather name="dollar-sign" size={20} color={AstroBarColors.primary} />
-            </View>
-            <ThemedText type="h3" style={{ color: AstroBarColors.primary }}>
-              {loading ? '...' : formatCurrency(stats?.averageOrderValue || 0)}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>Promedio</ThemedText>
-          </View>
-        </View>
-
-        {/* Mercado Pago Status */}
-        <View style={[styles.mpCard, { backgroundColor: mpStatus.connected ? '#E8F5E9' : '#FFF3E0' }, Shadows.sm]}>
-          <View style={styles.mpHeader}>
-            <View style={[styles.mpIcon, { backgroundColor: mpStatus.connected ? '#4CAF50' : '#FF9800' }]}>
-              <Feather name={mpStatus.connected ? "check" : "alert-circle"} size={20} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1, marginLeft: Spacing.md }}>
-              <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Mercado Pago {mpStatus.connected ? 'Conectado' : 'No Conectado'}
-              </ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 2 }}>
-                {mpStatus.connected 
-                  ? 'Recibiendo pagos correctamente' 
-                  : 'Conecta tu cuenta para recibir pagos'}
-              </ThemedText>
+          {/* Mercado Pago Status */}
+          <View style={[styles.mpCard, { backgroundColor: mpStatus.connected ? '#E8F5E9' : '#FFF3E0' }, Shadows.sm]}>
+            <View style={styles.mpHeader}>
+              <View style={[styles.mpIcon, { backgroundColor: mpStatus.connected ? '#4CAF50' : '#FF9800' }]}>
+                <Feather name={mpStatus.connected ? "check" : "alert-circle"} size={20} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1, marginLeft: Spacing.md }}>
+                <ThemedText type="body" style={{ fontWeight: '600' }}>
+                  Mercado Pago {mpStatus.connected ? 'Conectado' : 'No Conectado'}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 2 }}>
+                  {mpStatus.connected 
+                    ? 'Recibiendo pagos correctamente' 
+                    : 'Conecta tu cuenta para recibir pagos'}
+                </ThemedText>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Quick Actions */}
-        <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
-          <ThemedText type="h4" style={styles.sectionTitle}>Acciones Rápidas</ThemedText>
-          
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: theme.border }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('BusinessMercadoPago');
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
-              <Feather name="credit-card" size={20} color="#009EE3" />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Configurar Mercado Pago</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                {mpStatus.connected ? 'Gestionar cuenta conectada' : 'Conectar cuenta para recibir pagos'}
-              </ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
-
-          {mpStatus.connected && (
+          {/* Quick Actions */}
+          <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
+            <ThemedText type="h4" style={styles.sectionTitle}>Acciones Rápidas</ThemedText>
+            
             <Pressable
               style={[styles.actionItem, { borderBottomColor: theme.border }]}
-              onPress={openMercadoPago}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('BusinessMercadoPago');
+              }}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
-                <Feather name="external-link" size={20} color="#009EE3" />
+                <Feather name="credit-card" size={20} color="#009EE3" />
               </View>
               <View style={styles.actionContent}>
-                <ThemedText type="body">Ver en Mercado Pago</ThemedText>
+                <ThemedText type="body">Configurar Mercado Pago</ThemedText>
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                  Consultar saldo y movimientos
+                  {mpStatus.connected ? 'Gestionar cuenta conectada' : 'Conectar cuenta para recibir pagos'}
                 </ThemedText>
               </View>
               <Feather name="chevron-right" size={20} color={theme.textSecondary} />
             </Pressable>
-          )}
 
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: 'transparent' }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.navigate('PaymentHistory');
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.infoLight }]}>
-              <Feather name="file-text" size={20} color={AstroBarColors.info} />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Historial Completo</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Ver todas las transacciones</ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
-        </View>
+            {mpStatus.connected && (
+              <Pressable
+                style={[styles.actionItem, { borderBottomColor: theme.border }]}
+                onPress={openMercadoPago}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+                  <Feather name="external-link" size={20} color="#009EE3" />
+                </View>
+                <View style={styles.actionContent}>
+                  <ThemedText type="body">Ver en Mercado Pago</ThemedText>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                    Consultar saldo y movimientos
+                  </ThemedText>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+              </Pressable>
+            )}
 
-        {/* Info Card */}
-        <View style={[styles.infoCard, { backgroundColor: AstroBarColors.infoLight }]}>
-          <Feather name="info" size={20} color={AstroBarColors.info} />
-          <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-            <ThemedText type="body" style={{ color: AstroBarColors.info, fontWeight: '600' }}>Cómo Funciona</ThemedText>
-            <ThemedText type="small" style={{ color: AstroBarColors.info, marginTop: Spacing.xs }}>
-              • Recibes el 100% del precio de tus productos{"\n"}
-              • La comisión ({stats?.platformCommission || 0}%) se cobra adicional al cliente{"\n"}
-              • El dinero llega directo a tu cuenta de Mercado Pago{"\n"}
-              • Puedes retirar desde Mercado Pago cuando quieras
-            </ThemedText>
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: 'transparent' }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('PaymentHistory');
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: AstroBarColors.infoLight }]}>
+                <Feather name="file-text" size={20} color={AstroBarColors.info} />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Historial Completo</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Ver todas las transacciones</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
           </View>
-        </View>
-      </ScrollView>
-    </LinearGradient>
-  );
+
+          {/* Info Card */}
+          <View style={[styles.infoCard, { backgroundColor: AstroBarColors.infoLight }]}>
+            <Feather name="info" size={20} color={AstroBarColors.info} />
+            <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+              <ThemedText type="body" style={{ color: AstroBarColors.info, fontWeight: '600' }}>Cómo Funciona</ThemedText>
+              <ThemedText type="small" style={{ color: AstroBarColors.info, marginTop: Spacing.xs }}>
+                • Recibes el 100% del precio de tus productos{"\n"}
+                • La comisión ({stats?.platformCommission || 0}%) se cobra adicional al cliente{"\n"}
+                • El dinero llega directo a tu cuenta de Mercado Pago{"\n"}
+                • Puedes retirar desde Mercado Pago cuando quieras
+              </ThemedText>
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    );
   }
 
   // Vista para ADMIN/SUPER_ADMIN
@@ -621,21 +639,5 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'flex-start',
-  },
-  mpCard: {
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.lg,
-  },
-  mpHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mpIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
