@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, Alert, ActivityIndicator, ScrollView, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -10,9 +10,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
-import { Linking } from "react-native";
 import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
-import MercadoPagoWebView from "@/components/MercadoPagoWebView";
 
 export default function OrderPaymentScreen() {
   const insets = useSafeAreaInsets();
@@ -20,15 +18,13 @@ export default function OrderPaymentScreen() {
   const styles = getStyles(theme);
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { total, items } = route.params;
+  const { total, items, businessId } = route.params || {};
   const { clearCart } = useUnifiedCart();
 
   const [loading, setLoading] = useState(false);
   const [checkingMP, setCheckingMP] = useState(true);
   const [mpConnected, setMpConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [showWebView, setShowWebView] = useState(false);
-  const [authUrl, setAuthUrl] = useState("");
 
   useEffect(() => {
     checkMercadoPagoStatus();
@@ -40,12 +36,33 @@ export default function OrderPaymentScreen() {
     }, [])
   );
 
+  // Listener para capturar el retorno cuando se conecta Mercado Pago por Deep Link
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      if (event.url && event.url.includes("mp-connected")) {
+        checkMercadoPagoStatus();
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    Linking.getInitialURL().then((url) => {
+      if (url && url.includes("mp-connected")) {
+        checkMercadoPagoStatus();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const checkMercadoPagoStatus = async () => {
     setCheckingMP(true);
     try {
       const response = await apiRequest("GET", "/api/customer-mp/status");
       const data = await response.json();
-      setMpConnected(data.success && data.connected);
+      setMpConnected(Boolean(data.success && data.connected));
     } catch (error) {
       console.error("Error checking MP status:", error);
       setMpConnected(false);
@@ -62,10 +79,10 @@ export default function OrderPaymentScreen() {
       const data = await response.json();
       
       if (data.success && data.authUrl) {
-        setAuthUrl(data.authUrl);
-        setShowWebView(true);
+        // Abrimos en el navegador seguro del sistema para evitar crasheos de WebView nativo
+        await Linking.openURL(data.authUrl);
       } else {
-        Alert.alert("Error", "No se pudo conectar con Mercado Pago");
+        Alert.alert("Error", "No se pudo generar la URL de conexión con Mercado Pago");
       }
     } catch (error: any) {
       console.error("Error connecting MP:", error);
@@ -75,41 +92,48 @@ export default function OrderPaymentScreen() {
     }
   };
 
-  const handleWebViewSuccess = () => {
-    setShowWebView(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("¡Éxito!", "Cuenta de Mercado Pago conectada");
-    checkMercadoPagoStatus();
-  };
-
-  const handleWebViewCancel = () => {
-    setShowWebView(false);
-    Alert.alert("Cancelado", "Conexión con Mercado Pago cancelada");
-  };
-
   const handlePayment = async () => {
     setLoading(true);
     try {
+      // 1. Crear la orden en el servidor
       const response = await apiRequest("POST", "/api/orders/create", { 
         items,
-        total
+        total,
+        businessId
       });
       const data = await response.json();
       
       if (!data.success) {
         throw new Error(data.error || "Error al crear pedido");
       }
+
+      let checkoutUrl = data.initPoint;
+
+      // Fallback a /api/mp/create-payment si solo se recibió transactionId
+      if (!checkoutUrl && data.transactionId) {
+        const mpRes = await apiRequest("POST", "/api/mp/create-payment", {
+          transactionId: data.transactionId
+        });
+        const mpData = await mpRes.json();
+        if (mpData.success && mpData.initPoint) {
+          checkoutUrl = mpData.initPoint;
+        } else {
+          throw new Error(mpData.error || "El bar no tiene configurada su cuenta de Mercado Pago.");
+        }
+      }
       
-      if (data.initPoint) {
-        await Linking.openURL(data.initPoint);
+      if (checkoutUrl) {
+        await Linking.openURL(checkoutUrl);
         
         setTimeout(() => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           clearCart();
-          Alert.alert("¡Pedido exitoso!", "Tu pedido está en proceso", [
+          Alert.alert("¡Pedido en proceso!", "Tu pago fue redirigido a Mercado Pago.", [
             { text: "Ver pedidos", onPress: () => navigation.navigate("Main") }
           ]);
-        }, 3000);
+        }, 1500);
+      } else {
+        throw new Error("No se pudo obtener la URL de pago de Mercado Pago");
       }
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -119,15 +143,10 @@ export default function OrderPaymentScreen() {
     }
   };
 
-  if (showWebView && authUrl) {
-    return (
-      <MercadoPagoWebView
-        authUrl={authUrl}
-        onSuccess={handleWebViewSuccess}
-        onCancel={handleWebViewCancel}
-      />
-    );
-  }
+  // Formato seguro de dinero
+  const formattedTotal = typeof total === "number" 
+    ? (total > 10000 ? total / 100 : total).toLocaleString("es-AR", { style: "currency", currency: "ARS" })
+    : "$0,00";
 
   if (checkingMP) {
     return (
@@ -165,7 +184,7 @@ export default function OrderPaymentScreen() {
         <View style={[styles.card, { backgroundColor: theme.card }]}>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>Resumen del pedido</ThemedText>
           <ThemedText type="body" style={{ marginTop: Spacing.sm, color: theme.textSecondary }}>
-            {items.length} {items.length === 1 ? 'producto' : 'productos'}
+            {items?.length || 0} {items?.length === 1 ? 'producto' : 'productos'}
           </ThemedText>
 
           <View style={styles.divider} />
@@ -173,7 +192,7 @@ export default function OrderPaymentScreen() {
           <View style={styles.row}>
             <ThemedText type="body">Total a pagar</ThemedText>
             <ThemedText type="h2" style={{ color: "#FFD700" }}>
-              ${(total / 100).toFixed(2)}
+              {formattedTotal}
             </ThemedText>
           </View>
         </View>
@@ -272,7 +291,7 @@ export default function OrderPaymentScreen() {
                 <>
                   <Feather name="credit-card" size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />
                   <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
-                    Pagar ${(total / 100).toFixed(2)}
+                    Pagar {formattedTotal}
                   </ThemedText>
                 </>
               )}
@@ -353,7 +372,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.full,
     alignItems: "center",
-    justifyContent: "center",
+    justify.content: "center",
   },
   payButton: {
     flexDirection: "row",

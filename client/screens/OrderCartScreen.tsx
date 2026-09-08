@@ -38,9 +38,12 @@ export default function OrderCartScreen() {
       return;
     }
 
-    // Volvemos al flujo original automatizado usando el nombre real de tu pasarela en el Stack
-    // Le pasamos el 'total' y los 'items' tal cual los espera tu backend para generar el initPoint
+    // Extraemos el businessId del primer producto para saber a qué bar pertenece la venta
+    const businessId = items[0]?.businessId;
+
+    // Le pasamos 'businessId', 'total' e 'items' a OrderPaymentScreen
     navigation.navigate('OrderPayment', { 
+      businessId,
       total, 
       items 
     });
