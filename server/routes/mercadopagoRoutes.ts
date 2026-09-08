@@ -12,8 +12,13 @@ const router = express.Router();
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
+
+// 💡 Redirección unificada para evitar discrepancias en el panel
 const MP_REDIRECT_URI = `${BASE_URL}/api/mp/callback`;
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token Maestro de AstroBar
+
+// Instancia Maestra del SDK con tus credenciales de Plataforma
+const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
 
 // ==========================================
 // 1. OAUTH - Iniciar vinculación de cuenta MP del bar
@@ -26,10 +31,9 @@ router.get("/connect", authenticateToken, requireRole("business_owner"), async (
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    // Guardamos el ID del negocio en el parámetro 'state' de la URL de OAuth
-    const stateParam = encodeURIComponent(JSON.stringify({ businessId: business.id, userId: req.user!.id }));
+    // ✅ Enviamos el ID del negocio directo en el 'state'
+    const stateParam = business.id;
 
-    // Construcción de la URL de autorización estándar de Mercado Pago (sin PKCE)
     const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${stateParam}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}`;
 
     if (req.headers.accept && req.headers.accept.includes("text/html")) {
@@ -57,9 +61,9 @@ router.get("/callback", async (req, res) => {
     let businessId: string | null = null;
     try {
       const parsedState = JSON.parse(decodeURIComponent(state as string));
-      businessId = parsedState.businessId;
+      businessId = parsedState.businessId || state;
     } catch (e) {
-      businessId = state as string; // Fallback si viene como id plano
+      businessId = state as string;
     }
 
     if (!businessId) {
@@ -103,7 +107,6 @@ router.get("/callback", async (req, res) => {
 
     console.log(`✅ Cuenta de Mercado Pago conectada con éxito para el Bar ID: ${businessId}`);
 
-    // Respuesta HTML exitosa para redirigir a la app
     res.send(`
       <!DOCTYPE html>
       <html lang="es">
@@ -257,8 +260,8 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
     const platformFee = Number(transaction.platformCommission) || (totalAmount * commissionRate); 
     const businessAmount = totalAmount - platformFee; 
 
-    const barClient = new MercadoPagoConfig({ accessToken: mpAccount.accessToken });
-    const mpPreference = new Preference(barClient);
+    // 🚀 FIX CRÍTICO: La preferencia se crea con el CLIENTE MAESTRO DE ASTROBAR, no del bar.
+    const mpPreference = new Preference(platformClient);
 
     const result = await mpPreference.create({
       body: {
@@ -271,9 +274,10 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
             currency_id: 'ARS'
           },
         ],
-        marketplace_fee: platformFee,
+        marketplace_fee: platformFee, // Comisión retenida para AstroBar
+        sponsor_id: Number(mpAccount.mpUserId), // ID de Mercado Pago del Bar receptor
         external_reference: String(transaction.id),
-        notification_url: `${BASE_URL}/api/mercadopago/webhook`,
+        notification_url: `${BASE_URL}/api/mp/webhook`,
         back_urls: {
           success: `astrobar://payment-success`,
           failure: `astrobar://payment-failure`,
