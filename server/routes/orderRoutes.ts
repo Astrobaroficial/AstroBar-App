@@ -2,51 +2,85 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import { authenticateToken } from '../authMiddleware';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 
 const router = express.Router();
 
-// Crear pedido y procesar pago
+const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || "";
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
+
+// Instancia maestra con las credenciales de AstroBar
+const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
+
+// Crear pedido y generar pasarela de pago Mercado Pago (Split Payment)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.userId;
-    const { items, businessId } = req.body;
+    // Normalización de ID de usuario desde JWT
+    const userId = req.user!.id || req.user!.userId;
+    const { items, businessId: bodyBusinessId, total } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, error: 'No hay items en el pedido' });
     }
 
-    // Obtener comisión del bar
-    const [commissionResult]: any = await db.execute(
-      'SELECT platform_commission FROM business_commissions WHERE business_id = ?',
+    // Obtener el ID del negocio (del cuerpo o del primer ítem)
+    const businessId = bodyBusinessId || items[0]?.businessId;
+
+    if (!businessId) {
+      return res.status(400).json({ success: false, error: 'No se especificado el bar para este pedido.' });
+    }
+
+    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
+    const [mpAccounts]: any = await db.execute(
+      'SELECT mp_user_id, access_token FROM mercadopago_accounts WHERE business_id = ? LIMIT 1',
       [businessId]
     );
 
-    const platformCommission = commissionResult[0]?.platform_commission || 0.30;
+    const mpAccount = mpAccounts[0];
 
-    // Calcular totales
+    if (!mpAccount || !mpAccount.mp_user_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'El bar seleccionado aún no vinculó su cuenta de Mercado Pago para recibir ventas.',
+      });
+    }
+
+    // 2. Obtener comisión configurada para el bar
+    const [commissionResult]: any = await db.execute(
+      'SELECT platform_commission FROM business_commissions WHERE business_id = ? LIMIT 1',
+      [businessId]
+    );
+
+    const commissionRate = commissionResult[0]?.platform_commission 
+      ? parseFloat(commissionResult[0].platform_commission) / 100 
+      : 0.15;
+
+    // 3. Procesar Ítems y Calcular Totales
     let totalAmount = 0;
     const orderItems = [];
 
     for (const item of items) {
-      const subtotal = item.productPrice * item.quantity;
+      const price = Number(item.price || item.productPrice || 0);
+      const qty = Number(item.quantity || 1);
+      const itemPriceInPesos = price > 1000 ? price / 100 : price; // Convierte si viene en centavos
+      const subtotal = itemPriceInPesos * qty;
       totalAmount += subtotal;
-      
+
       orderItems.push({
         id: uuidv4(),
-        productId: item.productId,
-        productName: item.productName,
-        productPrice: item.productPrice,
-        quantity: item.quantity,
+        productId: String(item.id || item.productId || uuidv4()),
+        productName: item.name || item.productName || 'Producto de Menú',
+        productPrice: itemPriceInPesos,
+        quantity: qty,
         subtotal,
         notes: item.notes || null,
       });
     }
 
-    const commissionAmount = Math.round(totalAmount * platformCommission);
-    const businessRevenue = totalAmount;
-    const totalWithCommission = totalAmount + commissionAmount;
+    const platformFee = Math.round(totalAmount * commissionRate);
+    const businessRevenue = totalAmount - platformFee;
 
-    // Crear pedido
+    // 4. Registrar Pedido en estado 'pending'
     const orderId = uuidv4();
     const qrCode = `ORDER-${orderId}-${Date.now()}`;
     const canCancelUntil = new Date(Date.now() + 60000); // 60 segundos
@@ -54,12 +88,22 @@ router.post('/', authenticateToken, async (req, res) => {
     await db.execute(
       `INSERT INTO orders (
         id, user_id, business_id, total_amount, platform_commission_amount,
-        business_revenue, platform_commission_rate, status, qr_code, can_cancel_until
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'paid', ?, ?)`,
-      [orderId, userId, businessId, totalAmount, commissionAmount, businessRevenue, platformCommission, qrCode, canCancelUntil]
+        business_revenue, platform_commission_rate, status, qr_code, can_cancel_until, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())`,
+      [
+        orderId,
+        userId,
+        businessId,
+        totalAmount,
+        platformFee,
+        businessRevenue,
+        commissionRate,
+        qrCode,
+        canCancelUntil,
+      ]
     );
 
-    // Insertar items
+    // Insertar detalles de los ítems
     for (const item of orderItems) {
       await db.execute(
         `INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
@@ -68,38 +112,38 @@ router.post('/', authenticateToken, async (req, res) => {
       );
     }
 
-    // Actualizar paid_at y otorgar puntos inmediatamente
-    const pointsAwarded = Math.floor(totalAmount / 100); // 1 punto por cada $1 USD
-    
-    await db.execute(
-      'UPDATE orders SET paid_at = NOW(), points_awarded = ? WHERE id = ?',
-      [pointsAwarded, orderId]
-    );
+    // 5. Generar la Preferencia de Mercado Pago con Split Payment
+    const mpPreference = new Preference(platformClient);
 
-    // Otorgar puntos al usuario inmediatamente
-    await db.execute(
-      `UPDATE user_points 
-       SET total_points = total_points + ?,
-           orders_completed = orders_completed + 1,
-           points_from_orders = points_from_orders + ?,
-           updated_at = NOW()
-       WHERE user_id = ?`,
-      [pointsAwarded, pointsAwarded, userId]
-    );
+    const preferenceResult = await mpPreference.create({
+      body: {
+        items: orderItems.map((item) => ({
+          id: item.productId,
+          title: item.productName,
+          quantity: item.quantity,
+          unit_price: item.productPrice,
+          currency_id: 'ARS',
+        })),
+        marketplace_fee: platformFee, // Comisión para AstroBar
+        sponsor_id: Number(mpAccount.mp_user_id), // ID de Mercado Pago del Bar
+        external_reference: orderId,
+        notification_url: `${BASE_URL}/api/mp/webhook`,
+        back_urls: {
+          success: 'astrobar://payment-success',
+          failure: 'astrobar://payment-failure',
+          pending: 'astrobar://payment-pending',
+        },
+        auto_return: 'approved',
+      },
+    });
 
     res.json({
       success: true,
-      order: {
-        id: orderId,
-        qrCode,
-        totalAmount,
-        commissionAmount,
-        total: totalWithCommission,
-        canCancelUntil,
-      },
+      transactionId: orderId,
+      initPoint: preferenceResult.init_point,
     });
   } catch (error: any) {
-    console.error('Error creating order:', error);
+    console.error('Error creating order with MP:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -107,7 +151,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Obtener mis pedidos
 router.get('/my', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id || req.user!.userId;
 
     const [orders]: any = await db.execute(
       `SELECT o.*, b.name as business_name, b.address as business_address
@@ -118,7 +162,6 @@ router.get('/my', authenticateToken, async (req, res) => {
       [userId]
     );
 
-    // Obtener items de cada pedido
     for (const order of orders) {
       const [items]: any = await db.execute(
         'SELECT * FROM order_items WHERE order_id = ?',
@@ -137,7 +180,7 @@ router.get('/my', authenticateToken, async (req, res) => {
 // Cancelar pedido
 router.post('/:id/cancel', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.id || req.user!.userId;
     const { id } = req.params;
 
     const [orders]: any = await db.execute(
@@ -151,7 +194,7 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
 
     const order = orders[0];
 
-    if (order.status !== 'paid') {
+    if (order.status !== 'pending' && order.status !== 'paid') {
       return res.status(400).json({ success: false, error: 'El pedido no se puede cancelar' });
     }
 
@@ -175,7 +218,7 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
 router.post('/deliver', authenticateToken, async (req, res) => {
   try {
     const { qrCode } = req.body;
-    const businessOwnerId = req.user!.userId;
+    const businessOwnerId = req.user!.id || req.user!.userId;
 
     const [orders]: any = await db.execute(
       `SELECT o.*, b.owner_id FROM orders o
@@ -202,7 +245,6 @@ router.post('/deliver', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Pedido cancelado' });
     }
 
-    // Actualizar pedido a entregado (puntos ya fueron otorgados al pagar)
     await db.execute(
       'UPDATE orders SET status = ?, delivered_at = NOW() WHERE id = ?',
       ['delivered', order.id]
@@ -222,7 +264,7 @@ router.post('/deliver', authenticateToken, async (req, res) => {
 // Obtener pedidos del bar (business_owner)
 router.get('/business', authenticateToken, async (req, res) => {
   try {
-    const businessOwnerId = req.user!.userId;
+    const businessOwnerId = req.user!.id || req.user!.userId;
 
     const [orders]: any = await db.execute(
       `SELECT o.*, u.name as user_name, u.phone as user_phone
