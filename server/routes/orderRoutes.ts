@@ -12,8 +12,8 @@ const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-pr
 // Instancia maestra con las credenciales de AstroBar
 const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
 
-// Crear pedido y generar pasarela de pago Mercado Pago (Split Payment)
-router.post('/', authenticateToken, async (req, res) => {
+// Controlador unificado para la creación de pedidos
+const handleCreateOrder = async (req: express.Request, res: express.Response) => {
   try {
     // Normalización de ID de usuario desde JWT
     const userId = req.user!.id || req.user!.userId;
@@ -27,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const businessId = bodyBusinessId || items[0]?.businessId;
 
     if (!businessId) {
-      return res.status(400).json({ success: false, error: 'No se especificado el bar para este pedido.' });
+      return res.status(400).json({ success: false, error: 'No se ha especificado el bar para este pedido.' });
     }
 
     // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
@@ -146,7 +146,11 @@ router.post('/', authenticateToken, async (req, res) => {
     console.error('Error creating order with MP:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
+};
+
+// 🚀 Registrar la creación en ambas rutas para evitar 404
+router.post('/', authenticateToken, handleCreateOrder);
+router.post('/create', authenticateToken, handleCreateOrder);
 
 // Obtener mis pedidos
 router.get('/my', authenticateToken, async (req, res) => {

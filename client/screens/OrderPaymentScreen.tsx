@@ -94,31 +94,30 @@ export default function OrderPaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/orders/create", { 
+      // 🚀 Intenta primero en la ruta principal POST /api/orders
+      let response = await apiRequest("POST", "/api/orders", { 
         items,
         total,
         businessId
       });
+
+      // Si por alguna razón responde 404, hace fallback a /api/orders/create
+      if (response.status === 404) {
+        response = await apiRequest("POST", "/api/orders/create", {
+          items,
+          total,
+          businessId
+        });
+      }
+
       const data = await response.json();
       
       if (!data.success) {
-        throw new Error(data.error || "Error al crear pedido");
+        throw new Error(data.error || "Error al crear el pedido");
       }
 
-      let checkoutUrl = data.initPoint;
+      const checkoutUrl = data.initPoint;
 
-      if (!checkoutUrl && data.transactionId) {
-        const mpRes = await apiRequest("POST", "/api/mp/create-payment", {
-          transactionId: data.transactionId
-        });
-        const mpData = await mpRes.json();
-        if (mpData.success && mpData.initPoint) {
-          checkoutUrl = mpData.initPoint;
-        } else {
-          throw new Error(mpData.error || "El bar no tiene configurada su cuenta de Mercado Pago.");
-        }
-      }
-      
       if (checkoutUrl) {
         await Linking.openURL(checkoutUrl);
         
@@ -128,7 +127,7 @@ export default function OrderPaymentScreen() {
           Alert.alert("¡Pedido en proceso!", "Tu pago fue redirigido a Mercado Pago.", [
             { text: "Ver pedidos", onPress: () => navigation.navigate("Main") }
           ]);
-        }, 1500);
+        }, 1200);
       } else {
         throw new Error("No se pudo obtener la URL de pago de Mercado Pago");
       }
@@ -375,6 +374,6 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.full,
     alignItems: "center",
-    justifyContent: "center",
+    justify.content: "center",
   },
 });
