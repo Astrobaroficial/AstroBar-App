@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticateToken, requireRole } from "../authMiddleware";
+import { authenticateToken } from "../authMiddleware";
 import { db } from "../db";
 import { v4 as uuidv4 } from "uuid";
 
@@ -10,9 +10,10 @@ const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
 const MP_REDIRECT_URI = process.env.MERCADO_PAGO_REDIRECT_URI || "https://astrobar-app-production-4821.up.railway.app/api/customer-mp/callback";
 
 // 1. CONECTAR CUENTA MP - Cliente
-router.get("/connect", authenticateToken, requireRole("customer"), async (req, res) => {
+router.get("/connect", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    // Normalización de lectura del ID de usuario
+    const userId = req.user!.id || req.user!.userId;
     
     // URL de autorización de Mercado Pago
     const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${userId}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}`;
@@ -69,36 +70,18 @@ router.get("/callback", async (req, res) => {
         is_active = true
     `);
 
-    // Redirigir al frontend con respuesta HTML limpia + Deep Link
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <title>Conexión Exitosa - AstroBar</title>
-      </head>
-      <body style="background-color:#11011E;color:#FFFFFF;font-family:sans-serif;text-align:center;padding-top:50px;">
-        <h2>¡Billetera Vinculada con Éxito! 🎉</h2>
-        <p>Redirigiendo a AstroBar App...</p>
-        <a href="astrobar://mp-connected?success=true" style="color:#F16A30;font-weight:bold;">Volver a la App</a>
-        <script>
-          setTimeout(function() {
-            window.location.href = "astrobar://mp-connected?success=true";
-          }, 1500);
-        </script>
-      </body>
-      </html>
-    `);
+    // Redirigir directamente a la app por Deep Link
+    res.redirect(`astrobar://mp-connected?success=true`);
   } catch (error: any) {
     console.error("Error in MP callback:", error);
     res.redirect(`astrobar://mp-connected?success=false&error=${encodeURIComponent(error.message)}`);
   }
 });
 
-// 3. ESTADO DE CONEXIÓN - Cliente (Corregido y Normalizado)
-router.get("/status", authenticateToken, requireRole("customer"), async (req, res) => {
+// 3. ESTADO DE CONEXIÓN - Cliente (Soporte Universal de ID y Flexibilidad de Rol)
+router.get("/status", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.id || req.user!.userId;
     const { sql } = await import("drizzle-orm");
 
     const result: any = await db.execute(sql`
@@ -122,7 +105,7 @@ router.get("/status", authenticateToken, requireRole("customer"), async (req, re
       return res.json({ success: true, connected: false });
     }
 
-    // Convertir fecha a string ISO de forma blindada
+    // Convertir fecha a string ISO
     let connectedAtFormatted = new Date().toISOString();
     if (account.created_at) {
       connectedAtFormatted = new Date(account.created_at).toISOString();
@@ -142,9 +125,9 @@ router.get("/status", authenticateToken, requireRole("customer"), async (req, re
 });
 
 // 4. DESCONECTAR CUENTA MP - Cliente
-router.post("/disconnect", authenticateToken, requireRole("customer"), async (req, res) => {
+router.post("/disconnect", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.id || req.user!.userId;
     const { sql } = await import("drizzle-orm");
 
     await db.execute(sql`
