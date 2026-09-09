@@ -1,220 +1,376 @@
-import express from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import { db } from '../db';
-import { authenticateToken } from '../authMiddleware';
-import { MercadoPagoConfig, Preference } from 'mercadopago';
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, Pressable, Alert, ActivityIndicator, ScrollView, Linking } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 
-const router = express.Router();
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { Spacing, BorderRadius, AstroBarColors, Shadows } from "@/constants/theme";
+import { apiRequest } from "@/lib/query-client";
+import { useUnifiedCart } from "@/contexts/UnifiedCartContext";
 
-const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || "";
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
+export default function OrderPaymentScreen() {
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { total, items, businessId } = route.params || {};
+  const { clearCart } = useUnifiedCart();
 
-// Instancia maestra con las credenciales de AstroBar
-const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
+  const [loading, setLoading] = useState(false);
+  const [checkingMP, setCheckingMP] = useState(true);
+  const [mpConnected, setMpConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
 
-// Controlador unificado para la creación de pedidos
-const handleCreateOrder = async (req: express.Request, res: express.Response) => {
-  try {
-    const userId = req.user!.id || req.user!.userId;
-    const { items, businessId: bodyBusinessId } = req.body;
+  useEffect(() => {
+    checkMercadoPagoStatus();
+  }, []);
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({ success: false, error: 'No hay items en el pedido' });
-    }
+  useFocusEffect(
+    React.useCallback(() => {
+      checkMercadoPagoStatus();
+    }, [])
+  );
 
-    // Extraer businessId de forma ultra segura
-    const businessId = bodyBusinessId || items[0]?.businessId || items[0]?.business_id;
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      if (event.url && event.url.includes("mp-connected")) {
+        checkMercadoPagoStatus();
+      }
+    };
 
-    if (!businessId) {
-      return res.status(400).json({ success: false, error: 'No se ha especificado el bar para este pedido.' });
-    }
+    const subscription = Linking.addEventListener("url", handleDeepLink);
 
-    const { sql } = await import("drizzle-orm");
-
-    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
-    const mpResult: any = await db.execute(sql`
-      SELECT mp_user_id, access_token 
-      FROM mercadopago_accounts 
-      WHERE business_id = ${businessId} 
-      LIMIT 1
-    `);
-
-    const mpRows = Array.isArray(mpResult[0]) ? mpResult[0] : mpResult;
-    const mpAccount = mpRows[0];
-
-    if (!mpAccount || !mpAccount.mp_user_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'El bar seleccionado aún no vinculó su cuenta de Mercado Pago para recibir ventas.',
-      });
-    }
-
-    // 2. Obtener comisión configurada para el bar
-    const commissionResult: any = await db.execute(sql`
-      SELECT platform_commission 
-      FROM business_commissions 
-      WHERE business_id = ${businessId} 
-      LIMIT 1
-    `);
-
-    const commRows = Array.isArray(commissionResult[0]) ? commissionResult[0] : commissionResult;
-    const commissionRate = commRows[0]?.platform_commission 
-      ? parseFloat(commRows[0].platform_commission) / 100 
-      : 0.15;
-
-    // 3. Procesar Ítems y Calcular Totales
-    let totalAmount = 0;
-    const orderItems = [];
-
-    for (const item of items) {
-      const price = Number(item.price || item.productPrice || 0);
-      const qty = Number(item.quantity || 1);
-      const itemPriceInPesos = price > 1000 ? price / 100 : price;
-      const subtotal = itemPriceInPesos * qty;
-      totalAmount += subtotal;
-
-      orderItems.push({
-        id: uuidv4(),
-        productId: String(item.id || item.productId || uuidv4()),
-        productName: item.name || item.productName || 'Producto de Menú',
-        productPrice: itemPriceInPesos,
-        quantity: qty,
-        subtotal,
-        notes: item.notes || null,
-      });
-    }
-
-    const platformFee = Math.round(totalAmount * commissionRate);
-    const businessRevenue = totalAmount - platformFee;
-
-    // 4. Registrar Pedido en estado 'pending'
-    const orderId = uuidv4();
-    const qrCode = `ORDER-${orderId}-${Date.now()}`;
-    const canCancelUntil = new Date(Date.now() + 60000);
-
-    await db.execute(sql`
-      INSERT INTO orders (
-        id, user_id, business_id, total_amount, platform_commission_amount,
-        business_revenue, platform_commission_rate, status, qr_code, can_cancel_until, created_at
-      ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${totalAmount}, ${platformFee},
-        ${businessRevenue}, ${commissionRate}, 'pending', ${qrCode}, ${canCancelUntil}, NOW()
-      )
-    `);
-
-    // Insertar detalles de los ítems
-    for (const item of orderItems) {
-      await db.execute(sql`
-        INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
-        VALUES (${item.id}, ${orderId}, ${item.productId}, ${item.productName}, ${item.productPrice}, ${item.quantity}, ${item.subtotal}, ${item.notes})
-      `);
-    }
-
-    // 5. Generar Preferencia de Mercado Pago con Split Payment
-    const mpPreference = new Preference(platformClient);
-
-    const preferenceResult = await mpPreference.create({
-      body: {
-        items: orderItems.map((item) => ({
-          id: item.productId,
-          title: item.productName,
-          quantity: item.quantity,
-          unit_price: item.productPrice,
-          currency_id: 'ARS',
-        })),
-        marketplace_fee: platformFee,
-        sponsor_id: Number(mpAccount.mp_user_id),
-        external_reference: orderId,
-        notification_url: `${BASE_URL}/api/mp/webhook`,
-        back_urls: {
-          success: 'astrobar://payment-success',
-          failure: 'astrobar://payment-failure',
-          pending: 'astrobar://payment-pending',
-        },
-        auto_return: 'approved',
-      },
+    Linking.getInitialURL().then((url) => {
+      if (url && url.includes("mp-connected")) {
+        checkMercadoPagoStatus();
+      }
     });
 
-    res.json({
-      success: true,
-      transactionId: orderId,
-      initPoint: preferenceResult.init_point,
-    });
-  } catch (error: any) {
-    console.error('Error creating order with MP:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
-router.post('/', authenticateToken, handleCreateOrder);
-router.post('/create', authenticateToken, handleCreateOrder);
-
-// Obtener mis pedidos
-router.get('/my', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user!.id || req.user!.userId;
-    const { sql } = await import("drizzle-orm");
-
-    const result: any = await db.execute(sql`
-      SELECT o.*, b.name as business_name, b.address as business_address
-      FROM orders o
-      JOIN businesses b ON o.business_id = b.id
-      WHERE o.user_id = ${userId}
-      ORDER BY o.created_at DESC
-    `);
-
-    const orders = Array.isArray(result[0]) ? result[0] : result;
-
-    for (const order of orders) {
-      const itemsRes: any = await db.execute(sql`
-        SELECT * FROM order_items WHERE order_id = ${order.id}
-      `);
-      order.items = Array.isArray(itemsRes[0]) ? itemsRes[0] : itemsRes;
+  const checkMercadoPagoStatus = async () => {
+    setCheckingMP(true);
+    try {
+      const response = await apiRequest("GET", "/api/customer-mp/status");
+      const data = await response.json();
+      setMpConnected(Boolean(data.success && data.connected));
+    } catch (error) {
+      console.error("Error checking MP status:", error);
+      setMpConnected(false);
+    } finally {
+      setCheckingMP(false);
     }
+  };
 
-    res.json({ success: true, orders });
-  } catch (error: any) {
-    console.error('Error fetching orders:', error);
-    res.status(500).json({ success: false, error: error.message });
+  const handleConnectMercadoPago = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setConnecting(true);
+    try {
+      const response = await apiRequest("GET", "/api/customer-mp/connect");
+      const data = await response.json();
+      
+      if (data.success && data.authUrl) {
+        await Linking.openURL(data.authUrl);
+      } else {
+        Alert.alert("Error", "No se pudo generar la URL de conexión con Mercado Pago");
+      }
+    } catch (error: any) {
+      console.error("Error connecting MP:", error);
+      Alert.alert("Error", error.message || "No se pudo conectar");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    setLoading(true);
+    try {
+      let response = await apiRequest("POST", "/api/orders", { 
+        items,
+        total,
+        businessId
+      });
+
+      if (response.status === 404) {
+        response = await apiRequest("POST", "/api/orders/create", {
+          items,
+          total,
+          businessId
+        });
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || "Error al crear el pedido");
+      }
+
+      const checkoutUrl = data.initPoint;
+
+      if (checkoutUrl) {
+        await Linking.openURL(checkoutUrl);
+        
+        setTimeout(() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          clearCart();
+          Alert.alert("¡Pedido en proceso!", "Tu pago fue redirigido a Mercado Pago.", [
+            { text: "Ver pedidos", onPress: () => navigation.navigate("Main") }
+          ]);
+        }, 1200);
+      } else {
+        throw new Error("No se pudo obtener la URL de pago de Mercado Pago");
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      Alert.alert("Error", error.message || "No se pudo procesar el pago");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formattedTotal = typeof total === "number" 
+    ? (total > 10000 ? total / 100 : total).toLocaleString("es-AR", { style: "currency", currency: "ARS" })
+    : "$0,00";
+
+  if (checkingMP) {
+    return (
+      <LinearGradient
+        colors={[theme.gradientStart || '#000000', theme.gradientEnd || '#1A1A1A']}
+        style={styles.container}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={AstroBarColors.primary} />
+          <ThemedText type="body" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
+            Verificando método de pago...
+          </ThemedText>
+        </View>
+      </LinearGradient>
+    );
   }
+
+  return (
+    <LinearGradient
+      colors={[theme.gradientStart || '#000000', theme.gradientEnd || '#1A1A1A']}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.lg, paddingBottom: insets.bottom + Spacing.xl }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color={theme.text} />
+        </Pressable>
+
+        <ThemedText type="h2" style={{ marginTop: Spacing.xl, marginBottom: Spacing.md }}>
+          {mpConnected ? "Confirmar Pedido" : "Vincula tu Cuenta"}
+        </ThemedText>
+
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
+          <ThemedText type="small" style={{ color: theme.textSecondary }}>Resumen del pedido</ThemedText>
+          <ThemedText type="body" style={{ marginTop: Spacing.sm, color: theme.textSecondary }}>
+            {items?.length || 0} {items?.length === 1 ? 'producto' : 'productos'}
+          </ThemedText>
+
+          <View style={styles.divider} />
+
+          <View style={styles.row}>
+            <ThemedText type="body">Total a pagar</ThemedText>
+            <ThemedText type="h2" style={{ color: "#FFD700" }}>
+              {formattedTotal}
+            </ThemedText>
+          </View>
+        </View>
+
+        {!mpConnected ? (
+          <>
+            <View style={[styles.warningCard, { backgroundColor: AstroBarColors.warningLight }]}>
+              <Feather name="alert-circle" size={24} color={AstroBarColors.warning} />
+              <View style={{ flex: 1, marginLeft: Spacing.md }}>
+                <ThemedText type="body" style={{ color: AstroBarColors.warning, fontWeight: '600' }}>
+                  Cuenta no vinculada
+                </ThemedText>
+                <ThemedText type="small" style={{ color: AstroBarColors.warning, marginTop: Spacing.xs }}>
+                  Necesitas conectar tu cuenta de Mercado Pago para pagar
+                </ThemedText>
+              </View>
+            </View>
+
+            <View style={[styles.stepsCard, { backgroundColor: theme.card }, Shadows.sm]}>
+              <ThemedText type="h4" style={{ marginBottom: Spacing.md }}>¿Cómo funciona?</ThemedText>
+              
+              <View style={styles.stepRow}>
+                <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.primaryLight }]}>
+                  <ThemedText type="small" style={{ color: AstroBarColors.primary, fontWeight: '600' }}>1</ThemedText>
+                </View>
+                <ThemedText type="small" style={{ flex: 1, color: theme.textSecondary }}>
+                  Conecta tu cuenta de Mercado Pago
+                </ThemedText>
+              </View>
+
+              <View style={styles.stepRow}>
+                <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.successLight }]}>
+                  <ThemedText type="small" style={{ color: AstroBarColors.success, fontWeight: '600' }}>2</ThemedText>
+                </View>
+                <ThemedText type="small" style={{ flex: 1, color: theme.textSecondary }}>
+                  Autoriza el pago de forma segura
+                </ThemedText>
+              </View>
+
+              <View style={styles.stepRow}>
+                <View style={[styles.stepNumber, { backgroundColor: AstroBarColors.infoLight }]}>
+                  <ThemedText type="small" style={{ color: AstroBarColors.info, fontWeight: '600' }}>3</ThemedText>
+                </View>
+                <ThemedText type="small" style={{ flex: 1, color: theme.textSecondary }}>
+                  Recibe confirmación de tu pedido
+                </ThemedText>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={handleConnectMercadoPago}
+              disabled={connecting}
+              style={[styles.connectButton, { backgroundColor: AstroBarColors.primary, opacity: connecting ? 0.6 : 1 }]}
+            >
+              {connecting ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <>
+                  <Feather name="link" size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />
+                  <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
+                    Conectar Mercado Pago
+                  </ThemedText>
+                </>
+              )}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <View style={[styles.successCard, { backgroundColor: AstroBarColors.successLight }]}>
+              <Feather name="check-circle" size={24} color={AstroBarColors.success} />
+              <View style={{ flex: 1, marginLeft: Spacing.md }}>
+                <ThemedText type="body" style={{ color: AstroBarColors.success, fontWeight: '600' }}>
+                  ✅ Cuenta Conectada
+                </ThemedText>
+                <ThemedText type="small" style={{ color: AstroBarColors.success, marginTop: Spacing.xs }}>
+                  Listo para pagar con Mercado Pago
+                </ThemedText>
+              </View>
+            </View>
+
+            <View style={[styles.infoCard, { backgroundColor: theme.card + "80" }]}>
+              <Feather name="info" size={20} color={AstroBarColors.info} />
+              <ThemedText type="small" style={{ marginLeft: Spacing.sm, flex: 1, color: theme.textSecondary }}>
+                El bar preparará tu pedido una vez confirmado el pago
+              </ThemedText>
+            </View>
+
+            <Pressable
+              onPress={handlePayment}
+              disabled={loading}
+              style={[styles.payButton, { backgroundColor: AstroBarColors.primary, opacity: loading ? 0.6 : 1 }]}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <>
+                  <Feather name="credit-card" size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />
+                  <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
+                    Pagar {formattedTotal}
+                  </ThemedText>
+                </>
+              )}
+            </Pressable>
+          </>
+        )}
+      </ScrollView>
+    </LinearGradient>
+  );
+}
+
+const getStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+  },
+  content: { paddingHorizontal: Spacing.lg },
+  backButton: { marginBottom: Spacing.md },
+  card: {
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.lg,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#333",
+    marginVertical: Spacing.lg,
+  },
+  row: {
+    flexDirection: "row",
+    justify.content: "space-between",
+    alignItems: "center",
+  },
+  warningCard: {
+    flexDirection: 'row',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'flex-start',
+  },
+  successCard: {
+    flexDirection: 'row',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'flex-start',
+  },
+  stepsCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  infoCard: {
+    flexDirection: "row",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.xl,
+    alignItems: 'flex-start',
+  },
+  connectButton: {
+    flexDirection: "row",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  payButton: {
+    flexDirection: "row",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
-
-// Cancelar pedido
-router.post('/:id/cancel', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user!.id || req.user!.userId;
-    const { id } = req.params;
-    const { sql } = await import("drizzle-orm");
-
-    const result: any = await db.execute(sql`
-      SELECT * FROM orders WHERE id = ${id} AND user_id = ${userId}
-    `);
-
-    const orders = Array.isArray(result[0]) ? result[0] : result;
-
-    if (!orders || orders.length === 0) {
-      return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
-    }
-
-    const order = orders[0];
-
-    if (order.status !== 'pending' && order.status !== 'paid') {
-      return res.status(400).json({ success: false, error: 'El pedido no se puede cancelar' });
-    }
-
-    if (new Date() > new Date(order.can_cancel_until)) {
-      return res.status(400).json({ success: false, error: 'Tiempo de cancelación expirado' });
-    }
-
-    await db.execute(sql`
-      UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancellation_reason = 'Cancelado por el usuario' WHERE id = ${id}
-    `);
-
-    res.json({ success: true, message: 'Pedido cancelado' });
-  } catch (error: any) {
-    console.error('Error cancelling order:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-export default router;
