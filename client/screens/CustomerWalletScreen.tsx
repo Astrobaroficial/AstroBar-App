@@ -49,7 +49,7 @@ export default function CustomerWalletScreen() {
 
     // 🚀 Escuchador para cuando Mercado Pago redirige de regreso a la App vía Deep Link
     const subscription = Linking.addEventListener('url', (event) => {
-      if (event.url.includes('mp-connected')) {
+      if (event.url && event.url.includes('mp-connected')) {
         loadMercadoPagoStatus();
         loadTransactions();
         showToast('¡Mercado Pago vinculado con éxito!', 'success');
@@ -66,12 +66,18 @@ export default function CustomerWalletScreen() {
     }, [])
   );
 
+  // 🔍 Función aislada para consultar estado de MP del cliente
   const loadMercadoPagoStatus = async () => {
     try {
       const response = await apiRequest('GET', '/api/customer-mp/status');
       const data = await response.json();
-      if (data.success && data.connected) {
-        setMpAccount(data);
+      
+      if (data && data.success && data.connected) {
+        setMpAccount({
+          mpUserId: String(data.mpUserId),
+          isActive: Boolean(data.isActive),
+          connectedAt: data.connectedAt || new Date().toISOString(),
+        });
       } else {
         setMpAccount(null);
       }
@@ -83,16 +89,20 @@ export default function CustomerWalletScreen() {
     }
   };
 
+  // 📜 Función aislada para cargar el historial de transacciones
   const loadTransactions = async () => {
     setLoadingTransactions(true);
     try {
       const response = await apiRequest('GET', `/api/user/payment-history?filter=${filterTab}`);
-      const data = await response.json();
-      if (data.success) {
-        setTransactions(data.transactions || []);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success) {
+          setTransactions(data.transactions || []);
+        }
       }
     } catch (error) {
-      console.error('Error loading transactions:', error);
+      console.warn('Historial de transacciones no disponible temporalmente:', error);
+      setTransactions([]);
     } finally {
       setLoadingTransactions(false);
     }
