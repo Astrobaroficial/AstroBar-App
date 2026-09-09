@@ -9,21 +9,17 @@ const router = express.Router();
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || "";
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
 
-// Instancia maestra con las credenciales de AstroBar
 const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
 
-// Controlador unificado para la creación de pedidos
 const handleCreateOrder = async (req: express.Request, res: express.Response) => {
   try {
-    // Normalización de ID de usuario desde JWT
     const userId = req.user!.id || req.user!.userId;
-    const { items, businessId: bodyBusinessId, total } = req.body;
+    const { items, businessId: bodyBusinessId, total: bodyTotal } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, error: 'No hay items en el pedido' });
     }
 
-    // Obtener el ID del negocio (del cuerpo o del primer ítem)
     const businessId = bodyBusinessId || items[0]?.businessId || items[0]?.business_id;
 
     if (!businessId) {
@@ -32,7 +28,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 
     const { sql } = await import("drizzle-orm");
 
-    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar con Drizzle SQL
+    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
     const mpResult: any = await db.execute(sql`
       SELECT mp_user_id, access_token 
       FROM mercadopago_accounts 
@@ -70,7 +66,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     for (const item of items) {
       const price = Number(item.price || item.productPrice || 0);
       const qty = Number(item.quantity || 1);
-      const itemPriceInPesos = price > 1000 ? price / 100 : price; // Convierte si viene en centavos
+      const itemPriceInPesos = price > 1000 ? price / 100 : price;
       const subtotal = itemPriceInPesos * qty;
       totalAmount += subtotal;
 
@@ -85,21 +81,23 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       });
     }
 
-    const platformFee = Math.round(totalAmount * commissionRate);
-    const businessRevenue = totalAmount - platformFee;
+    // Si viene total desde la app se toma en cuenta, sino el calculado
+    if (bodyTotal && typeof bodyTotal === 'number') {
+      totalAmount = bodyTotal > 10000 ? bodyTotal / 100 : bodyTotal;
+    }
 
-    // 4. Registrar Pedido en estado 'pending'
+    const platformFee = Math.round(totalAmount * commissionRate);
+
+    // 4. Registrar Pedido en estado 'pending' (Ajustado a columna 'total' de la BD)
     const orderId = uuidv4();
     const qrCode = `ORDER-${orderId}-${Date.now()}`;
-    const canCancelUntil = new Date(Date.now() + 60000); // 60 segundos
+    const canCancelUntil = new Date(Date.now() + 60000);
 
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, total_amount, platform_commission_amount,
-        business_revenue, platform_commission_rate, status, qr_code, can_cancel_until, created_at
+        id, user_id, business_id, total, status, created_at
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${totalAmount}, ${platformFee},
-        ${businessRevenue}, ${commissionRate}, 'pending', ${qrCode}, ${canCancelUntil}, NOW()
+        ${orderId}, ${userId}, ${businessId}, ${totalAmount}, 'pending', NOW()
       )
     `);
 
@@ -111,7 +109,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       `);
     }
 
-    // 5. Generar la Preferencia de Mercado Pago con Split Payment
+    // 5. Generar Preferencia de Mercado Pago con Split Payment
     const mpPreference = new Preference(platformClient);
 
     const preferenceResult = await mpPreference.create({
@@ -123,8 +121,8 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
           unit_price: item.productPrice,
           currency_id: 'ARS',
         })),
-        marketplace_fee: platformFee, // Comisión para AstroBar
-        sponsor_id: Number(mpAccount.mp_user_id), // ID de Mercado Pago del Bar
+        marketplace_fee: platformFee,
+        sponsor_id: Number(mpAccount.mp_user_id),
         external_reference: orderId,
         notification_url: `${BASE_URL}/api/mp/webhook`,
         back_urls: {
@@ -147,7 +145,6 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// Registrar la creación en ambas rutas para evitar 404
 router.post('/', authenticateToken, handleCreateOrder);
 router.post('/create', authenticateToken, handleCreateOrder);
 
@@ -204,10 +201,6 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'El pedido no se puede cancelar' });
     }
 
-    if (new Date() > new Date(order.can_cancel_until)) {
-      return res.status(400).json({ success: false, error: 'Tiempo de cancelación expirado' });
-    }
-
     await db.execute(sql`
       UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancellation_reason = 'Cancelado por el usuario' WHERE id = ${id}
     `);
@@ -259,7 +252,6 @@ router.post('/deliver', authenticateToken, async (req, res) => {
     res.json({
       success: true,
       message: 'Pedido entregado',
-      pointsAwarded: order.points_awarded,
     });
   } catch (error: any) {
     console.error('Error delivering order:', error);
