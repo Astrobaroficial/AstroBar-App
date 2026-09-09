@@ -94,18 +94,19 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 
     const platformFee = Math.round(totalAmount * commissionRate);
 
-    // 5. Registrar Pedido en estado 'pending' (incluyendo business_name)
+    // 5. Registrar Pedido en estado 'pending' (incluyendo business_name e items como JSON string)
     const orderId = uuidv4();
+    const itemsJson = JSON.stringify(orderItems);
 
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, business_name, total, status, created_at
+        id, user_id, business_id, business_name, total, items, status, created_at
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${totalAmount}, 'pending', NOW()
+        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${totalAmount}, ${itemsJson}, 'pending', NOW()
       )
     `);
 
-    // Insertar detalles de los ítems
+    // Insertar detalles de los ítems en la tabla relacional order_items
     for (const item of orderItems) {
       await db.execute(sql`
         INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
