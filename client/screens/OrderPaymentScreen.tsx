@@ -36,7 +36,6 @@ export default function OrderPaymentScreen() {
     }, [])
   );
 
-  // Listener para capturar el retorno cuando se conecta Mercado Pago por Deep Link
   useEffect(() => {
     const handleDeepLink = (event: { url: string }) => {
       if (event.url && event.url.includes("mp-connected")) {
@@ -94,14 +93,12 @@ export default function OrderPaymentScreen() {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      // 🚀 Intenta primero en la ruta principal POST /api/orders
       let response = await apiRequest("POST", "/api/orders", { 
         items,
         total,
         businessId
       });
 
-      // Si por alguna razón responde 404, hace fallback a /api/orders/create
       if (response.status === 404) {
         response = await apiRequest("POST", "/api/orders/create", {
           items,
@@ -374,6 +371,6 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.full,
     alignItems: "center",
-    justify.content: "center",
+    justifyContent: "center",
   },
 });
