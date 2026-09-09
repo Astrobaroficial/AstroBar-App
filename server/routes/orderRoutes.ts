@@ -24,19 +24,24 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     }
 
     // Obtener el ID del negocio (del cuerpo o del primer ítem)
-    const businessId = bodyBusinessId || items[0]?.businessId;
+    const businessId = bodyBusinessId || items[0]?.businessId || items[0]?.business_id;
 
     if (!businessId) {
       return res.status(400).json({ success: false, error: 'No se ha especificado el bar para este pedido.' });
     }
 
-    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
-    const [mpAccounts]: any = await db.execute(
-      'SELECT mp_user_id, access_token FROM mercadopago_accounts WHERE business_id = ? LIMIT 1',
-      [businessId]
-    );
+    const { sql } = await import("drizzle-orm");
 
-    const mpAccount = mpAccounts[0];
+    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar con Drizzle SQL
+    const mpResult: any = await db.execute(sql`
+      SELECT mp_user_id, access_token 
+      FROM mercadopago_accounts 
+      WHERE business_id = ${businessId} 
+      LIMIT 1
+    `);
+
+    const mpRows = Array.isArray(mpResult[0]) ? mpResult[0] : mpResult;
+    const mpAccount = mpRows[0];
 
     if (!mpAccount || !mpAccount.mp_user_id) {
       return res.status(400).json({
@@ -46,13 +51,16 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     }
 
     // 2. Obtener comisión configurada para el bar
-    const [commissionResult]: any = await db.execute(
-      'SELECT platform_commission FROM business_commissions WHERE business_id = ? LIMIT 1',
-      [businessId]
-    );
+    const commissionResult: any = await db.execute(sql`
+      SELECT platform_commission 
+      FROM business_commissions 
+      WHERE business_id = ${businessId} 
+      LIMIT 1
+    `);
 
-    const commissionRate = commissionResult[0]?.platform_commission 
-      ? parseFloat(commissionResult[0].platform_commission) / 100 
+    const commRows = Array.isArray(commissionResult[0]) ? commissionResult[0] : commissionResult;
+    const commissionRate = commRows[0]?.platform_commission 
+      ? parseFloat(commRows[0].platform_commission) / 100 
       : 0.15;
 
     // 3. Procesar Ítems y Calcular Totales
@@ -85,31 +93,22 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     const qrCode = `ORDER-${orderId}-${Date.now()}`;
     const canCancelUntil = new Date(Date.now() + 60000); // 60 segundos
 
-    await db.execute(
-      `INSERT INTO orders (
+    await db.execute(sql`
+      INSERT INTO orders (
         id, user_id, business_id, total_amount, platform_commission_amount,
         business_revenue, platform_commission_rate, status, qr_code, can_cancel_until, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())`,
-      [
-        orderId,
-        userId,
-        businessId,
-        totalAmount,
-        platformFee,
-        businessRevenue,
-        commissionRate,
-        qrCode,
-        canCancelUntil,
-      ]
-    );
+      ) VALUES (
+        ${orderId}, ${userId}, ${businessId}, ${totalAmount}, ${platformFee},
+        ${businessRevenue}, ${commissionRate}, 'pending', ${qrCode}, ${canCancelUntil}, NOW()
+      )
+    `);
 
     // Insertar detalles de los ítems
     for (const item of orderItems) {
-      await db.execute(
-        `INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [item.id, orderId, item.productId, item.productName, item.productPrice, item.quantity, item.subtotal, item.notes]
-      );
+      await db.execute(sql`
+        INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
+        VALUES (${item.id}, ${orderId}, ${item.productId}, ${item.productName}, ${item.productPrice}, ${item.quantity}, ${item.subtotal}, ${item.notes})
+      `);
     }
 
     // 5. Generar la Preferencia de Mercado Pago con Split Payment
@@ -148,7 +147,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// 🚀 Registrar la creación en ambas rutas para evitar 404
+// Registrar la creación en ambas rutas para evitar 404
 router.post('/', authenticateToken, handleCreateOrder);
 router.post('/create', authenticateToken, handleCreateOrder);
 
@@ -156,22 +155,23 @@ router.post('/create', authenticateToken, handleCreateOrder);
 router.get('/my', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.id || req.user!.userId;
+    const { sql } = await import("drizzle-orm");
 
-    const [orders]: any = await db.execute(
-      `SELECT o.*, b.name as business_name, b.address as business_address
-       FROM orders o
-       JOIN businesses b ON o.business_id = b.id
-       WHERE o.user_id = ?
-       ORDER BY o.created_at DESC`,
-      [userId]
-    );
+    const result: any = await db.execute(sql`
+      SELECT o.*, b.name as business_name, b.address as business_address
+      FROM orders o
+      JOIN businesses b ON o.business_id = b.id
+      WHERE o.user_id = ${userId}
+      ORDER BY o.created_at DESC
+    `);
+
+    const orders = Array.isArray(result[0]) ? result[0] : result;
 
     for (const order of orders) {
-      const [items]: any = await db.execute(
-        'SELECT * FROM order_items WHERE order_id = ?',
-        [order.id]
-      );
-      order.items = items;
+      const itemsRes: any = await db.execute(sql`
+        SELECT * FROM order_items WHERE order_id = ${order.id}
+      `);
+      order.items = Array.isArray(itemsRes[0]) ? itemsRes[0] : itemsRes;
     }
 
     res.json({ success: true, orders });
@@ -186,13 +186,15 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.id || req.user!.userId;
     const { id } = req.params;
+    const { sql } = await import("drizzle-orm");
 
-    const [orders]: any = await db.execute(
-      'SELECT * FROM orders WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const result: any = await db.execute(sql`
+      SELECT * FROM orders WHERE id = ${id} AND user_id = ${userId}
+    `);
 
-    if (orders.length === 0) {
+    const orders = Array.isArray(result[0]) ? result[0] : result;
+
+    if (!orders || orders.length === 0) {
       return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
     }
 
@@ -206,10 +208,9 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Tiempo de cancelación expirado' });
     }
 
-    await db.execute(
-      'UPDATE orders SET status = ?, cancelled_at = NOW(), cancellation_reason = ? WHERE id = ?',
-      ['cancelled', 'Cancelado por el usuario', id]
-    );
+    await db.execute(sql`
+      UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancellation_reason = 'Cancelado por el usuario' WHERE id = ${id}
+    `);
 
     res.json({ success: true, message: 'Pedido cancelado' });
   } catch (error: any) {
@@ -223,15 +224,17 @@ router.post('/deliver', authenticateToken, async (req, res) => {
   try {
     const { qrCode } = req.body;
     const businessOwnerId = req.user!.id || req.user!.userId;
+    const { sql } = await import("drizzle-orm");
 
-    const [orders]: any = await db.execute(
-      `SELECT o.*, b.owner_id FROM orders o
-       JOIN businesses b ON o.business_id = b.id
-       WHERE o.qr_code = ?`,
-      [qrCode]
-    );
+    const result: any = await db.execute(sql`
+      SELECT o.*, b.owner_id FROM orders o
+      JOIN businesses b ON o.business_id = b.id
+      WHERE o.qr_code = ${qrCode}
+    `);
 
-    if (orders.length === 0) {
+    const orders = Array.isArray(result[0]) ? result[0] : result;
+
+    if (!orders || orders.length === 0) {
       return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
     }
 
@@ -249,10 +252,9 @@ router.post('/deliver', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Pedido cancelado' });
     }
 
-    await db.execute(
-      'UPDATE orders SET status = ?, delivered_at = NOW() WHERE id = ?',
-      ['delivered', order.id]
-    );
+    await db.execute(sql`
+      UPDATE orders SET status = 'delivered', delivered_at = NOW() WHERE id = ${order.id}
+    `);
 
     res.json({
       success: true,
@@ -269,23 +271,24 @@ router.post('/deliver', authenticateToken, async (req, res) => {
 router.get('/business', authenticateToken, async (req, res) => {
   try {
     const businessOwnerId = req.user!.id || req.user!.userId;
+    const { sql } = await import("drizzle-orm");
 
-    const [orders]: any = await db.execute(
-      `SELECT o.*, u.name as user_name, u.phone as user_phone
-       FROM orders o
-       JOIN businesses b ON o.business_id = b.id
-       JOIN users u ON o.user_id = u.id
-       WHERE b.owner_id = ?
-       ORDER BY o.created_at DESC`,
-      [businessOwnerId]
-    );
+    const result: any = await db.execute(sql`
+      SELECT o.*, u.name as user_name, u.phone as user_phone
+      FROM orders o
+      JOIN businesses b ON o.business_id = b.id
+      JOIN users u ON o.user_id = u.id
+      WHERE b.owner_id = ${businessOwnerId}
+      ORDER BY o.created_at DESC
+    `);
+
+    const orders = Array.isArray(result[0]) ? result[0] : result;
 
     for (const order of orders) {
-      const [items]: any = await db.execute(
-        'SELECT * FROM order_items WHERE order_id = ?',
-        [order.id]
-      );
-      order.items = items;
+      const itemsRes: any = await db.execute(sql`
+        SELECT * FROM order_items WHERE order_id = ${order.id}
+      `);
+      order.items = Array.isArray(itemsRes[0]) ? itemsRes[0] : itemsRes;
     }
 
     res.json({ success: true, orders });
