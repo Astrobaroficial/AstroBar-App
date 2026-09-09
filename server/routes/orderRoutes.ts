@@ -28,7 +28,14 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 
     const { sql } = await import("drizzle-orm");
 
-    // 1. Obtener la cuenta de Mercado Pago vinculada al Bar
+    // 1. Obtener el nombre del bar desde la tabla businesses
+    const businessResult: any = await db.execute(sql`
+      SELECT name FROM businesses WHERE id = ${businessId} LIMIT 1
+    `);
+    const businessRows = Array.isArray(businessResult[0]) ? businessResult[0] : businessResult;
+    const businessName = businessRows[0]?.name || "Bar Registrado";
+
+    // 2. Obtener la cuenta de Mercado Pago vinculada al Bar
     const mpResult: any = await db.execute(sql`
       SELECT mp_user_id, access_token 
       FROM mercadopago_accounts 
@@ -46,7 +53,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       });
     }
 
-    // 2. Obtener comisión configurada para el bar
+    // 3. Obtener comisión configurada para el bar
     const commissionResult: any = await db.execute(sql`
       SELECT platform_commission 
       FROM business_commissions 
@@ -59,7 +66,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       ? parseFloat(commRows[0].platform_commission) / 100 
       : 0.15;
 
-    // 3. Procesar Ítems y Calcular Totales
+    // 4. Procesar Ítems y Calcular Totales
     let totalAmount = 0;
     const orderItems = [];
 
@@ -81,23 +88,20 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       });
     }
 
-    // Si viene total desde la app se toma en cuenta, sino el calculado
     if (bodyTotal && typeof bodyTotal === 'number') {
       totalAmount = bodyTotal > 10000 ? bodyTotal / 100 : bodyTotal;
     }
 
     const platformFee = Math.round(totalAmount * commissionRate);
 
-    // 4. Registrar Pedido en estado 'pending' (Ajustado a columna 'total' de la BD)
+    // 5. Registrar Pedido en estado 'pending' (incluyendo business_name)
     const orderId = uuidv4();
-    const qrCode = `ORDER-${orderId}-${Date.now()}`;
-    const canCancelUntil = new Date(Date.now() + 60000);
 
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, total, status, created_at
+        id, user_id, business_id, business_name, total, status, created_at
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${totalAmount}, 'pending', NOW()
+        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${totalAmount}, 'pending', NOW()
       )
     `);
 
@@ -109,7 +113,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       `);
     }
 
-    // 5. Generar Preferencia de Mercado Pago con Split Payment
+    // 6. Generar Preferencia de Mercado Pago con Split Payment
     const mpPreference = new Preference(platformClient);
 
     const preferenceResult = await mpPreference.create({
