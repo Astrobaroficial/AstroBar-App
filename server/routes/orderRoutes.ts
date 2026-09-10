@@ -28,12 +28,13 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 
     const { sql } = await import("drizzle-orm");
 
-    // 1. Obtener el nombre del bar desde la tabla businesses
+    // 1. Obtener datos del bar desde la tabla businesses
     const businessResult: any = await db.execute(sql`
-      SELECT name FROM businesses WHERE id = ${businessId} LIMIT 1
+      SELECT name, image FROM businesses WHERE id = ${businessId} LIMIT 1
     `);
     const businessRows = Array.isArray(businessResult[0]) ? businessResult[0] : businessResult;
     const businessName = businessRows[0]?.name || "Bar Registrado";
+    const businessImage = businessRows[0]?.image || "";
 
     // 2. Obtener la cuenta de Mercado Pago vinculada al Bar
     const mpResult: any = await db.execute(sql`
@@ -67,15 +68,15 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       : 0.15;
 
     // 4. Procesar Ítems y Calcular Totales
-    let totalAmount = 0;
+    let calculatedSubtotal = 0;
     const orderItems = [];
 
     for (const item of items) {
       const price = Number(item.price || item.productPrice || 0);
       const qty = Number(item.quantity || 1);
       const itemPriceInPesos = price > 1000 ? price / 100 : price;
-      const subtotal = itemPriceInPesos * qty;
-      totalAmount += subtotal;
+      const subtotalItem = itemPriceInPesos * qty;
+      calculatedSubtotal += subtotalItem;
 
       orderItems.push({
         id: uuidv4(),
@@ -83,30 +84,30 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
         productName: item.name || item.productName || 'Producto de Menú',
         productPrice: itemPriceInPesos,
         quantity: qty,
-        subtotal,
+        subtotal: subtotalItem,
         notes: item.notes || null,
       });
     }
 
+    let finalTotal = calculatedSubtotal;
     if (bodyTotal && typeof bodyTotal === 'number') {
-      totalAmount = bodyTotal > 10000 ? bodyTotal / 100 : bodyTotal;
+      finalTotal = bodyTotal > 10000 ? bodyTotal / 100 : bodyTotal;
     }
 
-    const platformFee = Math.round(totalAmount * commissionRate);
-
-    // 5. Registrar Pedido en estado 'pending' (incluyendo business_name e items como JSON string)
+    const platformFee = Math.round(finalTotal * commissionRate);
     const orderId = uuidv4();
     const itemsJson = JSON.stringify(orderItems);
 
+    // 5. Registrar Pedido con mapeo de campos exactos
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, business_name, total, items, status, created_at
+        id, user_id, business_id, business_name, business_image, items, status, subtotal, productos_base, astrobar_commission, delivery_fee, total
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${totalAmount}, ${itemsJson}, 'pending', NOW()
+        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
       )
     `);
 
-    // Insertar detalles de los ítems en la tabla relacional order_items
+    // Insertar detalles en order_items
     for (const item of orderItems) {
       await db.execute(sql`
         INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
@@ -114,7 +115,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
       `);
     }
 
-    // 6. Generar Preferencia de Mercado Pago con Split Payment
+    // 6. Generar Preferencia de Mercado Pago
     const mpPreference = new Preference(platformClient);
 
     const preferenceResult = await mpPreference.create({
@@ -153,7 +154,6 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 router.post('/', authenticateToken, handleCreateOrder);
 router.post('/create', authenticateToken, handleCreateOrder);
 
-// Obtener mis pedidos
 router.get('/my', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.id || req.user!.userId;
@@ -183,7 +183,6 @@ router.get('/my', authenticateToken, async (req, res) => {
   }
 });
 
-// Cancelar pedido
 router.post('/:id/cancel', authenticateToken, async (req, res) => {
   try {
     const userId = req.user!.id || req.user!.userId;
@@ -200,97 +199,13 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
     }
 
-    const order = orders[0];
-
-    if (order.status !== 'pending' && order.status !== 'paid') {
-      return res.status(400).json({ success: false, error: 'El pedido no se puede cancelar' });
-    }
-
     await db.execute(sql`
-      UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancellation_reason = 'Cancelado por el usuario' WHERE id = ${id}
+      UPDATE orders SET status = 'cancelled' WHERE id = ${id}
     `);
 
     res.json({ success: true, message: 'Pedido cancelado' });
   } catch (error: any) {
     console.error('Error cancelling order:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Escanear QR y entregar pedido (business_owner)
-router.post('/deliver', authenticateToken, async (req, res) => {
-  try {
-    const { qrCode } = req.body;
-    const businessOwnerId = req.user!.id || req.user!.userId;
-    const { sql } = await import("drizzle-orm");
-
-    const result: any = await db.execute(sql`
-      SELECT o.*, b.owner_id FROM orders o
-      JOIN businesses b ON o.business_id = b.id
-      WHERE o.qr_code = ${qrCode}
-    `);
-
-    const orders = Array.isArray(result[0]) ? result[0] : result;
-
-    if (!orders || orders.length === 0) {
-      return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
-    }
-
-    const order = orders[0];
-
-    if (order.owner_id !== businessOwnerId) {
-      return res.status(403).json({ success: false, error: 'No autorizado' });
-    }
-
-    if (order.status === 'delivered') {
-      return res.status(400).json({ success: false, error: 'Pedido ya entregado' });
-    }
-
-    if (order.status === 'cancelled') {
-      return res.status(400).json({ success: false, error: 'Pedido cancelado' });
-    }
-
-    await db.execute(sql`
-      UPDATE orders SET status = 'delivered', delivered_at = NOW() WHERE id = ${order.id}
-    `);
-
-    res.json({
-      success: true,
-      message: 'Pedido entregado',
-    });
-  } catch (error: any) {
-    console.error('Error delivering order:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Obtener pedidos del bar (business_owner)
-router.get('/business', authenticateToken, async (req, res) => {
-  try {
-    const businessOwnerId = req.user!.id || req.user!.userId;
-    const { sql } = await import("drizzle-orm");
-
-    const result: any = await db.execute(sql`
-      SELECT o.*, u.name as user_name, u.phone as user_phone
-      FROM orders o
-      JOIN businesses b ON o.business_id = b.id
-      JOIN users u ON o.user_id = u.id
-      WHERE b.owner_id = ${businessOwnerId}
-      ORDER BY o.created_at DESC
-    `);
-
-    const orders = Array.isArray(result[0]) ? result[0] : result;
-
-    for (const order of orders) {
-      const itemsRes: any = await db.execute(sql`
-        SELECT * FROM order_items WHERE order_id = ${order.id}
-      `);
-      order.items = Array.isArray(itemsRes[0]) ? itemsRes[0] : itemsRes;
-    }
-
-    res.json({ success: true, orders });
-  } catch (error: any) {
-    console.error('Error fetching business orders:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
