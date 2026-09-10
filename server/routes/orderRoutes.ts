@@ -98,12 +98,12 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     const orderId = uuidv4();
     const itemsJson = JSON.stringify(orderItems);
 
-    // 5. Registrar Pedido con mapeo de campos exactos
+    // 5. Registrar Pedido incluyendo payment_method
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, business_name, business_image, items, status, subtotal, productos_base, astrobar_commission, delivery_fee, total
+        id, user_id, business_id, business_name, business_image, items, status, payment_method, subtotal, productos_base, astrobar_commission, delivery_fee, total
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
+        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', 'mercadopago', ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
       )
     `);
 
