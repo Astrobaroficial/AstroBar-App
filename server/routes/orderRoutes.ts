@@ -100,7 +100,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     const itemsJson = JSON.stringify(orderItems);
     const finalAddress = deliveryAddress || businessAddress;
 
-    // 5. Registrar Pedido incluyendo delivery_address
+    // 5. Registrar Pedido en la tabla 'orders'
     await db.execute(sql`
       INSERT INTO orders (
         id, user_id, business_id, business_name, business_image, items, status, payment_method, delivery_address, subtotal, productos_base, astrobar_commission, delivery_fee, total
@@ -108,14 +108,6 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
         ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', 'mercadopago', ${finalAddress}, ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
       )
     `);
-
-    // Insertar detalles en order_items
-    for (const item of orderItems) {
-      await db.execute(sql`
-        INSERT INTO order_items (id, order_id, product_id, product_name, product_price, quantity, subtotal, notes)
-        VALUES (${item.id}, ${orderId}, ${item.productId}, ${item.productName}, ${item.productPrice}, ${item.quantity}, ${item.subtotal}, ${item.notes})
-      `);
-    }
 
     // 6. Generar Preferencia de Mercado Pago
     const mpPreference = new Preference(platformClient);
@@ -172,10 +164,13 @@ router.get('/my', authenticateToken, async (req, res) => {
     const orders = Array.isArray(result[0]) ? result[0] : result;
 
     for (const order of orders) {
-      const itemsRes: any = await db.execute(sql`
-        SELECT * FROM order_items WHERE order_id = ${order.id}
-      `);
-      order.items = Array.isArray(itemsRes[0]) ? itemsRes[0] : itemsRes;
+      if (typeof order.items === 'string') {
+        try {
+          order.items = JSON.parse(order.items);
+        } catch (e) {
+          order.items = [];
+        }
+      }
     }
 
     res.json({ success: true, orders });
