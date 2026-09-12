@@ -110,29 +110,45 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     `);
 
     // 6. Generar Preferencia de Mercado Pago
-    const mpPreference = new Preference(platformClient);
+    const sellerMpUserId = Number(mpAccount.mp_user_id);
+    
+    // Extraer ID de usuario de la plataforma desde el token maestro
+    let platformUserId: number | null = null;
+    try {
+      const tokenParts = MP_ACCESS_TOKEN.split('-');
+      if (tokenParts.length > 1 && !isNaN(Number(tokenParts[1]))) {
+        platformUserId = Number(tokenParts[1]);
+      }
+    } catch (e) {
+      console.warn("Could not parse platform user ID from token");
+    }
 
-    const preferenceResult = await mpPreference.create({
-      body: {
-        items: orderItems.map((item) => ({
-          id: item.productId,
-          title: item.productName,
-          quantity: item.quantity,
-          unit_price: item.productPrice,
-          currency_id: 'ARS',
-        })),
-        marketplace_fee: platformFee,
-        sponsor_id: Number(mpAccount.mp_user_id),
-        external_reference: orderId,
-        notification_url: `${BASE_URL}/api/mp/webhook`,
-        back_urls: {
-          success: 'astrobar://payment-success',
-          failure: 'astrobar://payment-failure',
-          pending: 'astrobar://payment-pending',
-        },
-        auto_return: 'approved',
+    const preferenceBody: any = {
+      items: orderItems.map((item) => ({
+        id: item.productId,
+        title: item.productName,
+        quantity: item.quantity,
+        unit_price: item.productPrice,
+        currency_id: 'ARS',
+      })),
+      marketplace_fee: platformFee,
+      external_reference: orderId,
+      notification_url: `${BASE_URL}/api/mp/webhook`,
+      back_urls: {
+        success: 'astrobar://payment-success',
+        failure: 'astrobar://payment-failure',
+        pending: 'astrobar://payment-pending',
       },
-    });
+      auto_return: 'approved',
+    };
+
+    // 💡 EVITAR ERROR 400: Solo se manda sponsor_id si el vendedor NO es la cuenta de la plataforma
+    if (!platformUserId || platformUserId !== sellerMpUserId) {
+      preferenceBody.sponsor_id = sellerMpUserId;
+    }
+
+    const mpPreference = new Preference(platformClient);
+    const preferenceResult = await mpPreference.create({ body: preferenceBody });
 
     res.json({
       success: true,
@@ -141,7 +157,7 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     });
   } catch (error: any) {
     console.error('Error creating order with MP:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message || 'Error al procesar el pago' });
   }
 };
 
