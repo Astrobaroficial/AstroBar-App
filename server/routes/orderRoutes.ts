@@ -14,7 +14,7 @@ const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
 const handleCreateOrder = async (req: express.Request, res: express.Response) => {
   try {
     const userId = req.user!.id || req.user!.userId;
-    const { items, businessId: bodyBusinessId, total: bodyTotal } = req.body;
+    const { items, businessId: bodyBusinessId, total: bodyTotal, deliveryAddress } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, error: 'No hay items en el pedido' });
@@ -30,11 +30,12 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
 
     // 1. Obtener datos del bar desde la tabla businesses
     const businessResult: any = await db.execute(sql`
-      SELECT name, image FROM businesses WHERE id = ${businessId} LIMIT 1
+      SELECT name, image, address FROM businesses WHERE id = ${businessId} LIMIT 1
     `);
     const businessRows = Array.isArray(businessResult[0]) ? businessResult[0] : businessResult;
     const businessName = businessRows[0]?.name || "Bar Registrado";
     const businessImage = businessRows[0]?.image || "";
+    const businessAddress = businessRows[0]?.address || "Consumo en Local";
 
     // 2. Obtener la cuenta de Mercado Pago vinculada al Bar
     const mpResult: any = await db.execute(sql`
@@ -97,13 +98,14 @@ const handleCreateOrder = async (req: express.Request, res: express.Response) =>
     const platformFee = Math.round(finalTotal * commissionRate);
     const orderId = uuidv4();
     const itemsJson = JSON.stringify(orderItems);
+    const finalAddress = deliveryAddress || businessAddress;
 
-    // 5. Registrar Pedido incluyendo payment_method
+    // 5. Registrar Pedido incluyendo delivery_address
     await db.execute(sql`
       INSERT INTO orders (
-        id, user_id, business_id, business_name, business_image, items, status, payment_method, subtotal, productos_base, astrobar_commission, delivery_fee, total
+        id, user_id, business_id, business_name, business_image, items, status, payment_method, delivery_address, subtotal, productos_base, astrobar_commission, delivery_fee, total
       ) VALUES (
-        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', 'mercadopago', ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
+        ${orderId}, ${userId}, ${businessId}, ${businessName}, ${businessImage}, ${itemsJson}, 'pending', 'mercadopago', ${finalAddress}, ${Math.round(calculatedSubtotal)}, ${Math.round(calculatedSubtotal)}, ${platformFee}, 0, ${Math.round(finalTotal)}
       )
     `);
 
