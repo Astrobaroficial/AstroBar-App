@@ -90,6 +90,66 @@ router.get("/callback", async (req, res) => {
       throw new Error(tokenData.message || "No se pudo obtener el token de acceso de Mercado Pago.");
     }
 
+    // 🛡️ VALIDACIÓN: Verificar si esta cuenta de MP ya está vinculada a OTRO bar
+    const existingAccounts = await db
+      .select()
+      .from(mercadopagoAccounts)
+      .where(eq(mercadopagoAccounts.mpUserId, String(tokenData.user_id)))
+      .limit(1);
+
+    if (existingAccounts.length > 0 && existingAccounts[0].businessId !== businessId) {
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Cuenta Ya Vinculada - AstroBar</title>
+          <style>
+            body {
+              background-color: #11011E;
+              color: #FFFFFF;
+              font-family: system-ui, -apple-system, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              text-align: center;
+            }
+            .card {
+              background: #1A042B;
+              border: 2px solid #ef4444;
+              border-radius: 20px;
+              padding: 30px;
+              max-width: 360px;
+              box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+            }
+            h1 { color: #ef4444; font-size: 22px; margin-bottom: 10px; }
+            p { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+            .btn {
+              display: inline-block;
+              margin-top: 20px;
+              background: #F16A30;
+              color: #fff;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 50px;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>Cuenta Ya Vinculada ⚠️</h1>
+            <p>Esta cuenta de Mercado Pago ya se encuentra asociada a otro comercio en AstroBar.</p>
+            <a href="astrobar://mp-connected?success=false" class="btn">Volver a AstroBar App</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
     // Limpiar vinculaciones previas e insertar nuevas credenciales
     await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, businessId));
 
@@ -260,32 +320,47 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
     const platformFee = Number(transaction.platformCommission) || (totalAmount * commissionRate); 
     const businessAmount = totalAmount - platformFee; 
 
-    // 🚀 FIX CRÍTICO: La preferencia se crea con el CLIENTE MAESTRO DE ASTROBAR, no del bar.
-    const mpPreference = new Preference(platformClient);
-
-    const result = await mpPreference.create({
-      body: {
-        items: [
-          {
-            id: String(transaction.id),
-            title: "Promoción AstroBar",
-            quantity: 1,
-            unit_price: totalAmount,
-            currency_id: 'ARS'
-          },
-        ],
-        marketplace_fee: platformFee, // Comisión retenida para AstroBar
-        sponsor_id: Number(mpAccount.mpUserId), // ID de Mercado Pago del Bar receptor
-        external_reference: String(transaction.id),
-        notification_url: `${BASE_URL}/api/mp/webhook`,
-        back_urls: {
-          success: `astrobar://payment-success`,
-          failure: `astrobar://payment-failure`,
-          pending: `astrobar://payment-pending`,
-        },
-        auto_return: "approved",
+    // Obtener ID de usuario del token de plataforma para comparar
+    const sellerMpUserId = Number(mpAccount.mpUserId);
+    let platformUserId: number | null = null;
+    try {
+      const tokenParts = MP_ACCESS_TOKEN.split('-');
+      if (tokenParts.length > 1 && !isNaN(Number(tokenParts[1]))) {
+        platformUserId = Number(tokenParts[1]);
       }
-    });
+    } catch (e) {
+      console.warn("Could not parse platform user ID");
+    }
+
+    const preferenceBody: any = {
+      items: [
+        {
+          id: String(transaction.id),
+          title: "Promoción AstroBar",
+          quantity: 1,
+          unit_price: totalAmount,
+          currency_id: 'ARS'
+        },
+      ],
+      marketplace_fee: platformFee, // Comisión retenida para AstroBar
+      external_reference: String(transaction.id),
+      notification_url: `${BASE_URL}/api/mp/webhook`,
+      back_urls: {
+        success: `astrobar://payment-success`,
+        failure: `astrobar://payment-failure`,
+        pending: `astrobar://payment-pending`,
+      },
+      auto_return: "approved",
+    };
+
+    // Solo se incluye sponsor_id si no es la misma cuenta de la plataforma
+    if (!platformUserId || platformUserId !== sellerMpUserId) {
+      preferenceBody.sponsor_id = sellerMpUserId;
+    }
+
+    // 🚀 La preferencia se crea con el CLIENTE MAESTRO DE ASTROBAR
+    const mpPreference = new Preference(platformClient);
+    const result = await mpPreference.create({ body: preferenceBody });
 
     res.json({
       success: true,
