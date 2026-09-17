@@ -2,7 +2,7 @@ import express from "express";
 import { authenticateToken, requireRole } from "../authMiddleware";
 import { businesses, promotionTransactions, products, promotions } from "@shared/schema-mysql";
 import { db } from "../db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, gte, lte, inArray, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
@@ -151,7 +151,6 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     const todayRevenue = paidTransactions.reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     
     const now = new Date();
-    const { and, gte, lte, sql } = await import("drizzle-orm");
     const activePromotions = await db
       .select()
       .from(promotions)
@@ -257,7 +256,6 @@ router.get("/stats", authenticateToken, requireRole("business_owner"), async (re
     const monthRevenue = paidTransactions.filter(t => new Date(t.createdAt) >= monthStart).reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     const avgValue = redeemedTransactions.length > 0 ? Math.round(totalRevenue / redeemedTransactions.length) : 0;
     
-    const { sql } = await import("drizzle-orm");
     const topProductsResult = await db.execute(sql`
       SELECT p.title as name, COUNT(*) as quantity, SUM(pt.business_revenue) as revenue
       FROM promotion_transactions pt
@@ -353,7 +351,6 @@ router.get("/limits", authenticateToken, requireRole("business_owner"), async (r
 
     const productCount = await db.select().from(products).where(eq(products.businessId, business.id));
     const now = new Date();
-    const { and, gte, lte } = await import("drizzle-orm");
     const activePromotions = await db
       .select()
       .from(promotions)
@@ -380,7 +377,6 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
     if (userBusinesses.length === 0) return res.status(404).json({ error: "Business not found" });
 
     const businessIds = userBusinesses.map(b => b.id);
-    const { inArray } = await import("drizzle-orm");
     const allTransactions = await db.select().from(promotionTransactions).where(inArray(promotionTransactions.businessId, businessIds));
     
     const paidTransactions = allTransactions.filter(t => t.status === 'pending' || t.status === 'redeemed');
@@ -421,7 +417,6 @@ router.get("/commission-info", authenticateToken, requireRole("business_owner"),
 router.get("/payment-history", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
     const { filter } = req.query;
-    const { sql } = await import("drizzle-orm");
     const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
     if (userBusinesses.length === 0) return res.json({ success: true, transactions: [] });
     
@@ -597,20 +592,26 @@ router.delete("/products/:id", authenticateToken, requireRole("business_owner"),
 });
 
 // ==========================================
-// 🛠️ DELETE BUSINESS (NUEVA RUTA DE ELIMINACIÓN)
-// Borrado lógico para no romper relaciones/claves foráneas en la BD 💎
+// 🛠️ DELETE BUSINESS (RUTA DE ELIMINACIÓN CORREGIDA)
+// Permite borrado a Administradores o Dueños del negocio
 // ==========================================
-router.delete("/:id", authenticateToken, requireRole("admin"), async (req, res) => {
+router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const user = req.user!;
 
-    // Buscamos si el bar existe
     const [business] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
     if (!business) {
       return res.status(404).json({ error: "El bar que intentas eliminar no existe" });
     }
 
-    // Cambiamos isActive a false para ocultarlo sin perder registros financieros importantes
+    const isAdmin = user.role === "admin" || user.role === "super_admin";
+    const isOwner = user.role === "business_owner" && business.ownerId === user.id;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "No tienes autorización para eliminar este bar." });
+    }
+
     await db
       .update(businesses)
       .set({ 
@@ -619,7 +620,7 @@ router.delete("/:id", authenticateToken, requireRole("admin"), async (req, res) 
       })
       .where(eq(businesses.id, id));
 
-    console.log(`🗑️ Bar eliminado lógicamente (Desactivado): ${business.name} (${id})`);
+    console.log(`🗑️ Bar desactivado: ${business.name} (${id}) por usuario ${user.id}`);
     
     res.json({ success: true, message: "El bar fue eliminado con éxito del sistema" });
   } catch (error: any) {
@@ -629,13 +630,12 @@ router.delete("/:id", authenticateToken, requireRole("admin"), async (req, res) 
 });
 
 // ==========================================
-// 2. RUTAS PÚBLICAS DINÁMICAS (Irán siempre al final)
+// 2. RUTAS PÚBLICAS Y DEBUG
 // ==========================================
 
 // Debug routes
 router.get("/debug-commission-test", async (req, res) => {
   try {
-    const { sql } = await import("drizzle-orm");
     const commissionResult: any = await db.execute(sql`SELECT platform_commission FROM business_commissions WHERE business_id = 'bar_test_001' LIMIT 1`);
     const platformCommissionValue = commissionResult[0]?.platform_commission;
     const calculated = platformCommissionValue ? parseFloat(platformCommissionValue) : 30;
@@ -647,7 +647,6 @@ router.get("/debug-commission-test", async (req, res) => {
 
 router.get("/debug-commission", authenticateToken, async (req, res) => {
   try {
-    const { sql } = await import("drizzle-orm");
     const [userBusiness] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     if (!userBusiness) return res.json({ error: 'No business found' });
 
@@ -666,7 +665,6 @@ router.get("/", async (req, res) => {
     const { lat, lng, radius } = req.query;
     const allBusinesses = await db.select().from(businesses).where(eq(businesses.isActive, true));
     const now = new Date();
-    const { and, gte, lte } = await import("drizzle-orm");
     
     const enrichedBusinesses = await Promise.all(
       allBusinesses.map(async (business) => {
@@ -732,7 +730,6 @@ router.get("/:id/future-promotions", async (req, res) => {
     if (!business) return res.status(404).json({ error: "Business not found" });
 
     const now = new Date();
-    const { and, gte } = await import("drizzle-orm");
     const futurePromotions = await db.select().from(promotions).where(and(eq(promotions.businessId, id), eq(promotions.isActive, true), gte(promotions.startTime, now))).orderBy(promotions.startTime);
 
     res.json({ success: true, promotions: futurePromotions, total: futurePromotions.length });
@@ -742,7 +739,7 @@ router.get("/:id/future-promotions", async (req, res) => {
   }
 });
 
-// GET BUSINESS BY ID (Debe quedar estrictamente última)
+// GET BUSINESS BY ID (Debe quedar estrictamente al final)
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
