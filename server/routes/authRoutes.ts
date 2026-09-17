@@ -151,7 +151,7 @@ router.post("/send-code", async (req, res) => {
 
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, or, like } = await import("drizzle-orm");
+    const { eq, or } = await import("drizzle-orm");
 
     const phoneDigits = phone.replace(/[^\d]/g, '');
     const normalizedPhone = phoneDigits.startsWith('54') ? `+${phoneDigits}` : `+54${phoneDigits}`;
@@ -183,7 +183,7 @@ router.post("/send-code", async (req, res) => {
   }
 });
 
-// 🚀 Registro de Usuario en TEXTO PLANO
+// 🚀 Registro de Usuario en TEXTO PLANO (Corregido)
 router.post("/phone-signup", async (req, res) => {
   try {
     const { name, email, phone, password, role, birthDate, referralCode } = req.body;
@@ -194,31 +194,44 @@ router.post("/phone-signup", async (req, res) => {
 
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, or } = await import("drizzle-orm");
+    const { eq } = await import("drizzle-orm");
     const jwt = await import("jsonwebtoken");
 
-    const phoneDigits = phone.replace(/[^\d]/g, '');
-    const normalizedPhone = phoneDigits.startsWith('54') ? `+${phoneDigits}` : `+54${phoneDigits}`;
+    // Limpiar correo si se envió uno
+    const cleanEmail = email && typeof email === "string" && email.trim() !== "" ? email.trim().toLowerCase() : null;
 
-    const existingUser = await db
-      .select()
+    // Normalizar teléfono
+    const phoneDigits = phone.replace(/[^\d]/g, "");
+    const normalizedPhone = phoneDigits.startsWith("54") ? `+${phoneDigits}` : `+54${phoneDigits}`;
+
+    // 1. Validar si el TELÉFONO ya existe
+    const existingPhone = await db
+      .select({ id: users.id })
       .from(users)
-      .where(
-        or(
-          eq(users.phone, normalizedPhone),
-          email ? eq(users.email, email) : undefined
-        )
-      )
+      .where(eq(users.phone, normalizedPhone))
       .limit(1);
 
-    if (existingUser.length > 0) {
-      return res.status(400).json({ error: "El teléfono o email ya se encuentra registrado" });
+    if (existingPhone.length > 0) {
+      return res.status(400).json({ error: "El número de teléfono ya se encuentra registrado" });
     }
 
-    // 🔍 SIN ENCRIPTAR: Guardamos 'password' tal cual viene del formulario web
+    // 2. Validar si el EMAIL ya existe (solo si el usuario mandó uno válido)
+    if (cleanEmail) {
+      const existingEmail = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, cleanEmail))
+        .limit(1);
+
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ error: "El correo electrónico ya se encuentra registrado" });
+      }
+    }
+
+    // 3. Insertar nuevo usuario
     await db.insert(users).values({
-      name,
-      email: email || null,
+      name: name.trim(),
+      email: cleanEmail,
       phone: normalizedPhone,
       password: password, 
       role: role || "customer",
@@ -252,6 +265,7 @@ router.post("/phone-signup", async (req, res) => {
       },
     });
   } catch (error: any) {
+    console.error("Error en phone-signup:", error);
     res.status(500).json({ error: error.message });
   }
 });
