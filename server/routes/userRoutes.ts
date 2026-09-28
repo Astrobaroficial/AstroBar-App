@@ -129,7 +129,7 @@ router.post("/push-token", authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (Soporta Name, Phone, Username y Cambio de Contraseña)
+// Update user profile (Soporta Name, Phone, Username, ProfileImage y Cambio de Contraseña)
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const { users } = await import("@shared/schema-mysql");
@@ -138,7 +138,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
     const bcrypt = await import("bcrypt");
 
     const userId = req.user!.id;
-    const { name, phone, username, currentPassword, newPassword } = req.body;
+    const { name, phone, username, profileImage, currentPassword, newPassword } = req.body;
 
     const [user] = await db
       .select()
@@ -168,6 +168,10 @@ router.put("/profile", authenticateToken, async (req, res) => {
 
     if (phone !== undefined) {
       updates.phone = phone?.trim() || null;
+    }
+
+    if (profileImage !== undefined) {
+      updates.profileImage = profileImage;
     }
 
     if (newPassword) {
@@ -422,15 +426,6 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       isActive: true,
     });
 
-    console.log(`💳 Tarjeta tokenizada y guardada para usuario ${req.user!.id}:`, {
-      lastFourDigits,
-      brand,
-      expiryMonth,
-      expiryYear: yearToStore,
-      mpToken: tokenResult.token,
-      isDefault,
-    });
-
     res.json({
       success: true,
       message: "Tarjeta agregada exitosamente",
@@ -464,8 +459,6 @@ router.delete("/payment-methods/:cardId", authenticateToken, async (req, res) =>
           eq(paymentCards.userId, req.user!.id)
         )
       );
-
-    console.log(`🗑️ Tarjeta eliminada para usuario ${req.user!.id}:`, cardId);
 
     res.json({
       success: true,
@@ -544,11 +537,10 @@ router.put("/notification-preferences", authenticateToken, async (req, res) => {
     const userId = req.user!.id;
     const { flashPromosEnabled, soundEnabled, vibrationEnabled } = req.body;
     
-    // Validate input
     if (typeof flashPromosEnabled !== 'boolean' || 
         typeof soundEnabled !== 'boolean' || 
         typeof vibrationEnabled !== 'boolean') {
-      return res.status(400).json({ error: "Invalid preferences format" });
+      return res.status(0).json({ error: "Invalid preferences format" });
     }
     
     const preferences = {
