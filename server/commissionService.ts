@@ -1,11 +1,15 @@
 import { db } from "./db";
-import { businessCommissions, systemSettings } from "@shared/schema-mysql";
+import { businessCommissions, businesses, systemSettings } from "@shared/schema-mysql";
 import { eq } from "drizzle-orm";
 
 export class CommissionService {
-  // Get commission for a specific business
+  /**
+   * Obtiene la comisión calculada según los meses de antigüedad del comercio.
+   * Si existe una comisión personalizada manual en businessCommissions, se respeta.
+   */
   static async getBusinessCommission(businessId: string): Promise<number> {
     try {
+      // 1. Verificar si hay una comisión personalizada manual para este negocio
       const [commission] = await db
         .select()
         .from(businessCommissions)
@@ -16,11 +20,53 @@ export class CommissionService {
         return parseFloat(commission.platformCommission);
       }
 
-      // Return default commission if not configured
+      // 2. Si no hay personalizada, calcularla por la antigüedad (createdAt)
+      const [business] = await db
+        .select({ createdAt: businesses.createdAt })
+        .from(businesses)
+        .where(eq(businesses.id, businessId))
+        .limit(1);
+
+      if (business && business.createdAt) {
+        return this.calculateProgressiveCommissionRate(business.createdAt);
+      }
+
       return await this.getDefaultCommission();
     } catch (error) {
       console.error("Error getting business commission:", error);
       return await this.getDefaultCommission();
+    }
+  }
+
+  /**
+   * Calcula el porcentaje según la antigüedad de la cuenta del comercio.
+   * Mes 1: 0% | Mes 2: 3% | Mes 3: 6% | Mes 4: 9% | Mes 5: 13% | Mes 6+: 15%
+   */
+  static calculateProgressiveCommissionRate(createdAt: Date | string): number {
+    const created = new Date(createdAt);
+    const now = new Date();
+
+    let monthDiff = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+
+    if (now.getDate() < created.getDate()) {
+      monthDiff--;
+    }
+
+    const monthNumber = Math.max(1, monthDiff + 1);
+
+    switch (monthNumber) {
+      case 1:
+        return 0;      // 0% (mes 1)
+      case 2:
+        return 0.03;   // 3% (mes 2)
+      case 3:
+        return 0.06;   // 6% (mes 3)
+      case 4:
+        return 0.09;   // 9% (mes 4)
+      case 5:
+        return 0.13;   // 13% (mes 5)
+      default:
+        return 0.15;   // 15% (mes 6 en adelante)
     }
   }
 
@@ -37,19 +83,22 @@ export class CommissionService {
         return parseFloat(setting.value);
       }
 
-      return 0.30; // 30% default
+      return 0.15; // 15% default máximo
     } catch (error) {
       console.error("Error getting default commission:", error);
-      return 0.30;
+      return 0.15;
     }
   }
 
-  // Calculate split based on commission
-  // Bar receives 100% of product price, platform charges commission on top
-  static calculateSplit(productPrice: number, platformCommission: number) {
-    const businessAmount = productPrice; // Bar gets 100% of product price
-    const platformAmount = Math.round(productPrice * platformCommission); // Platform charges commission
-    const totalAmount = businessAmount + platformAmount; // Total user pays
+  /**
+   * Modificado: Divide el pago del usuario entre el comercio y AstroBar.
+   * Ejemplo para total $10.000 con 3% de comisión (0.03):
+   * - AstroBar = $300
+   * - Comercio = $9.700
+   */
+  static calculateSplit(totalAmount: number, platformCommission: number) {
+    const platformAmount = Math.round(totalAmount * platformCommission);
+    const businessAmount = totalAmount - platformAmount;
 
     return {
       platform: platformAmount,
@@ -59,7 +108,7 @@ export class CommissionService {
     };
   }
 
-  // Set commission for a business
+  // Set manual commission for a business
   static async setBusinessCommission(
     businessId: string,
     platformCommission: number,

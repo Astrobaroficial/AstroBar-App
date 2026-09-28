@@ -14,6 +14,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
       .select({
         id: users.id,
         name: users.name,
+        username: users.username,
         email: users.email,
         phone: users.phone,
         role: users.role,
@@ -128,31 +129,92 @@ router.post("/push-token", authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile
+// Update user profile (Soporta Name, Phone, Username y Cambio de Contraseña)
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
     const { eq } = await import("drizzle-orm");
+    const bcrypt = await import("bcrypt");
 
-    const { name, phone } = req.body;
+    const userId = req.user!.id;
+    const { name, phone, username, currentPassword, newPassword } = req.body;
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: "Name is required" });
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    await db
-      .update(users)
-      .set({ 
-        name: name.trim(),
-        phone: phone?.trim() || null
-      })
-      .where(eq(users.id, req.user!.id));
+    const updates: Record<string, any> = {};
 
-    res.json({ success: true });
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({ error: "El nombre es requerido" });
+      }
+      updates.name = name.trim();
+    }
+
+    if (username !== undefined) {
+      if (!username.trim()) {
+        return res.status(400).json({ error: "El nombre de usuario no puede estar vacío" });
+      }
+      updates.username = username.trim();
+    }
+
+    if (phone !== undefined) {
+      updates.phone = phone?.trim() || null;
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Debes ingresar tu contraseña actual para cambiarla" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "La nueva contraseña debe tener al menos 6 caracteres" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ error: "La contraseña actual es incorrecta" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      updates.password = hashedPassword;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, userId));
+    }
+
+    const [updatedUser] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        profileImage: users.profileImage,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    res.json({ success: true, message: "Perfil actualizado correctamente", user: updatedUser });
   } catch (error: any) {
     console.error("Error updating profile:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || "Error al actualizar el perfil" });
   }
 });
 
