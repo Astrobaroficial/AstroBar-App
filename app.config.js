@@ -63,7 +63,7 @@ export default {
     extra: {
       eas: {
         /* 🪐 INYECTAMOS EL NUEVO ID DE TU CUENTA NUEVA */
-        projectId: "c2677a12-3825-42c7-a798-5d90bcc4af6b"
+        projectId: "d43007c6-e68c-4d6e-ab95-953667fcdc89"
       },
       EXPO_PUBLIC_BACKEND_URL: "https://astrobar-app-production-4821.up.railway.app"
     }

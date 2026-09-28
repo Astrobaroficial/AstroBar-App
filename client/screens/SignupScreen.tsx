@@ -9,6 +9,7 @@ import {
   Share,
   TextInput,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -18,6 +19,7 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withDelay } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Input } from "@/components/Input";
@@ -68,7 +70,6 @@ const BUSINESS_TYPES = [
   { id: "other", name: "Otro" },
 ];
 
-// Componente para renderizar y animar cada estrella en el espacio exterior
 function StarParticle({ x, y, size, delay }: { x: number; y: number; size: number; delay: number }) {
   const opacity = useSharedValue(0.15);
 
@@ -99,8 +100,6 @@ function StarParticle({ x, y, size, delay }: { x: number; y: number; size: numbe
     />
   );
 }
-
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withDelay } from "react-native-reanimated";
 
 export default function SignupScreen({ navigation, route }: SignupScreenProps) {
   const { theme } = useTheme();
@@ -140,12 +139,16 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
   }, []);
 
   const calculateAge = (dateString: string) => {
-    const [day, month, year] = dateString.split('/').map(Number);
-    const birthDate = new Date(year, month - 1, day);
+    if (dateString.length < 8) return 0;
+    const day = parseInt(dateString.slice(0, 2), 10);
+    const month = parseInt(dateString.slice(2, 4), 10);
+    const year = parseInt(dateString.slice(4, 8), 10);
+    
+    const birthDateObj = new Date(year, month - 1, day);
     const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDiff = today.getMonth() - birthDateObj.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
       age--;
     }
     return age;
@@ -168,10 +171,9 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
 
   const formatPhoneDisplay = (value: string) => {
     const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 6)
-      return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
-    return `${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6, 10)}`;
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return `${numbers.slice(0, 2)} ${numbers.slice(2)}`;
+    return `${numbers.slice(0, 2)} ${numbers.slice(2, 6)} ${numbers.slice(6, 10)}`;
   };
 
   const handlePhoneChange = (text: string) => {
@@ -250,6 +252,20 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
 
     try {
       const formattedPhone = phone.startsWith('+') ? phone : `+54${phone}`;
+      
+      // Guardar borrador del negocio antes de registrar
+      if (role === "business_owner") {
+        await AsyncStorage.setItem(
+          PENDING_BUSINESS_DRAFT_KEY,
+          JSON.stringify({
+            name: businessName.trim(),
+            type: businessType,
+            address: businessAddress.trim(),
+            phone: businessPhone.trim() ? (businessPhone.startsWith('+') ? businessPhone : `+54${businessPhone}`) : formattedPhone,
+          })
+        );
+      }
+
       const result = await signup(
         name,
         role,
@@ -257,25 +273,24 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
         email.trim() ? email : undefined,
         password,
       );
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       if (result?.requiresVerification) {
-        if (role === "business_owner") {
-          await AsyncStorage.setItem(
-            PENDING_BUSINESS_DRAFT_KEY,
-            JSON.stringify({
-              name: businessName.trim(),
-              type: businessType,
-              address: businessAddress.trim(),
-              phone: businessPhone.trim() || formattedPhone,
-            })
-          );
-        }
         navigation.navigate("VerifyPhone", { phone: formattedPhone });
+      } else {
+        // ✨ FEEDBACK VISUAL AGREGADO AL CREAR LA CUENTA CORRECTAMENTE
+        if (showToast) {
+          showToast("¡Cuenta creada exitosamente! Bienvenido a AstroBar 🚀", "success");
+        } else {
+          Alert.alert("¡Registro Exitoso!", "Tu cuenta ha sido creada correctamente.", [
+            { text: "Continuar", onPress: () => navigation.navigate("Login") }
+          ]);
+        }
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      if (error.message?.includes("already") || error.message?.includes("existe")) {
+      if (error.message?.includes("already") || error.message?.includes("registrado") || error.message?.includes("existe")) {
         setShowUserExistsModal(true);
       } else {
         setErrors({ email: error.message || "Error al crear la cuenta" });
@@ -304,13 +319,11 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
       style={styles.container}
       resizeMode="cover"
     >
-      {/* 🌌 Overlay con degradado espacial profundo continuo */}
       <LinearGradient 
         colors={['rgba(11, 17, 30, 0.92)', 'rgba(15, 23, 42, 0.85)', 'rgba(5, 8, 15, 0.80)']}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* ✨ Estrellas titilantes de fondo */}
       {starList.map((star) => (
         <StarParticle key={star.id} x={star.x} y={star.y} size={star.size} delay={star.delay} />
       ))}
@@ -344,7 +357,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
             </ThemedText>
           </View>
 
-          {/* Tarjeta translúcida Cristal Esmerilado */}
           <BlurView intensity={35} tint="dark" style={[styles.formCard, Shadows.lg]}>
             <Input
               label="Nombre completo"
@@ -495,9 +507,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                   {errors.phone}
                 </ThemedText>
               ) : null}
-              <ThemedText type="caption" style={styles.phoneHint}>
-                Te enviaremos un SMS para verificar tu número
-              </ThemedText>
             </View>
 
             <View style={styles.inputWrapper}>
@@ -533,9 +542,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
                   {errors.birthDate}
                 </ThemedText>
               ) : null}
-              <ThemedText type="caption" style={styles.phoneHint}>
-                Debes ser mayor de 18 años para usar AstroBar
-              </ThemedText>
             </View>
 
             {role === "business_owner" ? (
@@ -702,7 +708,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               ¿Cómo quieres usar AstroBar?
             </ThemedText>
             
-            {/* 🪐 CONTROL DE ROLES REESTRUCTURADO SIN VIOLETA Y CON CONTORNOS CIAN NEÓN */}
             <View style={styles.rolesContainer}>
               {ROLES.map((r) => {
                 const isSelected = role === r.value;
@@ -763,7 +768,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               })}
             </View>
 
-            {/* 🪐 BOTÓN DE REGISTRO MEJORADO CON PRESSABLE CIAN NEÓN PREMIUM */}
             <Pressable
               onPress={handleSignup}
               disabled={isLoading}
@@ -854,37 +858,17 @@ const styles = StyleSheet.create({
   roleIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center", marginBottom: Spacing.xs },
   inlineSectionTitle: { fontWeight: "800", marginBottom: Spacing.xs, color: "#00f2fe", fontSize: 15, textTransform: "uppercase", letterSpacing: 1 },
   inlineSectionNote: { color: "#94a3b8", marginBottom: Spacing.sm, fontSize: 12, fontWeight: "500" },
-  businessTypeRow: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs },
-  businessTypeChip: { paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm, borderRadius: BorderRadius.md, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(15, 23, 42, 0.4)" },
-  businessTypeChipActive: { borderColor: "#00f2fe", backgroundColor: "rgba(0, 242, 254, 0.15)" },
-  businessTypeChipText: { color: "#cbd5e1", fontWeight: "600" },
-  businessTypeChipTextActive: { color: "#00f2fe", fontWeight: "700" },
-  
-  // 🔮 ESTILOS DEL BOTÓN REGISTRARSE NATIVO PREMIUM
-  signupButtonNative: {
-    marginTop: Spacing.md,
-    height: 50,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: "#00f2fe",
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 5
-  },
-  signupButtonTextNative: {
-    color: '#05080f',
-    fontWeight: '900',
-    fontSize: 16,
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
-  termsText: { textAlign: "center", color: "#94a3b8", marginTop: Spacing.md, fontSize: 11, fontWeight: "500" },
-  shareButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: Spacing.md, gap: Spacing.sm, marginBottom: Spacing.md },
-  shareText: { color: "#00f2fe", fontWeight: "700", fontSize: 14 },
-  loginLink: { flexDirection: "row", justifyContent: "center", marginTop: Spacing.sm },
-  loginText: { color: "#94a3b8", fontWeight: "500" },
-  loginLinkText: { color: "#00f2fe", fontWeight: "800", marginLeft: 4 },
+  businessTypeRow: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs, marginTop: 4 },
+  businessTypeChip: { paddingHorizontal: Spacing.md, paddingVertical: 8, borderRadius: BorderRadius.md, backgroundColor: "rgba(15, 23, 42, 0.6)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)" },
+  businessTypeChipActive: { backgroundColor: "rgba(0, 242, 254, 0.2)", borderColor: "#00f2fe" },
+  businessTypeChipText: { color: "#94a3b8", fontWeight: "600" },
+  businessTypeChipTextActive: { color: "#00f2fe", fontWeight: "800" },
+  signupButtonNative: { height: 52, borderRadius: BorderRadius.lg, justifyContent: "center", alignItems: "center", marginTop: Spacing.md, shadowColor: "#00f2fe", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  signupButtonTextNative: { color: "#05080f", fontSize: 16, fontWeight: "800", letterSpacing: 0.5 },
+  termsText: { color: "#64748b", textAlign: "center", marginTop: Spacing.sm, fontSize: 11 },
+  shareButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.xs, marginBottom: Spacing.lg, paddingVertical: Spacing.sm },
+  shareText: { color: "#00f2fe", fontWeight: "600" },
+  loginLink: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  loginText: { color: "#94a3b8" },
+  loginLinkText: { color: "#00f2fe", fontWeight: "700" },
 });

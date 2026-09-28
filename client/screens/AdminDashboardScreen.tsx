@@ -5,7 +5,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Pressable, // ✅ CORRECCIÓN 1: Agregamos Pressable que faltaba e iba a dar crash
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -47,8 +47,6 @@ export default function AdminDashboardScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ CORRECCIÓN 2: Eliminamos la llamada 'const styles = getStyles()' que causaba el ReferenceError
-
   const fetchDashboardData = async () => {
     try {
       const [metricsRes, ordersRes, driversRes] = await Promise.all([
@@ -59,7 +57,9 @@ export default function AdminDashboardScreen() {
       const metricsData = await metricsRes.json();
       const ordersData = await ordersRes.json();
       const driversData = await driversRes.json();
-      setDashboardMetrics(metricsData);
+      
+      // ✅ Solución: Aseguramos que tome la estructura correcta de métricas
+      setDashboardMetrics(metricsData.metrics || metricsData);
       setActiveOrders(ordersData.orders || []);
       setOnlineDrivers(driversData.drivers || []);
     } catch (error) {
