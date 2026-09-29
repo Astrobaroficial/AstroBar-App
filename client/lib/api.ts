@@ -1,32 +1,27 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// 💡 Dejamos la URL base limpia sin agregarle /api forzado
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+import { API_CONFIG } from '../constants/api'; // Ruta corregida hacia client/constants/api.ts
 
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: API_CONFIG.BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: API_CONFIG.TIMEOUT,
 });
 
 apiClient.interceptors.request.use(
   async (config) => {
     try {
       const userStr = await AsyncStorage.getItem('@AstroBar_user');
-      console.log('Token check:', userStr ? 'Found' : 'Not found');
       if (userStr) {
         const user = JSON.parse(userStr);
         if (user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
-          console.log('Token added to request');
-        } else {
-          console.log('No token in user object');
         }
       }
     } catch (error) {
-      console.error('Error getting token:', error);
+      console.error('Error getting token in interceptor:', error);
     }
     return config;
   },
