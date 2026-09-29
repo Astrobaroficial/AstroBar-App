@@ -58,8 +58,8 @@ export default function AdminDashboardScreen() {
       const ordersData = await ordersRes.json();
       const driversData = await driversRes.json();
       
-      // ✅ Solución: Aseguramos que tome la estructura correcta de métricas
-      setDashboardMetrics(metricsData.metrics || metricsData);
+      // ✅ Solución definitiva: Acepta tanto si viene en .metrics, .stats, .dashboard como en la raíz
+      setDashboardMetrics(metricsData.metrics || metricsData.stats || metricsData.dashboard || metricsData);
       setActiveOrders(ordersData.orders || []);
       setOnlineDrivers(driversData.drivers || []);
     } catch (error) {
