@@ -3,28 +3,22 @@ import { authenticateToken } from "../authMiddleware";
 
 const router = express.Router();
 
-// Get user profile
+// Get user profile (Optimizado y blindado con SQL directo)
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
-    const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    const { sql } = await import("drizzle-orm");
 
-    const [user] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        email: users.email,
-        phone: users.phone,
-        role: users.role,
-        profileImage: users.profileImage,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
-      })
-      .from(users)
-      .where(eq(users.id, req.user!.id))
-      .limit(1);
+    const userId = req.user!.id;
+    const result: any = await db.execute(sql`
+      SELECT id, name, username, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
+      FROM users
+      WHERE id = ${userId}
+      LIMIT 1
+    `);
+
+    const rows = Array.isArray(result[0]) ? result[0] : result;
+    const user = rows[0];
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -40,13 +34,12 @@ router.get("/profile", authenticateToken, async (req, res) => {
 // Get user stats
 router.get("/stats", authenticateToken, async (req, res) => {
   try {
-    const { userPoints, promotionTransactions, businesses } = await import("@shared/schema-mysql");
+    const { userPoints, promotionTransactions } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, and, sql } = await import("drizzle-orm");
+    const { eq, and } = await import("drizzle-orm");
 
     const userId = req.user!.id;
 
-    // Get points
     const [points] = await db
       .select()
       .from(userPoints)
@@ -57,7 +50,6 @@ router.get("/stats", authenticateToken, async (req, res) => {
     const promotionsRedeemed = points?.promotionsRedeemed || 0;
     const currentLevel = points?.currentLevel || 'copper';
 
-    // Get unique bars visited
     const transactions = await db
       .select({ businessId: promotionTransactions.businessId })
       .from(promotionTransactions)
@@ -71,7 +63,6 @@ router.get("/stats", authenticateToken, async (req, res) => {
     const uniqueBars = new Set(transactions.map(t => t.businessId));
     const barsVisited = uniqueBars.size;
 
-    // Get total spent
     const redeemedTransactions = await db
       .select({ amountPaid: promotionTransactions.amountPaid })
       .from(promotionTransactions)
@@ -84,7 +75,6 @@ router.get("/stats", authenticateToken, async (req, res) => {
 
     const totalSpent = redeemedTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
 
-    // Calculate points to next level
     let pointsToNextLevel = 0;
     if (currentLevel === 'copper') pointsToNextLevel = 100 - totalPoints;
     else if (currentLevel === 'bronze') pointsToNextLevel = 250 - totalPoints;
@@ -129,7 +119,7 @@ router.post("/push-token", authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (Soporta Name, Phone, Username, ProfileImage y Cambio de Contraseña)
+// Update user profile
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const { users } = await import("@shared/schema-mysql");
@@ -199,21 +189,14 @@ router.put("/profile", authenticateToken, async (req, res) => {
         .where(eq(users.id, userId));
     }
 
-    const [updatedUser] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        email: users.email,
-        phone: users.phone,
-        role: users.role,
-        profileImage: users.profileImage,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    const result: any = await db.execute(sql`
+      SELECT id, name, username, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
+      FROM users
+      WHERE id = ${userId}
+      LIMIT 1
+    `);
+    const rows = Array.isArray(result[0]) ? result[0] : result;
+    const updatedUser = rows[0];
 
     res.json({ success: true, message: "Perfil actualizado correctamente", user: updatedUser });
   } catch (error: any) {
@@ -258,7 +241,6 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Total spent (all redeemed transactions)
     const allTransactions = await db
       .select({ amountPaid: promotionTransactions.amountPaid })
       .from(promotionTransactions)
@@ -272,7 +254,6 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
     const totalEarnings = allTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
     const totalTransactions = allTransactions.length;
 
-    // This month spending
     const monthTransactions = await db
       .select({ amountPaid: promotionTransactions.amountPaid })
       .from(promotionTransactions)
@@ -286,7 +267,6 @@ router.get("/wallet-stats", authenticateToken, async (req, res) => {
 
     const thisMonthEarnings = monthTransactions.reduce((sum, t) => sum + t.amountPaid, 0);
 
-    // Pending (accepted but not redeemed)
     const pendingTransactions = await db
       .select({ amountPaid: promotionTransactions.amountPaid })
       .from(promotionTransactions)
@@ -346,7 +326,7 @@ router.get("/payment-methods", authenticateToken, async (req, res) => {
   }
 });
 
-// Add payment method (tarjeta) - Tokenizar con Mercado Pago
+// Add payment method (tarjeta)
 router.post("/payment-methods", authenticateToken, async (req, res) => {
   try {
     const { paymentCards } = await import("@shared/schema-mysql");
@@ -355,12 +335,10 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
     const MercadoPagoService = await import("../services/mercadoPagoService");
     const { cardNumber, cardholderName, expiryMonth, expiryYear, cvv, isDefault } = req.body;
 
-    // Validar datos
     if (!cardNumber || !cardholderName || !expiryMonth || !expiryYear || !cvv) {
       return res.status(400).json({ error: "Faltan datos de la tarjeta" });
     }
 
-    // Validar fecha de vencimiento
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
@@ -374,11 +352,6 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Mes de vencimiento inválido" });
     }
 
-    if (fullYear > currentYear + 20) {
-      return res.status(400).json({ error: "Fecha de vencimiento muy lejana" });
-    }
-
-    // Tokenizar tarjeta con Mercado Pago
     const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
     if (!mpAccessToken) {
       return res.status(500).json({ error: "Mercado Pago no está configurado" });
@@ -397,21 +370,18 @@ router.post("/payment-methods", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Error al tokenizar tarjeta" });
     }
 
-    // Detectar marca de tarjeta
     let brand = tokenResult.cardBrand || "Visa";
     if (cardNumber.startsWith("5")) brand = "Mastercard";
     else if (cardNumber.startsWith("3")) brand = "Amex";
 
     const lastFourDigits = cardNumber.slice(-4);
 
-    // Si es predeterminada, desmarcar las otras
     if (isDefault) {
       await db.update(paymentCards)
         .set({ isDefault: false })
         .where(eq(paymentCards.userId, req.user!.id));
     }
 
-    // Guardar tarjeta con token de Mercado Pago
     const cardId = `card_${Date.now()}`;
     const yearToStore = fullYear > 100 ? fullYear % 100 : fullYear;
     await db.insert(paymentCards).values({
@@ -491,13 +461,11 @@ router.get("/notification-preferences", authenticateToken, async (req, res) => {
 router.get("/payment-history", authenticateToken, async (req, res) => {
   try {
     const { filter } = req.query;
-    const { promotionTransactions, promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, and, sql } = await import("drizzle-orm");
+    const { sql } = await import("drizzle-orm");
 
     const userId = req.user!.id;
 
-    // Build query with JOINs
     const result: any = await db.execute(sql`
       SELECT 
         pt.id,
@@ -540,7 +508,7 @@ router.put("/notification-preferences", authenticateToken, async (req, res) => {
     if (typeof flashPromosEnabled !== 'boolean' || 
         typeof soundEnabled !== 'boolean' || 
         typeof vibrationEnabled !== 'boolean') {
-      return res.status(0).json({ error: "Invalid preferences format" });
+      return res.status(400).json({ error: "Invalid preferences format" });
     }
     
     const preferences = {
