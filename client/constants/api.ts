@@ -1,97 +1,31 @@
-// API Configuration for AstroBar Frontend
-import { Platform } from "react-native";
-import Constants from "expo-constants";
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from './api-config'; // Asegúrate de que la ruta apunte a tu archivo de configuración
 
-// DEVELOPMENT: Set to true to disable GPS tracking and use fixed location from DB
-const DISABLE_GPS_IN_DEV = true;
-
-// Get API base URL dynamically at runtime
-export const getApiBaseUrl = (): string => {
-  // PRODUCTION: Check expo config first (from app.config.js)
-  const expoBackendUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL;
-  if (expoBackendUrl && !__DEV__) {
-    return expoBackendUrl;
-  }
-
-  // Check for environment variable (development)
-  const envBackendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  if (envBackendUrl) {
-    const trimmed = envBackendUrl.trim();
-    return trimmed;
-  }
-
-  // 🚀 CAMBIO 1: Forzamos a que en desarrollo use Railway si no estás corriendo el backend local
-  if (__DEV__) {
-    // Si estás corriendo tu servidor Node local en la PC, descomentá la línea de abajo y comentá la de Railway:
-    // return "http://localhost:5000";
-    return "https://astrobar-app-production-4821.up.railway.app";
-  }
-
-  // For web in production, use current origin (same domain)
-  if (Platform.OS === "web" && typeof window !== "undefined" && window.location) {
-    return window.location.origin;
-  }
-
-  // Production fallback
-  return "https://astrobar-app-production-4821.up.railway.app";
-};
-
-export const API_CONFIG = {
-  get BASE_URL() {
-    return getApiBaseUrl();
+const apiClient = axios.create({
+  baseURL: API_CONFIG.BASE_URL, // Usa directamente la URL base limpia de la configuración
+  headers: {
+    'Content-Type': 'application/json',
   },
-  ENDPOINTS: {
-    AUTH: {
-      VERIFY_PHONE: "/api/auth/verify-phone",
-      SEND_CODE: "/api/auth/send-code",
-      LOGIN: "/api/auth/login",
-      LOGOUT: "/api/auth/logout",
-      // 🚀 CAMBIO 2: Agregamos el endpoint de registro que estaba pidiendo tu pantalla
-      PHONE_SIGNUP: "/api/auth/phone-signup",
-    },
-    BUSINESSES: {
-      LIST: "/api/businesses",
-      DETAIL: (id: string) => `/api/businesses/${id}`,
-      PRODUCTS: (id: string) => `/api/businesses/${id}/products`,
-    },
-    ORDERS: {
-      CREATE: "/api/orders",
-      LIST: "/api/orders",
-      DETAIL: (id: string) => `/api/orders/${id}`,
-      UPDATE_STATUS: (id: string) => `/api/orders/${id}/status`,
-    },
-    USERS: {
-      PROFILE: "/api/user/profile",
-      UPDATE: "/api/user/profile",
-    },
-  },
-  TIMEOUT: 10000, // 10 seconds
-};
-
-export const GPS_CONFIG = {
-  DISABLE_IN_DEV: DISABLE_GPS_IN_DEV,
-};
-
-// Helper function to build full URL
-export const buildApiUrl = (endpoint: string) => {
-  return `${API_CONFIG.BASE_URL}${endpoint}`;
-};
-
-// Default headers for API requests
-export const getDefaultHeaders = (token?: string) => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  return headers;
-};
-
-console.log("?? API Configuration:", {
-  baseUrl: API_CONFIG.BASE_URL,
-  isDev: __DEV__,
-  platform: Platform.OS,
+  timeout: API_CONFIG.TIMEOUT,
 });
+
+apiClient.interceptors.request.use(
+  async (config) => {
+    try {
+      const userStr = await AsyncStorage.getItem('@AstroBar_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting token in interceptor:', error);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const api = apiClient;

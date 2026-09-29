@@ -1,7 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` : 'http://localhost:5000/api';
+// 💡 Dejamos la URL base limpia sin agregarle /api forzado
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 const apiClient = axios.create({
   baseURL: API_URL,
