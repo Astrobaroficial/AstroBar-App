@@ -3,7 +3,7 @@ import { authenticateToken } from "../authMiddleware";
 
 const router = express.Router();
 
-// Get user profile (Optimizado y blindado con SQL directo)
+// Get user profile (Sin la columna username para evitar errores)
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const { db } = await import("../db");
@@ -11,7 +11,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
     const userId = req.user!.id;
     const result: any = await db.execute(sql`
-      SELECT id, name, username, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
+      SELECT id, name, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
       FROM users
       WHERE id = ${userId}
       LIMIT 1
@@ -128,7 +128,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
     const bcrypt = await import("bcrypt");
 
     const userId = req.user!.id;
-    const { name, phone, username, profileImage, currentPassword, newPassword } = req.body;
+    const { name, phone, profileImage, currentPassword, newPassword } = req.body;
 
     const [user] = await db
       .select()
@@ -147,13 +147,6 @@ router.put("/profile", authenticateToken, async (req, res) => {
         return res.status(400).json({ error: "El nombre es requerido" });
       }
       updates.name = name.trim();
-    }
-
-    if (username !== undefined) {
-      if (!username.trim()) {
-        return res.status(400).json({ error: "El nombre de usuario no puede estar vacío" });
-      }
-      updates.username = username.trim();
     }
 
     if (phone !== undefined) {
@@ -190,7 +183,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
     }
 
     const result: any = await db.execute(sql`
-      SELECT id, name, username, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
+      SELECT id, name, email, phone, role, profile_image as profileImage, is_active as isActive, created_at as createdAt
       FROM users
       WHERE id = ${userId}
       LIMIT 1
