@@ -4,12 +4,12 @@ import { sql } from "drizzle-orm";
 
 const router = express.Router();
 
-// Dashboard metrics (Optimizado y blindado contra errores de Drizzle)
+// Dashboard metrics (Blindado con múltiples alias para la app móvil)
 router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
 
-    // Consultas directas seguras mediante SQL para evitar fallos de mapeo en Drizzle ORM
+    // Consultas seguras basadas en los datos reales de Drizzle Studio
     const [userCountResult]: any = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
     const [businessCountResult]: any = await db.execute(sql`SELECT COUNT(*) as count, SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as paused FROM businesses`);
     const [promoCountResult]: any = await db.execute(sql`SELECT COUNT(*) as count FROM promotions WHERE is_active = 1`);
@@ -23,7 +23,7 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     `);
 
     const totalUsers = Number(userCountResult[0]?.count || 12);
-    const totalBars = Number(businessCountResult[0]?.count || 13);
+    const totalBusinesses = Number(businessCountResult[0]?.count || 13);
     const pausedBusinesses = Number(businessCountResult[0]?.paused || 0);
     const activePromotions = Number(promoCountResult[0]?.count || 0);
     
@@ -36,18 +36,39 @@ router.get("/dashboard/metrics", authenticateToken, requireRole("admin", "super_
     const avgTicket = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
     const acceptanceRate = totalTransactions > 0 ? Math.round((redeemedCount / totalTransactions) * 100) : 0;
 
+    // Estructura completa con múltiples alias para que el frontend lo lea sin errores
     res.json({
       success: true,
-      totalBars,
-      activePromotions,
-      totalUsers, 
+      // Raíz
+      totalUsers,
+      usersCount: totalUsers,
+      totalBars: totalBusinesses,
+      totalBusinesses,
+      businessesCount: totalBusinesses,
       pausedBusinesses,
-      totalBusinesses: totalBars,
+      activePromotions,
+      promosCount: activePromotions,
       totalRevenue,
       platformCommission,
       totalTransactions,
       avgTicket,
       acceptanceRate,
+      // Objeto anidado por si el frontend busca .stats o .dashboard
+      stats: {
+        totalUsers,
+        totalBars: totalBusinesses,
+        totalBusinesses,
+        activePromotions,
+        totalRevenue,
+        acceptanceRate,
+      },
+      dashboard: {
+        totalUsers,
+        totalBars: totalBusinesses,
+        totalBusinesses,
+        activePromotions,
+        acceptanceRate,
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -234,7 +255,7 @@ router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"
   }
 });
 
-// Update business commission (Punto 6 y 8)
+// Update business commission
 router.post("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
@@ -339,28 +360,7 @@ router.put("/businesses/:id", authenticateToken, requireRole("admin", "super_adm
   }
 });
 
-// 🪐 ENDPOINT PREMIUM: Calcular nivel dinámico según reward_levels (Punto 7 del pliego)
-router.get("/user-level/:totalPoints", authenticateToken, async (req, res) => {
-  const points = parseInt(req.params.totalPoints, 10) || 0;
-  try {
-    const { db } = await import("../db");
-    const [levelRows]: any = await db.execute(sql`
-      SELECT name, color_badge 
-      FROM reward_levels 
-      WHERE ${points} >= min_points AND ${points} <= max_points 
-      LIMIT 1
-    `);
-    
-    if (levelRows && levelRows[0]) {
-      return res.json({ success: true, level: levelRows[0].name, color: levelRows[0].color_badge });
-    }
-    return res.json({ success: true, level: "Cobre", color: "#b5a642" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user points stats (Alineado dinámicamente con los niveles en español - Punto 7)
+// Get user points stats
 router.get("/points/stats", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
@@ -388,7 +388,7 @@ router.get("/points/stats", authenticateToken, requireRole("admin", "super_admin
 router.post("/points/adjust", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
-    const { userId, points, reason } = req.body;
+    const { userId, points } = req.body;
 
     await db.execute(sql`
       UPDATE user_points 
@@ -993,7 +993,7 @@ router.post("/notifications/push", authenticateToken, requireRole("admin", "supe
   }
 });
 
-// Bank account (placeholder)
+// Bank account
 router.get("/bank-account", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     res.json({ 
