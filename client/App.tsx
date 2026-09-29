@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Platform, View, Linking } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -19,6 +20,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
+import AdminDashboard from "@/screens/AdminDashboard";
+import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
+import AdminManagement from "@/screens/AdminManagement";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BusinessProvider } from "@/contexts/BusinessContext";
@@ -45,6 +50,8 @@ Notifications.setNotificationHandler({
 });
 
 SplashScreen.preventAutoHideAsync();
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   const theme = useTheme();
@@ -105,7 +112,6 @@ export default function App() {
 
     const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Check initial URL
     Linking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
@@ -125,7 +131,6 @@ export default function App() {
   useEffect(() => {
     const checkNotificationPermission = async () => {
       if (Platform.OS === "web") {
-        // Skip notification setup on web platform
         return;
       }
 
@@ -166,32 +171,37 @@ export default function App() {
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
               <AppProvider>
-                  <AuthProvider>
-                    <BusinessProvider>
-                      <UnifiedCartProvider>
-                        <ToastProvider>
-                            <ThemedScreenWrapper>
-                              <AppThemedShell>
-                                <RootStackNavigator />
-                              </AppThemedShell>
-                            </ThemedScreenWrapper>
-                            {showOnboarding && (
-                              <OnboardingOverlay
-                                onComplete={() => setShowOnboarding(false)}
-                              />
-                            )}
-                            <NotificationPermissionModal
-                              visible={showNotificationModal}
-                              onAccept={handleAcceptNotifications}
-                              onDecline={handleDeclineNotifications}
-                            />
-                          </ToastProvider>
-                        </UnifiedCartProvider>
-                      </BusinessProvider>
-                    </AuthProvider>
-                </AppProvider>
-              <StatusBar style="auto" />
+                <AuthProvider>
+                  <BusinessProvider>
+                    <UnifiedCartProvider>
+                      <ToastProvider>
+                        <ThemedScreenWrapper>
+                          <AppThemedShell>
+                            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                              <Stack.Screen name="RootMain" component={RootStackNavigator} />
+                              <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+                              <Stack.Screen name="AdminDashboardScreen" component={AdminDashboardScreen} />
+                              <Stack.Screen name="AdminManagement" component={AdminManagement} />
+                            </Stack.Navigator>
+                          </AppThemedShell>
+                        </ThemedScreenWrapper>
+                        {showOnboarding && (
+                          <OnboardingOverlay
+                            onComplete={() => setShowOnboarding(false)}
+                          />
+                        )}
+                        <NotificationPermissionModal
+                          visible={showNotificationModal}
+                          onAccept={handleAcceptNotifications}
+                          onDecline={handleDeclineNotifications}
+                        />
+                      </ToastProvider>
+                    </UnifiedCartProvider>
+                  </BusinessProvider>
+                </AuthProvider>
+              </AppProvider>
             </KeyboardProvider>
+            <StatusBar style="auto" />
           </GestureHandlerRootView>
         </SafeAreaProvider>
       </QueryClientProvider>
