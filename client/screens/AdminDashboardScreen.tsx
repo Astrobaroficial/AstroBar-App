@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native"; // ✅ Usamos React Navigation en lugar de expo-router
 import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -40,6 +40,8 @@ interface AdminStats {
 export default function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const navigation = useNavigation(); // ✅ Inicializamos la navegación nativa
+  
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
   const [onlineDrivers, setOnlineDrivers] = useState<OnlineDriver[]>([]);
@@ -98,7 +100,8 @@ export default function AdminDashboardScreen() {
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
         <View style={styles.headerContent}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          {/* ✅ Usamos navigation.goBack() para volver atrás correctamente */}
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
             <Feather name="arrow-left" size={24} color={theme.text} />
           </Pressable>
           <ThemedText type="h2">Dashboard</ThemedText>
