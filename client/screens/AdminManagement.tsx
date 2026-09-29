@@ -24,16 +24,20 @@ export default function AdminManagement() {
       let res;
       if (activeTab === 'users') {
         res = await api.get('/admin/users');
-        setData(res.data.users || res.data);
+        const rawUsers = res.data.users || res.data || [];
+        // Filtramos estrictamente elementos nulos o sin ID/email/phone para evitar basura en pantalla
+        setData(rawUsers.filter((u: any) => u && (u.id || u.email || u.phone)));
       } else if (activeTab === 'businesses') {
         res = await api.get('/admin/businesses');
-        setData(res.data.businesses || res.data);
+        const rawBusinesses = res.data.businesses || res.data || [];
+        setData(rawBusinesses.filter((b: any) => b && (b.id || b.businessId)));
       } else {
         res = await api.get('/admin/commissions');
-        setData(res.data.businesses || res.data);
+        const rawCommissions = res.data.businesses || res.data || [];
+        setData(rawCommissions.filter((c: any) => c && c.businessId));
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading management data:', error);
     } finally {
       setLoading(false);
     }
@@ -88,7 +92,7 @@ export default function AdminManagement() {
       Alert.alert('Éxito', 'Estado actualizado');
       loadData();
     } catch (error) {
-      Alert.alert('Error', 'No se pudo actualizar');
+      Alert.alert('Error', 'No se pudo actualizar el estado');
     }
   };
 
@@ -107,7 +111,7 @@ export default function AdminManagement() {
               Alert.alert('Éxito', 'Usuario eliminado');
               loadData();
             } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar');
+              Alert.alert('Error', 'No se pudo eliminar el usuario');
             }
           }
         }
@@ -115,18 +119,25 @@ export default function AdminManagement() {
     );
   };
 
+  // Helper seguro para formatear fechas sin que arroje "Invalid Date"
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+  };
+
   const renderBusiness = ({ item }: any) => (
     <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.name}</Text>
-          <Text style={styles.cardSubtitle}>{item.address}</Text>
-          <Text style={styles.cardDetail}>Propietario: {item.ownerName}</Text>
-          <Text style={styles.cardDetail}>Teléfono: {item.phone}</Text>
+          <Text style={styles.cardTitle}>{item.name || 'Sin nombre'}</Text>
+          <Text style={styles.cardSubtitle}>{item.address || 'Sin dirección'}</Text>
+          <Text style={styles.cardDetail}>Propietario: {item.ownerName || 'N/A'}</Text>
+          <Text style={styles.cardDetail}>Teléfono: {item.phone || 'N/A'}</Text>
           <Text style={styles.cardDetail}>Email: {item.email || 'N/A'}</Text>
           <Text style={styles.cardDetail}>Mercado Pago: {item.mercadoPagoAccountId ? 'Conectado' : 'No conectado'}</Text>
-          <Text style={styles.cardDetail}>Verificación: {item.verificationStatus}</Text>
-          <Text style={styles.cardDetail}>Registro: {new Date(item.createdAt).toLocaleDateString()}</Text>
+          <Text style={styles.cardDetail}>Verificación: {item.verificationStatus || 'Pendiente'}</Text>
+          <Text style={styles.cardDetail}>Registro: {formatDate(item.createdAt)}</Text>
         </View>
         <View>
           <TouchableOpacity
@@ -135,7 +146,7 @@ export default function AdminManagement() {
           >
             <Text style={styles.statusText}>{item.isActive ? 'Activo' : 'Inactivo'}</Text>
           </TouchableOpacity>
-          <Feather name="edit-2" size={20} color={AstroBarColors.primary} style={{ marginTop: 8 }} />
+          <Feather name="edit-2" size={20} color={AstroBarColors.primary} style={{ marginTop: 8, alignSelf: 'center' }} />
         </View>
       </View>
     </TouchableOpacity>
@@ -145,12 +156,12 @@ export default function AdminManagement() {
     <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.businessName || `Bar ${item.businessId}`}</Text>
+          <Text style={styles.cardTitle}>{item.businessName || `Bar #${item.businessId}`}</Text>
           <Text style={styles.commissionValue}>
-            {(parseFloat(item.commission) * 100).toFixed(1)}% de comisión
+            {item.commission ? `${(parseFloat(item.commission) * 100).toFixed(1)}%` : '0%'} de comisión
           </Text>
           <Text style={styles.cardDetail}>
-            Última actualización: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}
+            Última actualización: {formatDate(item.lastUpdatedAt || item.lastUpdated)}
           </Text>
         </View>
         <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
@@ -162,12 +173,12 @@ export default function AdminManagement() {
     <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.name}</Text>
-          <Text style={styles.cardSubtitle}>{item.email || item.phone}</Text>
-          <Text style={styles.cardDetail}>Rol: {item.role}</Text>
+          <Text style={styles.cardTitle}>{item.name || 'Usuario sin nombre'}</Text>
+          <Text style={styles.cardSubtitle}>{item.email || item.phone || 'Sin contacto'}</Text>
+          <Text style={styles.cardDetail}>Rol: {item.role || 'customer'}</Text>
           <Text style={styles.cardDetail}>Email verificado: {item.emailVerified ? 'Sí' : 'No'}</Text>
           <Text style={styles.cardDetail}>Teléfono verificado: {item.phoneVerified ? 'Sí' : 'No'}</Text>
-          <Text style={styles.cardDetail}>Registro: {new Date(item.createdAt).toLocaleDateString()}</Text>
+          <Text style={styles.cardDetail}>Registro: {formatDate(item.createdAt)}</Text>
         </View>
         <View style={{ alignItems: 'flex-end', gap: 8 }}>
           <TouchableOpacity
@@ -176,7 +187,7 @@ export default function AdminManagement() {
           >
             <Text style={styles.statusText}>{item.isActive ? 'Activo' : 'Inactivo'}</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
             <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
             <TouchableOpacity onPress={(e) => { e.stopPropagation(); deleteUser(item.id); }}>
               <Feather name="trash-2" size={20} color="#f44336" />
@@ -217,7 +228,7 @@ export default function AdminManagement() {
 
       <FlatList
         data={data}
-        keyExtractor={(item, index) => item.id || item.businessId || `item-${index}`}
+        keyExtractor={(item, index) => String(item?.id || item?.businessId || `item-${index}`)}
         renderItem={activeTab === 'users' ? renderUser : activeTab === 'businesses' ? renderBusiness : renderCommission}
         contentContainerStyle={styles.list}
         refreshing={loading}
@@ -232,9 +243,9 @@ export default function AdminManagement() {
             
             {activeTab === 'users' && (
               <>
-                <TextInput style={styles.input} placeholder="Nombre" value={editForm.name} onChangeText={(text) => setEditForm({...editForm, name: text})} />
-                <TextInput style={styles.input} placeholder="Email" value={editForm.email} onChangeText={(text) => setEditForm({...editForm, email: text})} />
-                <TextInput style={styles.input} placeholder="Teléfono" value={editForm.phone} onChangeText={(text) => setEditForm({...editForm, phone: text})} />
+                <TextInput style={styles.input} placeholder="Nombre" value={editForm.name || ''} onChangeText={(text) => setEditForm({...editForm, name: text})} />
+                <TextInput style={styles.input} placeholder="Email" value={editForm.email || ''} onChangeText={(text) => setEditForm({...editForm, email: text})} />
+                <TextInput style={styles.input} placeholder="Teléfono" value={editForm.phone || ''} onChangeText={(text) => setEditForm({...editForm, phone: text})} />
                 <View style={styles.input}>
                   <Text style={{ color: '#666', marginBottom: 4 }}>Rol:</Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -256,10 +267,10 @@ export default function AdminManagement() {
             
             {activeTab === 'businesses' && (
               <>
-                <TextInput style={styles.input} placeholder="Nombre" value={editForm.name} onChangeText={(text) => setEditForm({...editForm, name: text})} />
-                <TextInput style={styles.input} placeholder="Dirección" value={editForm.address} onChangeText={(text) => setEditForm({...editForm, address: text})} />
-                <TextInput style={styles.input} placeholder="Teléfono" value={editForm.phone} onChangeText={(text) => setEditForm({...editForm, phone: text})} />
-                <TextInput style={styles.input} placeholder="Email" value={editForm.email} onChangeText={(text) => setEditForm({...editForm, email: text})} />
+                <TextInput style={styles.input} placeholder="Nombre" value={editForm.name || ''} onChangeText={(text) => setEditForm({...editForm, name: text})} />
+                <TextInput style={styles.input} placeholder="Dirección" value={editForm.address || ''} onChangeText={(text) => setEditForm({...editForm, address: text})} />
+                <TextInput style={styles.input} placeholder="Teléfono" value={editForm.phone || ''} onChangeText={(text) => setEditForm({...editForm, phone: text})} />
+                <TextInput style={styles.input} placeholder="Email" value={editForm.email || ''} onChangeText={(text) => setEditForm({...editForm, email: text})} />
               </>
             )}
             
@@ -269,7 +280,7 @@ export default function AdminManagement() {
                   style={styles.input} 
                   placeholder="Comisión % (5-30)" 
                   keyboardType="numeric" 
-                  value={editForm.commission ? (parseFloat(editForm.commission) * 100).toFixed(0) : ''} 
+                  value={editForm.commission ? String((parseFloat(editForm.commission) * 100).toFixed(0)) : ''} 
                   onChangeText={(text) => setEditForm({...editForm, commission: text})} 
                 />
                 <TextInput 
@@ -313,7 +324,7 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   statusText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   commissionValue: { fontSize: 20, fontWeight: 'bold', color: AstroBarColors.primary, marginTop: 8 },
-  modal: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modal: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
   modalContent: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '90%', maxWidth: 400 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   input: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 14 },
