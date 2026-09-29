@@ -25,7 +25,6 @@ export default function AdminManagement() {
       if (activeTab === 'users') {
         res = await api.get('/admin/users');
         const rawUsers = res.data.users || res.data || [];
-        // Filtramos estrictamente elementos nulos o sin ID/email/phone para evitar basura en pantalla
         setData(rawUsers.filter((u: any) => u && (u.id || u.email || u.phone)));
       } else if (activeTab === 'businesses') {
         res = await api.get('/admin/businesses');
@@ -33,8 +32,8 @@ export default function AdminManagement() {
         setData(rawBusinesses.filter((b: any) => b && (b.id || b.businessId)));
       } else {
         res = await api.get('/admin/commissions');
-        const rawCommissions = res.data.businesses || res.data || [];
-        setData(rawCommissions.filter((c: any) => c && c.businessId));
+        const rawCommissions = res.data.businesses || res.data || res.data.commissions || [];
+        setData(rawCommissions.filter((c: any) => c && (c.businessId || c.id)));
       }
     } catch (error) {
       console.error('Error loading management data:', error);
@@ -69,7 +68,7 @@ export default function AdminManagement() {
         const commissionValue = parseFloat(editForm.commission);
         const commissionDecimal = commissionValue > 1 ? commissionValue / 100 : commissionValue;
         await api.post('/admin/commissions', {
-          businessId: selectedItem.businessId,
+          businessId: selectedItem.businessId || selectedItem.id,
           commission: commissionDecimal,
           notes: editForm.notes || ''
         });
@@ -119,7 +118,6 @@ export default function AdminManagement() {
     );
   };
 
-  // Helper seguro para formatear fechas sin que arroje "Invalid Date"
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -152,22 +150,30 @@ export default function AdminManagement() {
     </TouchableOpacity>
   );
 
-  const renderCommission = ({ item }: any) => (
-    <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
-      <View style={styles.cardHeader}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.businessName || `Bar #${item.businessId}`}</Text>
-          <Text style={styles.commissionValue}>
-            {item.commission ? `${(parseFloat(item.commission) * 100).toFixed(1)}%` : '0%'} de comisión
-          </Text>
-          <Text style={styles.cardDetail}>
-            Última actualización: {formatDate(item.lastUpdatedAt || item.lastUpdated)}
-          </Text>
+  const renderCommission = ({ item }: any) => {
+    const rawCommission = item?.commission ?? item?.rate ?? 0;
+    const numericCommission = parseFloat(rawCommission);
+    const formattedCommission = !isNaN(numericCommission) 
+      ? (numericCommission > 1 ? numericCommission : numericCommission * 100).toFixed(1) 
+      : '0.0';
+
+    return (
+      <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>{item?.businessName || item?.name || `Bar #${item?.businessId || item?.id || 'N/A'}`}</Text>
+            <Text style={styles.commissionValue}>
+              {formattedCommission}% de comisión
+            </Text>
+            <Text style={styles.cardDetail}>
+              Última actualización: {formatDate(item?.lastUpdatedAt || item?.lastUpdated || item?.updatedAt)}
+            </Text>
+          </View>
+          <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
         </View>
-        <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderUser = ({ item }: any) => (
     <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
