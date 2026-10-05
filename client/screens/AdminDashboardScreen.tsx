@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native"; // ✅ Usamos React Navigation en lugar de expo-router
+import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -40,7 +40,7 @@ interface AdminStats {
 export default function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const navigation = useNavigation(); // ✅ Inicializamos la navegación nativa
+  const navigation = useNavigation();
   
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
@@ -51,24 +51,43 @@ export default function AdminDashboardScreen() {
 
   const fetchDashboardData = async () => {
     try {
-      const [metricsRes, ordersRes, driversRes] = await Promise.all([
-        apiRequest("GET", "/api/admin/dashboard/metrics"),
-        apiRequest("GET", "/api/admin/dashboard/active-orders"),
-        apiRequest("GET", "/api/admin/dashboard/online-drivers"),
-      ]);
-      const metricsData = await metricsRes.json();
-      const ordersData = await ordersRes.json();
-      const driversData = await driversRes.json();
-      
-      // ✅ Solución definitiva: Acepta tanto si viene en .metrics, .stats, .dashboard como en la raíz
-      setDashboardMetrics(metricsData.metrics || metricsData.stats || metricsData.dashboard || metricsData);
-      setActiveOrders(ordersData.orders || []);
-      setOnlineDrivers(driversData.drivers || []);
+      console.log("=== INICIANDO CARGA DE DASHBOARD ADMIN ===");
+
+      // 1. Cargar Métricas/Stats (El más importante)
+      try {
+        const metricsRes = await apiRequest("GET", "/api/admin/dashboard/metrics");
+        const metricsText = await metricsRes.text();
+        const metricsData = JSON.parse(metricsText);
+        
+        const payload = metricsData.metrics || metricsData.stats || metricsData.dashboard || metricsData;
+        setDashboardMetrics(payload);
+        
+        // ¡Solución al espacio en blanco! Asignamos también a stats
+        setStats(payload); 
+      } catch (e: any) {
+        console.error("❌ Error cargando metrics:", e.message);
+      }
+
+      // 2. Cargar Órdenes Activas
+      try {
+        const ordersRes = await apiRequest("GET", "/api/admin/dashboard/active-orders");
+        const ordersData = await ordersRes.json();
+        setActiveOrders(ordersData.orders || []);
+      } catch (e: any) {
+        console.error("❌ Error cargando órdenes:", e.message);
+      }
+
+      // 3. Cargar Conductores
+      try {
+        const driversRes = await apiRequest("GET", "/api/admin/dashboard/online-drivers");
+        const driversData = await driversRes.json();
+        setOnlineDrivers(driversData.drivers || []);
+      } catch (e: any) {
+        console.error("❌ Error cargando conductores:", e.message);
+      }
+
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setDashboardMetrics(null);
-      setActiveOrders([]);
-      setOnlineDrivers([]);
+      console.error("Error general en dashboard:", error);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -77,8 +96,6 @@ export default function AdminDashboardScreen() {
 
   useEffect(() => {
     fetchDashboardData();
-    
-    // Auto-refresh cada 30 segundos
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -100,7 +117,6 @@ export default function AdminDashboardScreen() {
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
         <View style={styles.headerContent}>
-          {/* ✅ Usamos navigation.goBack() para volver atrás correctamente */}
           <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
             <Feather name="arrow-left" size={24} color={theme.text} />
           </Pressable>
