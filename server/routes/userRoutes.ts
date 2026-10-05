@@ -124,7 +124,8 @@ router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const { users } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq } = await import("drizzle-orm");
+    // AQUÍ ESTABA EL ERROR: Faltaba importar sql
+    const { eq, sql } = await import("drizzle-orm");
     const bcrypt = await import("bcrypt");
 
     const userId = req.user!.id;
