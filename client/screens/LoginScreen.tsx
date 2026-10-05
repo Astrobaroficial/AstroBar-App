@@ -192,17 +192,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         navigation.navigate("VerifyPhone", { phone: identifier });
         return;
       }
-
-      // 🪐 REDIRECCIÓN EXPLÍCITA DE ROLES PARA EVITAR CRASHES POR RUTAS FANTASMAS
-      if (result?.user) {
-        if (result.user.role === 'business_owner') {
-          navigation.navigate('BusinessPromotions');
-        } else if (result.user.role === 'admin' || result.user.role === 'super_admin') {
-          navigation.navigate('AdminDashboard');
-        } else {
-          navigation.navigate('MainTabs');
-        }
-      }
+      // La navegación manual se eliminó aquí. El RootStackNavigator se encarga.
     } catch (error: any) {
       showToast(error.message || "Error al iniciar sesión", "error");
     } finally {
