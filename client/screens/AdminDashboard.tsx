@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { api } from '../lib/api';
+// CAMBIO CRÍTICO: Usamos el apiRequest nativo de tu app, eliminando el viejo '../lib/api' que causaba el crash
+import { apiRequest } from '@/lib/query-client';
 import { AstroBarColors } from '@/constants/theme';
 import { useTheme } from "@/hooks/useTheme";
 
@@ -12,9 +13,8 @@ export default function AdminDashboard() {
   const [pointsStats, setPointsStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   
-  // Consumimos el tema dinámico del proyecto
   const { theme } = useTheme();
-  const isDark = theme.background === "#000000" || theme.background === "black" || theme.background === "#121212";
+  const isDark = theme?.background === "#000000" || theme?.background === "black" || theme?.background === "#121212";
 
   useEffect(() => {
     loadStats();
@@ -23,55 +23,77 @@ export default function AdminDashboard() {
   const loadStats = async () => {
     setLoading(true);
 
-    // 1. Métricas Principales (Usuarios, Bares)
+    // 1. Métricas Principales
     try {
-      const metricsRes = await api.get('/admin/dashboard/metrics');
-      const data = metricsRes.data.metrics || metricsRes.data.stats || metricsRes.data;
-      setStats((prev: any) => ({ ...prev, ...data }));
+      const res = await apiRequest("GET", "/api/admin/dashboard/metrics");
+      if (res.ok) {
+        const data = await res.json();
+        const payload = data?.metrics || data?.stats || data;
+        if (typeof payload === 'object' && !Array.isArray(payload)) {
+          setStats((prev: any) => ({ ...prev, ...payload }));
+        }
+      }
     } catch (error: any) {
-      console.error('❌ Error loading metrics:', error.response?.data || error.message);
+      console.log('❌ Error metrics:', error.message);
     }
 
     // 2. Promociones
     try {
-      const promoRes = await api.get('/admin/promotions/dashboard');
-      const promoData = promoRes.data.dashboard || promoRes.data;
-      setStats((prev: any) => ({ ...prev, promotions: promoData }));
+      const res = await apiRequest("GET", "/api/admin/promotions/dashboard");
+      if (res.ok) {
+        const data = await res.json();
+        const promoData = data?.dashboard || data;
+        if (typeof promoData === 'object' && !Array.isArray(promoData)) {
+          setStats((prev: any) => ({ ...prev, promotions: promoData }));
+        }
+      }
     } catch (error: any) {
-      console.error('❌ Error loading promotions:', error.response?.data || error.message);
+      console.log('❌ Error promotions:', error.message);
     }
 
     // 3. Ingresos (Revenue)
     try {
-      const revenueRes = await api.get('/admin/revenue/stats');
-      setRevenue(revenueRes.data.stats || revenueRes.data);
+      const res = await apiRequest("GET", "/api/admin/revenue/stats");
+      if (res.ok) {
+        const data = await res.json();
+        const revData = data?.stats || data;
+        if (typeof revData === 'object') setRevenue(revData);
+      }
     } catch (error: any) {
-      console.error('❌ Error loading revenue:', error.response?.data || error.message);
+      console.log('❌ Error revenue:', error.message);
     }
 
     // 4. Top Usuarios
     try {
-      const topUsersRes = await api.get('/admin/users/top');
-      setTopUsers(topUsersRes.data.users || topUsersRes.data || []);
+      const res = await apiRequest("GET", "/api/admin/users/top");
+      if (res.ok) {
+        const data = await res.json();
+        const usersData = data?.users || data;
+        setTopUsers(Array.isArray(usersData) ? usersData : []);
+      }
     } catch (error: any) {
-      console.error('❌ Error loading top users:', error.response?.data || error.message);
+      console.log('❌ Error top users:', error.message);
+      setTopUsers([]);
     }
 
     // 5. Sistema de Puntos
     try {
-      const pointsRes = await api.get('/admin/points/stats');
-      setPointsStats(pointsRes.data.stats || pointsRes.data);
+      const res = await apiRequest("GET", "/api/admin/points/stats");
+      if (res.ok) {
+        const data = await res.json();
+        const ptsData = data?.stats || data;
+        if (typeof ptsData === 'object') setPointsStats(ptsData);
+      }
     } catch (error: any) {
-      console.error('❌ Error loading points:', error.response?.data || error.message);
+      console.log('❌ Error points:', error.message);
     }
 
     setLoading(false);
   };
 
-  // Colores dinámicos adaptados a la jerarquía visual del dueño de bar
-  const bgContainer = isDark ? '#0b111e' : '#f5f5f5'; // Azul galáctico vs Gris claro
-  const bgSurface = isDark ? '#111927' : '#ffffff';   // Tarjeta interna oscura vs blanca
-  const bgElement = isDark ? '#1f293d' : '#f5f5f5';   // Sub-bloques gris azulado vs gris claro
+  const bgContainer = isDark ? '#0b111e' : '#f5f5f5';
+  const bgSurface = isDark ? '#111927' : '#ffffff';
+  const bgElement = isDark ? '#1f293d' : '#f5f5f5';
   const textTitle = isDark ? '#ffffff' : '#333333';
   const textSub = isDark ? '#94a3b8' : '#666666';
   const borderStyle = isDark ? '#1e293b' : '#f0f0f0';
@@ -86,51 +108,48 @@ export default function AdminDashboard() {
         <Text style={[styles.subtitle, { color: textSub }]}>Métricas comerciales en tiempo real</Text>
       </View>
 
-      {/* Grid de Métricas Principales con estética Neón/Astro en Modo Oscuro */}
       <View style={styles.grid}>
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#4CAF50', borderColor: isDark ? '#00f2fe' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="users" size={26} color={isDark ? '#00f2fe' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.totalUsers || 0}</Text>
+          <Text style={styles.cardValue}>{Number(stats.totalUsers) || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Usuarios Totales</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#2196F3', borderColor: isDark ? '#3b82f6' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="briefcase" size={26} color={isDark ? '#3b82f6' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.totalBars || 0}</Text>
+          <Text style={styles.cardValue}>{Number(stats.totalBars) || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Bares Aliados</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#FF9800', borderColor: isDark ? '#ff9f43' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="zap" size={26} color={isDark ? '#ff9f43' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.activePromotions || stats.promotions?.totalActive || 0}</Text>
+          <Text style={styles.cardValue}>{Number(stats.activePromotions || stats.promotions?.totalActive) || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Promos Activas</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#9C27B0', borderColor: isDark ? '#a55eea' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="trending-up" size={26} color={isDark ? '#a55eea' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.promotions?.acceptanceRate || 0}%</Text>
+          <Text style={styles.cardValue}>{Number(stats.promotions?.acceptanceRate) || 0}%</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>% Aceptación</Text>
         </View>
       </View>
 
-      {/* Top Bares */}
       <View style={[styles.section, { backgroundColor: bgSurface }]}>
         <Text style={[styles.sectionTitle, { color: textTitle }]}>Top Rankings de Bares</Text>
-        {stats.promotions?.topBars?.map((bar: any, index: number) => (
+        {Array.isArray(stats?.promotions?.topBars) && stats.promotions.topBars.map((bar: any, index: number) => (
           <View key={index} style={[styles.listItem, { borderBottomColor: borderStyle }]}>
             <View style={[styles.rank, { backgroundColor: AstroBarColors.primary }]}>
               <Text style={styles.rankText}>#{index + 1}</Text>
             </View>
             <View style={styles.listItemContent}>
-              <Text style={[styles.listItemTitle, { color: textTitle }]}>{bar.name}</Text>
-              <Text style={[styles.listItemSubtitle, { color: textSub }]}>{bar.count} canjes completados</Text>
+              <Text style={[styles.listItemTitle, { color: textTitle }]}>{String(bar.name || 'Desconocido')}</Text>
+              <Text style={[styles.listItemSubtitle, { color: textSub }]}>{Number(bar.count) || 0} canjes completados</Text>
             </View>
           </View>
         ))}
       </View>
 
-      {/* Ingresos de la Plataforma */}
-      {revenue && (
+      {revenue && typeof revenue === 'object' && (
         <View style={[styles.section, { backgroundColor: bgSurface }]}>
           <Text style={[styles.sectionTitle, { color: textTitle }]}>Caja e Ingresos de Plataforma</Text>
           <View style={styles.revenueGrid}>
@@ -144,7 +163,7 @@ export default function AdminDashboard() {
             </View>
             <View style={[styles.revenueItem, { backgroundColor: bgElement }]}>
               <Text style={[styles.revenueLabel, { color: textSub }]}>Volumen Transacciones</Text>
-              <Text style={[styles.revenueValue, { color: textTitle }]}>{revenue.totalTransactions || 0}</Text>
+              <Text style={[styles.revenueValue, { color: textTitle }]}>{Number(revenue.totalTransactions) || 0}</Text>
             </View>
             <View style={[styles.revenueItem, { backgroundColor: bgElement }]}>
               <Text style={[styles.revenueLabel, { color: textSub }]}>Ticket Promedio</Text>
@@ -154,8 +173,7 @@ export default function AdminDashboard() {
         </View>
       )}
 
-      {/* Top Usuarios */}
-      {topUsers.length > 0 && (
+      {Array.isArray(topUsers) && topUsers.length > 0 && (
         <View style={[styles.section, { backgroundColor: bgSurface }]}>
           <Text style={[styles.sectionTitle, { color: textTitle }]}>Clientes Premium (Mayor Canje)</Text>
           {topUsers.slice(0, 5).map((user: any, index: number) => (
@@ -164,43 +182,42 @@ export default function AdminDashboard() {
                 <Text style={styles.rankText}>#{index + 1}</Text>
               </View>
               <View style={styles.listItemContent}>
-                <Text style={[styles.listItemTitle, { color: textTitle }]}>{user.name}</Text>
-                <Text style={[styles.listItemSubtitle, { color: textSub }]}>{user.redemptions} visitas • Consumo: ${Number(user.totalSpent || 0).toFixed(2)}</Text>
+                <Text style={[styles.listItemTitle, { color: textTitle }]}>{String(user.name || 'Cliente')}</Text>
+                <Text style={[styles.listItemSubtitle, { color: textSub }]}>{Number(user.redemptions) || 0} visitas • Consumo: ${Number(user.totalSpent || 0).toFixed(2)}</Text>
               </View>
             </View>
           ))}
         </View>
       )}
 
-      {/* Sistema de Fidelización */}
-      {pointsStats && (
+      {pointsStats && typeof pointsStats === 'object' && (
         <View style={[styles.section, { backgroundColor: bgSurface, marginBottom: 25 }]}>
           <Text style={[styles.sectionTitle, { color: textTitle }]}>Distribución de Rangos de Clientes</Text>
           <View style={styles.pointsGrid}>
             <View style={styles.pointsItem}>
               <Feather name="award" size={22} color="#CD7F32" />
               <Text style={[styles.pointsLabel, { color: textSub }]}>Copper</Text>
-              <Text style={[styles.pointsValue, { color: textTitle }]}>{pointsStats.copper || 0}</Text>
+              <Text style={[styles.pointsValue, { color: textTitle }]}>{Number(pointsStats.copper) || 0}</Text>
             </View>
             <View style={styles.pointsItem}>
               <Feather name="award" size={22} color="#b87333" />
               <Text style={[styles.pointsLabel, { color: textSub }]}>Bronze</Text>
-              <Text style={[styles.pointsValue, { color: textTitle }]}>{pointsStats.bronze || 0}</Text>
+              <Text style={[styles.pointsValue, { color: textTitle }]}>{Number(pointsStats.bronze) || 0}</Text>
             </View>
             <View style={styles.pointsItem}>
               <Feather name="award" size={22} color="#C0C0C0" />
               <Text style={[styles.pointsLabel, { color: textSub }]}>Silver</Text>
-              <Text style={[styles.pointsValue, { color: textTitle }]}>{pointsStats.silver || 0}</Text>
+              <Text style={[styles.pointsValue, { color: textTitle }]}>{Number(pointsStats.silver) || 0}</Text>
             </View>
             <View style={styles.pointsItem}>
               <Feather name="award" size={22} color="#FFD700" />
               <Text style={[styles.pointsLabel, { color: textSub }]}>Gold</Text>
-              <Text style={[styles.pointsValue, { color: textTitle }]}>{pointsStats.gold || 0}</Text>
+              <Text style={[styles.pointsValue, { color: textTitle }]}>{Number(pointsStats.gold) || 0}</Text>
             </View>
             <View style={styles.pointsItem}>
               <Feather name="award" size={22} color="#E5E4E2" />
               <Text style={[styles.pointsLabel, { color: textSub }]}>Platinum</Text>
-              <Text style={[styles.pointsValue, { color: textTitle }]}>{pointsStats.platinum || 0}</Text>
+              <Text style={[styles.pointsValue, { color: textTitle }]}>{Number(pointsStats.platinum) || 0}</Text>
             </View>
           </View>
         </View>
