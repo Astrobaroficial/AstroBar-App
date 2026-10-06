@@ -6,7 +6,7 @@ import { AstroBarColors } from '@/constants/theme';
 import { useTheme } from "@/hooks/useTheme";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<any>({ totalUsers: 0, totalBars: 0, promotions: { totalActive: 0, acceptanceRate: 0, topBars: [] } });
+  const [stats, setStats] = useState<any>({ totalUsers: 0, totalBars: 0, activePromotions: 0, promotions: { totalActive: 0, acceptanceRate: 0, topBars: [] } });
   const [revenue, setRevenue] = useState<any>(null);
   const [topUsers, setTopUsers] = useState<any[]>([]);
   const [pointsStats, setPointsStats] = useState<any>(null);
@@ -21,24 +21,51 @@ export default function AdminDashboard() {
   }, []);
 
   const loadStats = async () => {
+    setLoading(true);
+
+    // 1. Métricas Principales (Usuarios, Bares)
     try {
-      setLoading(true);
-      const [metricsRes, promoRes, revenueRes, topUsersRes, pointsRes] = await Promise.all([
-        api.get('/admin/dashboard/metrics'),
-        api.get('/admin/promotions/dashboard'),
-        api.get('/admin/revenue/stats'),
-        api.get('/admin/users/top'),
-        api.get('/admin/points/stats')
-      ]);
-      setStats({ ...metricsRes.data, promotions: promoRes.data.dashboard });
-      setRevenue(revenueRes.data.stats);
-      setTopUsers(topUsersRes.data.users || []);
-      setPointsStats(pointsRes.data.stats);
+      const metricsRes = await api.get('/admin/dashboard/metrics');
+      const data = metricsRes.data.metrics || metricsRes.data.stats || metricsRes.data;
+      setStats((prev: any) => ({ ...prev, ...data }));
     } catch (error: any) {
-      console.error('Error loading stats:', error.response?.data || error.message);
-    } finally {
-      setLoading(false);
+      console.error('❌ Error loading metrics:', error.response?.data || error.message);
     }
+
+    // 2. Promociones
+    try {
+      const promoRes = await api.get('/admin/promotions/dashboard');
+      const promoData = promoRes.data.dashboard || promoRes.data;
+      setStats((prev: any) => ({ ...prev, promotions: promoData }));
+    } catch (error: any) {
+      console.error('❌ Error loading promotions:', error.response?.data || error.message);
+    }
+
+    // 3. Ingresos (Revenue)
+    try {
+      const revenueRes = await api.get('/admin/revenue/stats');
+      setRevenue(revenueRes.data.stats || revenueRes.data);
+    } catch (error: any) {
+      console.error('❌ Error loading revenue:', error.response?.data || error.message);
+    }
+
+    // 4. Top Usuarios
+    try {
+      const topUsersRes = await api.get('/admin/users/top');
+      setTopUsers(topUsersRes.data.users || topUsersRes.data || []);
+    } catch (error: any) {
+      console.error('❌ Error loading top users:', error.response?.data || error.message);
+    }
+
+    // 5. Sistema de Puntos
+    try {
+      const pointsRes = await api.get('/admin/points/stats');
+      setPointsStats(pointsRes.data.stats || pointsRes.data);
+    } catch (error: any) {
+      console.error('❌ Error loading points:', error.response?.data || error.message);
+    }
+
+    setLoading(false);
   };
 
   // Colores dinámicos adaptados a la jerarquía visual del dueño de bar
@@ -63,19 +90,19 @@ export default function AdminDashboard() {
       <View style={styles.grid}>
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#4CAF50', borderColor: isDark ? '#00f2fe' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="users" size={26} color={isDark ? '#00f2fe' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.totalUsers}</Text>
+          <Text style={styles.cardValue}>{stats.totalUsers || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Usuarios Totales</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#2196F3', borderColor: isDark ? '#3b82f6' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="briefcase" size={26} color={isDark ? '#3b82f6' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.totalBars}</Text>
+          <Text style={styles.cardValue}>{stats.totalBars || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Bares Aliados</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: isDark ? '#152238' : '#FF9800', borderColor: isDark ? '#ff9f43' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
           <Feather name="zap" size={26} color={isDark ? '#ff9f43' : '#fff'} />
-          <Text style={styles.cardValue}>{stats.activePromotions || 0}</Text>
+          <Text style={styles.cardValue}>{stats.activePromotions || stats.promotions?.totalActive || 0}</Text>
           <Text style={[styles.cardLabel, { color: isDark ? '#94a3b8' : '#fff' }]}>Promos Activas</Text>
         </View>
 
