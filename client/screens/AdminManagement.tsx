@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { api } from '../lib/api';
+// CAMBIO CRÍTICO: Nueva importación de apiRequest
+import { apiRequest } from '@/lib/query-client';
 import { AstroBarColors } from '@/constants/theme';
 
 type Tab = 'users' | 'businesses' | 'commissions';
@@ -21,19 +22,27 @@ export default function AdminManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      let res;
       if (activeTab === 'users') {
-        res = await api.get('/admin/users');
-        const rawUsers = res.data.users || res.data || [];
-        setData(rawUsers.filter((u: any) => u && (u.id || u.email || u.phone)));
+        const res = await apiRequest('GET', '/api/admin/users');
+        if (res.ok) {
+          const dataJson = await res.json();
+          const rawUsers = dataJson.users || dataJson || [];
+          setData(rawUsers.filter((u: any) => u && (u.id || u.email || u.phone)));
+        }
       } else if (activeTab === 'businesses') {
-        res = await api.get('/admin/businesses');
-        const rawBusinesses = res.data.businesses || res.data || [];
-        setData(rawBusinesses.filter((b: any) => b && (b.id || b.businessId)));
+        const res = await apiRequest('GET', '/api/admin/businesses');
+        if (res.ok) {
+          const dataJson = await res.json();
+          const rawBusinesses = dataJson.businesses || dataJson || [];
+          setData(rawBusinesses.filter((b: any) => b && (b.id || b.businessId)));
+        }
       } else {
-        res = await api.get('/admin/commissions');
-        const rawCommissions = res.data.businesses || res.data || res.data.commissions || [];
-        setData(rawCommissions.filter((c: any) => c && (c.businessId || c.id)));
+        const res = await apiRequest('GET', '/api/admin/commissions');
+        if (res.ok) {
+          const dataJson = await res.json();
+          const rawCommissions = dataJson.businesses || dataJson || dataJson.commissions || [];
+          setData(rawCommissions.filter((c: any) => c && (c.businessId || c.id)));
+        }
       }
     } catch (error) {
       console.error('Error loading management data:', error);
@@ -50,15 +59,16 @@ export default function AdminManagement() {
 
   const saveEdit = async () => {
     try {
+      let res;
       if (activeTab === 'users') {
-        await api.put(`/admin/users/${selectedItem.id}`, {
+        res = await apiRequest('PUT', `/api/admin/users/${selectedItem.id}`, {
           name: editForm.name,
           email: editForm.email,
           phone: editForm.phone,
           role: editForm.role
         });
       } else if (activeTab === 'businesses') {
-        await api.put(`/admin/businesses/${selectedItem.id}`, {
+        res = await apiRequest('PUT', `/api/admin/businesses/${selectedItem.id}`, {
           name: editForm.name,
           address: editForm.address,
           phone: editForm.phone,
@@ -67,27 +77,37 @@ export default function AdminManagement() {
       } else {
         const commissionValue = parseFloat(editForm.commission);
         const commissionDecimal = commissionValue > 1 ? commissionValue / 100 : commissionValue;
-        await api.post('/admin/commissions', {
+        res = await apiRequest('POST', '/api/admin/commissions', {
           businessId: selectedItem.businessId || selectedItem.id,
           commission: commissionDecimal,
           notes: editForm.notes || ''
         });
       }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'No se pudo actualizar');
+      }
+
       Alert.alert('Éxito', 'Datos actualizados');
       setEditModal(false);
       loadData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'No se pudo actualizar');
+      Alert.alert('Error', error.message || 'No se pudo actualizar');
     }
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean, type: 'user' | 'business') => {
     try {
+      let res;
       if (type === 'user') {
-        await api.patch(`/admin/users/${id}/status`, { isActive: !currentStatus });
+        res = await apiRequest('PATCH', `/api/admin/users/${id}/status`, { isActive: !currentStatus });
       } else {
-        await api.patch(`/admin/businesses/${id}/verification`, { isActive: !currentStatus });
+        res = await apiRequest('PATCH', `/api/admin/businesses/${id}/verification`, { isActive: !currentStatus });
       }
+      
+      if (!res.ok) throw new Error('Error al actualizar');
+      
       Alert.alert('Éxito', 'Estado actualizado');
       loadData();
     } catch (error) {
@@ -106,7 +126,8 @@ export default function AdminManagement() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete(`/admin/users/${id}`);
+              const res = await apiRequest('DELETE', `/api/admin/users/${id}`);
+              if (!res.ok) throw new Error('Error al eliminar');
               Alert.alert('Éxito', 'Usuario eliminado');
               loadData();
             } catch (error) {
