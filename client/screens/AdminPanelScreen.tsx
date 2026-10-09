@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, StyleSheet } from 'react-native';
-import { api } from '../lib/api';
+// CAMBIO CRÍTICO: Usamos el apiRequest nativo de tu app
+import { apiRequest } from '@/lib/query-client';
 
 export default function AdminPanelScreen() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -18,31 +19,79 @@ export default function AdminPanelScreen() {
   const loadData = async () => {
     try {
       if (activeTab === 'dashboard') {
-        const { data } = await api.get('/admin/stats/dashboard');
-        setStats(data);
-        const alertsRes = await api.get('/admin/alerts');
-        setAlerts(alertsRes.data);
+        try {
+          const resStats = await apiRequest('GET', '/api/admin/stats/dashboard');
+          if (resStats.ok) {
+            const data = await resStats.json();
+            setStats(data?.stats || data);
+          }
+        } catch (e) { console.log('❌ Error stats:', e); }
+
+        try {
+          const resAlerts = await apiRequest('GET', '/api/admin/alerts');
+          if (resAlerts.ok) {
+            const data = await resAlerts.json();
+            setAlerts(Array.isArray(data) ? data : (data?.alerts || []));
+          }
+        } catch (e) { console.log('❌ Error alerts:', e); }
+
       } else if (activeTab === 'users') {
-        const { data } = await api.get('/admin/users');
-        setUsers(data);
+        try {
+          const res = await apiRequest('GET', '/api/admin/users');
+          if (res.ok) {
+            const data = await res.json();
+            // Escudo: Garantizamos que sea un array
+            setUsers(Array.isArray(data) ? data : (data?.users || []));
+          }
+        } catch (e) { 
+          console.log('❌ Error users:', e);
+          setUsers([]);
+        }
+
       } else if (activeTab === 'businesses') {
-        const { data } = await api.get('/admin/businesses');
-        setBusinesses(data);
+        try {
+          const res = await apiRequest('GET', '/api/admin/businesses');
+          if (res.ok) {
+            const data = await res.json();
+            setBusinesses(Array.isArray(data) ? data : (data?.businesses || []));
+          }
+        } catch (e) { 
+          console.log('❌ Error businesses:', e);
+          setBusinesses([]);
+        }
+
       } else if (activeTab === 'settings') {
-        const { data } = await api.get('/admin/settings');
-        setSettings(data);
+        try {
+          const res = await apiRequest('GET', '/api/admin/settings');
+          if (res.ok) {
+            const data = await res.json();
+            setSettings(Array.isArray(data) ? data : (data?.settings || []));
+          }
+        } catch (e) { 
+          console.log('❌ Error settings:', e);
+          setSettings([]);
+        }
+
       } else if (activeTab === 'commissions') {
-        const { data } = await api.get('/admin/commissions');
-        setCommissions(data);
+        try {
+          const res = await apiRequest('GET', '/api/admin/commissions');
+          if (res.ok) {
+            const data = await res.json();
+            setCommissions(Array.isArray(data) ? data : (data?.commissions || []));
+          }
+        } catch (e) { 
+          console.log('❌ Error commissions:', e);
+          setCommissions([]);
+        }
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error general loading data:', error);
     }
   };
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await api.patch(`/admin/users/${userId}/status`, { isActive: !currentStatus });
+      await apiRequest('PATCH', `/api/admin/users/${userId}/status`, { isActive: !currentStatus });
       Alert.alert('Éxito', 'Estado del usuario actualizado');
       loadData();
     } catch (error) {
@@ -52,7 +101,7 @@ export default function AdminPanelScreen() {
 
   const toggleBusinessStatus = async (businessId: string, currentStatus: boolean) => {
     try {
-      await api.patch(`/admin/businesses/${businessId}/status`, { isActive: !currentStatus });
+      await apiRequest('PATCH', `/api/admin/businesses/${businessId}/status`, { isActive: !currentStatus });
       Alert.alert('Éxito', 'Estado del bar actualizado');
       loadData();
     } catch (error) {
@@ -62,7 +111,7 @@ export default function AdminPanelScreen() {
 
   const updateSetting = async (key: string, value: string) => {
     try {
-      await api.put(`/admin/settings/${key}`, { value });
+      await apiRequest('PUT', `/api/admin/settings/${key}`, { value });
       Alert.alert('Éxito', 'Configuración actualizada');
       loadData();
     } catch (error) {
@@ -77,7 +126,7 @@ export default function AdminPanelScreen() {
       async (message) => {
         if (message) {
           try {
-            await api.post('/admin/notifications/push', {
+            await apiRequest('POST', '/api/admin/notifications/push', {
               title: 'Notificación de AstroBar',
               message,
               targetType: 'all_users'
@@ -95,7 +144,7 @@ export default function AdminPanelScreen() {
     <View style={styles.section}>
       <Text style={styles.title}>Dashboard</Text>
       
-      {alerts.length > 0 && (
+      {(alerts || []).length > 0 && (
         <View style={styles.alertBox}>
           {alerts.map((alert, i) => (
             <Text key={i} style={styles.alertText}>⚠️ {alert.message}</Text>
@@ -107,36 +156,38 @@ export default function AdminPanelScreen() {
         <>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalUsers}</Text>
+              <Text style={styles.statValue}>{stats.totalUsers || 0}</Text>
               <Text style={styles.statLabel}>Usuarios Totales</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.activeUsers}</Text>
+              <Text style={styles.statValue}>{stats.activeUsers || 0}</Text>
               <Text style={styles.statLabel}>Usuarios Activos</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalBars}</Text>
+              <Text style={styles.statValue}>{stats.totalBars || 0}</Text>
               <Text style={styles.statLabel}>Bares Totales</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.activeBars}</Text>
+              <Text style={styles.statValue}>{stats.activeBars || 0}</Text>
               <Text style={styles.statLabel}>Bares Activos</Text>
             </View>
           </View>
 
-          <View style={styles.limitCard}>
-            <Text style={styles.limitTitle}>Límite de Bares</Text>
-            <Text style={styles.limitText}>
-              {stats.limits.currentBars} / {stats.limits.maxBars} ({stats.limits.percentageUsed.toFixed(1)}%)
-            </Text>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${stats.limits.percentageUsed}%` }]} />
+          {stats.limits && (
+            <View style={styles.limitCard}>
+              <Text style={styles.limitTitle}>Límite de Bares</Text>
+              <Text style={styles.limitText}>
+                {stats.limits.currentBars || 0} / {stats.limits.maxBars || 0} ({(stats.limits.percentageUsed || 0).toFixed(1)}%)
+              </Text>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${stats.limits.percentageUsed || 0}%` }]} />
+              </View>
             </View>
-          </View>
+          )}
 
           <View style={styles.revenueCard}>
             <Text style={styles.revenueLabel}>Ingresos Totales</Text>
-            <Text style={styles.revenueValue}>${(stats.totalRevenue / 100).toFixed(2)}</Text>
+            <Text style={styles.revenueValue}>${((stats.totalRevenue || 0) / 100).toFixed(2)}</Text>
           </View>
         </>
       )}
@@ -145,9 +196,9 @@ export default function AdminPanelScreen() {
 
   const renderUsers = () => (
     <View style={styles.section}>
-      <Text style={styles.title}>Gestión de Usuarios ({users.length})</Text>
+      <Text style={styles.title}>Gestión de Usuarios ({(users || []).length})</Text>
       <ScrollView>
-        {users.map((user) => (
+        {(users || []).map((user) => (
           <View key={user.id} style={styles.listItem}>
             <View style={styles.listItemInfo}>
               <Text style={styles.listItemName}>{user.name}</Text>
@@ -170,14 +221,14 @@ export default function AdminPanelScreen() {
 
   const renderBusinesses = () => (
     <View style={styles.section}>
-      <Text style={styles.title}>Gestión de Bares ({businesses.length})</Text>
+      <Text style={styles.title}>Gestión de Bares ({(businesses || []).length})</Text>
       <ScrollView>
-        {businesses.map((business) => (
+        {(businesses || []).map((business) => (
           <View key={business.id} style={styles.listItem}>
             <View style={styles.listItemInfo}>
               <Text style={styles.listItemName}>{business.name}</Text>
               <Text style={styles.listItemDetail}>{business.address}</Text>
-              <Text style={styles.listItemDetail}>Estado: {business.verificationStatus}</Text>
+              <Text style={styles.listItemDetail}>Estado: {business.verificationStatus || 'Pendiente'}</Text>
             </View>
             <TouchableOpacity
               style={[styles.statusButton, business.isActive ? styles.activeButton : styles.inactiveButton]}
@@ -197,7 +248,7 @@ export default function AdminPanelScreen() {
     <View style={styles.section}>
       <Text style={styles.title}>Configuración del Sistema</Text>
       <ScrollView>
-        {settings.map((setting) => (
+        {(settings || []).map((setting) => (
           <View key={setting.id} style={styles.settingItem}>
             <Text style={styles.settingKey}>{setting.key}</Text>
             <Text style={styles.settingDescription}>{setting.description}</Text>
@@ -220,11 +271,11 @@ export default function AdminPanelScreen() {
     <View style={styles.section}>
       <Text style={styles.title}>Comisiones por Bar</Text>
       <ScrollView>
-        {commissions.map((commission) => (
+        {(commissions || []).map((commission) => (
           <View key={commission.id} style={styles.commissionItem}>
             <Text style={styles.commissionBusiness}>Bar ID: {commission.businessId}</Text>
             <Text style={styles.commissionValue}>
-              Comisión: {(parseFloat(commission.platformCommission) * 100).toFixed(1)}%
+              Comisión: {(parseFloat(commission.platformCommission || '0') * 100).toFixed(1)}%
             </Text>
             <Text style={styles.commissionNotes}>{commission.notes}</Text>
           </View>
