@@ -461,6 +461,13 @@ router.get("/owner-profile", authenticateToken, requireRole("business_owner"), a
 // Create business route
 router.post("/create", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
+    // 🔒 SEGURIDAD: Comprobar el límite máximo de 2 bares
+    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    if (userBusinesses.length >= 2) {
+      return res.status(403).json({ error: "Has alcanzado el límite máximo de 2 bares permitidos por cuenta." });
+    }
+    // -----------------------------------------------------
+
     const { name, description, type, address, phone, image } = req.body;
     const businessId = uuidv4();
     const newBusiness = {
@@ -522,9 +529,16 @@ router.put("/:id", authenticateToken, requireRole("business_owner"), async (req,
     
     console.log('📝 Procesando datos del bar para el usuario:', req.user!.id);
     
-    const [existingBusiness] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+    // Obtenemos todos los negocios del usuario
+    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    const existingBusiness = userBusinesses.length > 0 ? userBusinesses[0] : null;
     
     if (!existingBusiness) {
+      // 🔒 SEGURIDAD: Comprobar el límite antes de crear (por si cae por aquí)
+      if (userBusinesses.length >= 2) {
+        return res.status(403).json({ error: "Has alcanzado el límite máximo de 2 bares permitidos por cuenta." });
+      }
+
       console.log('✨ Creando el negocio por primera vez...');
       const newBusinessId = uuidv4();
       const insertData: any = {
