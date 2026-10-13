@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Modal, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 import { ThemedText } from './ThemedText';
+// Importamos tu conector oficial para que funcione en el APK apuntando a Railway
+import { apiRequest } from '@/lib/query-client';
 
 interface UserRegistrationModalProps {
   visible: boolean;
@@ -27,25 +29,22 @@ export function UserRegistrationModal({ visible, onSave, onClose }: UserRegistra
       return;
     }
 
-    // --- NUEVO: ESCUDO DE VALIDACIÓN FRONTAL ---
+    // --- ESCUDO DE VALIDACIÓN FRONTAL ---
     if (email.trim()) {
       const cleanEmail = email.trim().toLowerCase();
       
-      // 1. Validar formato básico (que tenga @ y un punto)
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(cleanEmail)) {
         Alert.alert('Correo inválido', 'Por favor ingresa un correo electrónico con formato válido.');
         return;
       }
 
-      // 2. Validar que no sean puros números (Ej: 21412512512@gmail.com)
       const [username] = cleanEmail.split('@');
       if (/^\d{7,}$/.test(username)) {
         Alert.alert('Correo inválido', 'Por favor utiliza un correo personal real (no secuencias de solo números).');
         return;
       }
       
-      // 3. Validar que no sea demasiado corto
       if (username.length < 3) {
         Alert.alert('Correo inválido', 'El nombre de usuario del correo es demasiado corto.');
         return;
@@ -56,14 +55,16 @@ export function UserRegistrationModal({ visible, onSave, onClose }: UserRegistra
     const userData: UserData = { name, phone, email, address };
     
     try {
-      // Guardar en backend
-      const response = await fetch('http://localhost:5000/api/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
+      // Usamos apiRequest en lugar de fetch con localhost
+      const response = await apiRequest('POST', '/api/users/register', userData);
 
       if (response.ok) {
+        // ✨ AQUÍ ESTÁ EL NUEVO CARTEL DE ÉXITO ✨
+        Alert.alert(
+          '¡Registro exitoso!', 
+          'Tu cuenta ha sido creada correctamente. Ya puedes comenzar a usar AstroBar.'
+        );
+
         onSave(userData);
         // Limpiar campos
         setName('');
@@ -71,12 +72,11 @@ export function UserRegistrationModal({ visible, onSave, onClose }: UserRegistra
         setEmail('');
         setAddress('');
       } else {
-        // Si el backend (el que hicimos recién) lo rechaza, mostramos el error
         const errorData = await response.json();
         Alert.alert('Error', errorData.error || 'No se pudo guardar');
       }
     } catch (error) {
-      Alert.alert('Error', 'Error de conexión');
+      Alert.alert('Error', 'Error de conexión con el servidor');
     }
   };
 
