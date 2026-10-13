@@ -1,4 +1,6 @@
 import express from "express";
+// NUEVO: Importamos nuestro validador
+import { validateEmailRealism } from "../utils/emailValidator"; 
 
 const router = express.Router();
 
@@ -115,7 +117,6 @@ router.post("/dev-email-login", async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    // 🔍 COMPARACIÓN DIRECTA: Compara el texto plano directamente
     if (user[0].password !== password) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
@@ -183,7 +184,7 @@ router.post("/send-code", async (req, res) => {
   }
 });
 
-// 🚀 Registro de Usuario en TEXTO PLANO (Corregido)
+// 🚀 Registro de Usuario en TEXTO PLANO
 router.post("/phone-signup", async (req, res) => {
   try {
     const { name, email, phone, password, role, birthDate, referralCode } = req.body;
@@ -200,6 +201,15 @@ router.post("/phone-signup", async (req, res) => {
     // Limpiar correo si se envió uno
     const cleanEmail = email && typeof email === "string" && email.trim() !== "" ? email.trim().toLowerCase() : null;
 
+    // --- NUEVO: ESCUDO DE VALIDACIÓN DE CORREO ---
+    if (cleanEmail) {
+      const emailCheck = validateEmailRealism(cleanEmail);
+      if (!emailCheck.isValid) {
+        return res.status(400).json({ error: emailCheck.error });
+      }
+    }
+    // ---------------------------------------------
+
     // Normalizar teléfono
     const phoneDigits = phone.replace(/[^\d]/g, "");
     const normalizedPhone = phoneDigits.startsWith("54") ? `+${phoneDigits}` : `+54${phoneDigits}`;
@@ -215,7 +225,7 @@ router.post("/phone-signup", async (req, res) => {
       return res.status(400).json({ error: "El número de teléfono ya se encuentra registrado" });
     }
 
-    // 2. Validar si el EMAIL ya existe (solo si el usuario mandó uno válido)
+    // 2. Validar si el EMAIL ya existe
     if (cleanEmail) {
       const existingEmail = await db
         .select({ id: users.id })
