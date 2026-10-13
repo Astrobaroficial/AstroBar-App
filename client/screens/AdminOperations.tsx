@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { api } from '../lib/api';
+// CAMBIO CRÍTICO: Usamos el apiRequest nativo de tu app
+import { apiRequest } from '@/lib/query-client';
 import { AstroBarColors } from '@/constants/theme';
 
 type Tab = 'transactions' | 'promotions';
@@ -62,14 +63,25 @@ export default function AdminOperations() {
     try {
       setLoading(true);
       if (activeTab === 'transactions') {
-        const res = await api.get('/admin/transactions');
-        setData(res.data.transactions || []);
+        const res = await apiRequest('GET', '/api/admin/transactions');
+        if (res.ok) {
+           const resData = await res.json();
+           setData(resData.transactions || resData || []);
+        } else {
+           setData([]);
+        }
       } else {
-        const res = await api.get('/promotions?includeInactive=true');
-        setData(res.data.promotions || []);
+        const res = await apiRequest('GET', '/api/promotions?includeInactive=true');
+        if (res.ok) {
+           const resData = await res.json();
+           setData(resData.promotions || resData || []);
+        } else {
+           setData([]);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -77,9 +89,13 @@ export default function AdminOperations() {
 
   const togglePromotion = async (id: string, currentStatus: boolean) => {
     try {
-      await api.patch(`/promotions/${id}`, { isActive: !currentStatus });
-      showAlert('Éxito', currentStatus ? 'Promoción pausada' : 'Promoción activada');
-      loadData();
+      const res = await apiRequest('PATCH', `/api/promotions/${id}`, { isActive: !currentStatus });
+      if (res.ok) {
+         showAlert('Éxito', currentStatus ? 'Promoción pausada' : 'Promoción activada');
+         loadData();
+      } else {
+         throw new Error('Error al actualizar');
+      }
     } catch (error) {
       showAlert('Error', 'No se pudo actualizar la promoción');
     }
@@ -91,9 +107,13 @@ export default function AdminOperations() {
       '¿Eliminar esta promoción?',
       async () => {
         try {
-          await api.delete(`/promotions/${id}`);
-          showAlert('Éxito', 'Promoción eliminada');
-          loadData();
+          const res = await apiRequest('DELETE', `/api/promotions/${id}`);
+          if (res.ok) {
+             showAlert('Éxito', 'Promoción eliminada');
+             loadData();
+          } else {
+             throw new Error('Error al eliminar');
+          }
         } catch (error) {
           showAlert('Error', 'No se pudo eliminar');
         }
@@ -119,12 +139,12 @@ export default function AdminOperations() {
           </TouchableOpacity>
         </View>
       </View>
-      <Text style={styles.cardDetail}>Bar: {item.businessName}</Text>
+      <Text style={styles.cardDetail}>Bar: {item.businessName || 'N/A'}</Text>
       <Text style={styles.cardDetail}>Tipo: {item.type === 'flash' ? 'Flash' : 'Común'}</Text>
-      <Text style={styles.cardDetail}>Precio: ${item.promoPrice.toFixed(2)}</Text>
-      <Text style={styles.cardDetail}>Stock: {item.stock - item.stockConsumed}/{item.stock}</Text>
-      <Text style={styles.cardDetail}>Inicio: {new Date(item.startTime).toLocaleString()}</Text>
-      <Text style={styles.cardDetail}>Fin: {new Date(item.endTime).toLocaleString()}</Text>
+      <Text style={styles.cardDetail}>Precio: ${item.promoPrice ? item.promoPrice.toFixed(2) : '0.00'}</Text>
+      <Text style={styles.cardDetail}>Stock: {(item.stock || 0) - (item.stockConsumed || 0)}/{item.stock || 0}</Text>
+      {item.startTime && <Text style={styles.cardDetail}>Inicio: {new Date(item.startTime).toLocaleString()}</Text>}
+      {item.endTime && <Text style={styles.cardDetail}>Fin: {new Date(item.endTime).toLocaleString()}</Text>}
     </View>
   );
 
@@ -139,12 +159,12 @@ export default function AdminOperations() {
           <Text style={styles.badgeText}>{item.status}</Text>
         </View>
       </View>
-      <Text style={styles.cardDetail}>Usuario: {item.user?.name}</Text>
-      <Text style={styles.cardDetail}>Bar: {item.business?.name}</Text>
-      <Text style={styles.cardDetail}>Monto: ${item.amountPaid.toFixed(2)}</Text>
-      <Text style={styles.cardDetail}>Comisión: ${item.platformCommission.toFixed(2)}</Text>
+      <Text style={styles.cardDetail}>Usuario: {item.user?.name || 'N/A'}</Text>
+      <Text style={styles.cardDetail}>Bar: {item.business?.name || 'N/A'}</Text>
+      <Text style={styles.cardDetail}>Monto: ${item.amountPaid ? item.amountPaid.toFixed(2) : '0.00'}</Text>
+      <Text style={styles.cardDetail}>Comisión: ${item.platformCommission ? item.platformCommission.toFixed(2) : '0.00'}</Text>
       <Text style={styles.cardDetail}>
-        Fecha: {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString()}
+        Fecha: {item.createdAt ? `${new Date(item.createdAt).toLocaleDateString()} ${new Date(item.createdAt).toLocaleTimeString()}` : 'N/A'}
       </Text>
     </View>
   );
@@ -203,7 +223,7 @@ export default function AdminOperations() {
 
       <FlatList
         data={filteredData}
-        keyExtractor={(item, index) => item.id || index.toString()}
+        keyExtractor={(item, index) => String(item.id || index)}
         renderItem={activeTab === 'transactions' ? renderTransaction : renderPromotion}
         contentContainerStyle={styles.list}
         refreshing={loading}
