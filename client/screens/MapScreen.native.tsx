@@ -22,10 +22,8 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { apiRequest } from "@/lib/query-client";
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type PinStatus = 'closed' | 'opening_soon' | 'open' | 'hot_promo';
 
 const { width, height } = Dimensions.get('window');
-const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export default function MapScreen() {
   const { theme } = useTheme();
@@ -82,14 +80,8 @@ export default function MapScreen() {
       const origin = `${location.coords.latitude},${location.coords.longitude}`;
       const destination = `${bar.latitude},${bar.longitude}`;
 
-      console.log('🗺️ Requesting directions...');
-      console.log('  From:', origin);
-      console.log('  To:', destination);
-
       const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
       const data = await response.json();
-
-      console.log('📥 Response:', JSON.stringify(data, null, 2));
 
       if (data.success && data.route) {
         const points = decodePolyline(data.route.polyline);
@@ -99,15 +91,12 @@ export default function MapScreen() {
           return;
         }
         
-        console.log('✅ Route decoded:', points.length, 'points');
-        
         setRouteCoords(points);
         setRouteInfo({
           distance: data.route.distance,
           duration: data.route.duration,
         });
 
-        // Ajustar el mapa para mostrar toda la ruta
         setTimeout(() => {
           const allCoords = [
             { latitude: location.coords.latitude, longitude: location.coords.longitude },
@@ -123,21 +112,11 @@ export default function MapScreen() {
         
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        console.error('❌ Error response:', data);
         const errorMsg = data.hint || data.details || data.error || 'No se pudo encontrar una ruta';
-        Alert.alert('Error', errorMsg + '\n\nRevisa los logs del servidor para más detalles.');
+        Alert.alert('Error', errorMsg);
       }
     } catch (err: any) {
-      console.error('❌ Exception getting directions:', err);
-      Alert.alert(
-        'Error de Conexión', 
-        'No se pudieron obtener las direcciones.\n\n' +
-        'Posibles causas:\n' +
-        '• API de Directions no habilitada en Google Cloud\n' +
-        '• Restricciones en la API Key\n' +
-        '• Problema de conexión\n\n' +
-        'Error: ' + (err.message || 'Desconocido')
-      );
+      Alert.alert('Error de Conexión', 'No se pudieron obtener las direcciones.');
     }
   };
 
@@ -171,22 +150,42 @@ export default function MapScreen() {
     return points;
   };
 
-  const calculateDistance = (coord1: any, coord2: any) => {
-    const R = 6371; // Earth's radius in km
-    const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
-    const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+  // -------------------------------------------------------------
+  // 🎨 LÓGICA VISUAL PERSONALIZADA PARA MARCADORES EN EL MAPA
+  // -------------------------------------------------------------
+  const getMarkerDesign = (bar: any) => {
+    const type = (bar.type || '').toLowerCase();
+    
+    // Si está cerrado, atenuamos un poco el pin pero mantenemos su ícono
+    const isClosed = !bar.isOpen;
+    
+    let config = { icon: "map-pin", color: "#64748b" }; // Por defecto (gris)
+
+    if (type.includes('nightclub') || type.includes('discoteca')) {
+      config = { icon: "music", color: isClosed ? "#6b21a8" : "#9C27B0" }; // Morado
+    } else if (type.includes('pub')) {
+      config = { icon: "speaker", color: isClosed ? "#c2410c" : "#FF5722" }; // Naranja
+    } else if (type.includes('bar') || type.includes('restaurant_bar')) {
+      config = { icon: "coffee", color: isClosed ? "#0284c7" : "#00f2fe" }; // Celeste AstroBar
+    } else if (type.includes('lounge')) {
+      config = { icon: "moon", color: isClosed ? "#312e81" : "#3F51B5" }; // Azul oscuro
+    } else if (type.includes('restaurant')) {
+      config = { icon: "pie-chart", color: isClosed ? "#b45309" : "#FF9800" }; // Ámbar
+    }
+
+    // Sobrescribir con dorado si tiene promos flash MUY importantes activas
+    if (bar.hasFlashPromo && bar.isOpen) {
+      config.color = "#FFD700"; // Dorado
+      config.icon = "zap"; // Rayo
+    }
+
+    return config;
   };
 
-  const getMarkerColor = (bar: any) => {
-    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700'; // Dorado para flash promo
-    if (bar.isOpen) return '#4CAF50'; // Verde para abierto
-    if (bar.openingSoon) return '#FFB800'; // Amarillo para próximo a abrir
-    return '#EF4444'; // Rojo para cerrado
+  const getStatusDotColor = (bar: any) => {
+    if (bar.hasFlashPromo && bar.isOpen) return '#FFD700'; 
+    if (bar.isOpen) return '#4CAF50'; 
+    return '#EF4444'; 
   };
 
   const handleMarkerPress = (bar: any) => {
@@ -200,20 +199,6 @@ export default function MapScreen() {
       latitudeDelta: 0.01,
       longitudeDelta: 0.01,
     });
-  };
-
-  const handleGetDirections = () => {
-    if (selectedBar) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      getDirections(selectedBar);
-    }
-  };
-
-  const handleViewDetails = () => {
-    if (selectedBar) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      navigation.navigate('BusinessDetail', { businessId: selectedBar.id });
-    }
   };
 
   if (isLoading) {
@@ -255,26 +240,50 @@ export default function MapScreen() {
         }}
         showsUserLocation
         showsMyLocationButton
+        userInterfaceStyle="dark"
+        customMapStyle={[
+          { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
+          { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
+          { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
+          { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
+          { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
+          { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] },
+          { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] },
+          { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
+          { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] },
+          { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] },
+          { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] },
+          { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] },
+          { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] },
+          { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] },
+          { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
+          { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] },
+          { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] },
+          { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }
+        ]}
       >
-        {bars.map((bar) => (
-          <Marker
-            key={bar.id}
-            coordinate={{
-              latitude: parseFloat(bar.latitude),
-              longitude: parseFloat(bar.longitude),
-            }}
-            onPress={() => handleMarkerPress(bar)}
-          >
-            <View style={[styles.customMarker, { backgroundColor: getMarkerColor(bar) }]}>
-              <Feather name="map-pin" size={24} color="#FFF" />
-              {bar.hasFlashPromo && (
-                <View style={styles.flashBadge}>
-                  <Feather name="zap" size={10} color="#FFD700" />
-                </View>
-              )}
-            </View>
-          </Marker>
-        ))}
+        {bars.map((bar) => {
+          const design = getMarkerDesign(bar);
+          return (
+            <Marker
+              key={bar.id}
+              coordinate={{
+                latitude: parseFloat(bar.latitude),
+                longitude: parseFloat(bar.longitude),
+              }}
+              onPress={() => handleMarkerPress(bar)}
+            >
+              <View style={[styles.customMarker, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.8 }]}>
+                <Feather name={design.icon as any} size={20} color="#FFF" />
+                {!bar.isOpen && (
+                  <View style={styles.closedBadge}>
+                    <View style={styles.closedBadgeInner} />
+                  </View>
+                )}
+              </View>
+            </Marker>
+          );
+        })}
 
         {location && routeCoords.length > 0 && (
           <>
@@ -309,8 +318,8 @@ export default function MapScreen() {
                 {selectedBar.address || 'Buenos Aires'}
               </ThemedText>
               <View style={styles.statusRow}>
-                <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedBar) }]} />
-                <ThemedText type="small" style={{ color: getMarkerColor(selectedBar), fontWeight: '600' }}>
+                <View style={[styles.statusDot, { backgroundColor: getStatusDotColor(selectedBar) }]} />
+                <ThemedText type="small" style={{ color: getStatusDotColor(selectedBar), fontWeight: '600' }}>
                   {selectedBar.hasFlashPromo ? `⚡ ${selectedBar.flashPromoCount} Flash Activo` :
                    selectedBar.isOpen ? 'Abierto' : 'Cerrado'}
                 </ThemedText>
@@ -337,7 +346,7 @@ export default function MapScreen() {
           <View style={styles.buttonRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: AstroBarColors.primary }]}
-              onPress={handleGetDirections}
+              onPress={() => getDirections(selectedBar)}
             >
               <Feather name="navigation" size={18} color="#FFF" />
               <ThemedText type="small" style={{ color: '#FFF', marginLeft: 8, fontWeight: '600' }}>
@@ -346,7 +355,7 @@ export default function MapScreen() {
             </Pressable>
             <Pressable
               style={[styles.actionButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}
-              onPress={handleViewDetails}
+              onPress={() => navigation.navigate('BusinessDetail', { businessId: selectedBar.id })}
             >
               <Feather name="info" size={18} color={theme.text} />
               <ThemedText type="small" style={{ marginLeft: 8, fontWeight: '600' }}>
@@ -364,7 +373,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignitems: 'center',
   },
   fullContainer: {
     flex: 1,
@@ -385,31 +394,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   customMarker: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#FFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 6,
   },
-  flashBadge: {
+  closedBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#FF4444',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
+  },
+  closedBadgeInner: {
+    width: 6,
+    height: 2,
+    backgroundColor: '#FFF',
+    borderRadius: 1,
   },
   bottomSheet: {
     position: 'absolute',
