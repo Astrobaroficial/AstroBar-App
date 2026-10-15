@@ -331,7 +331,7 @@ router.get("/promotions", authenticateToken, requireRole("business_owner"), asyn
       business = fetchedBusiness || insertData;
     }
     const businessPromotions = await db.select().from(promotions).where(eq(promotions.businessId, business.id));
-   
+    
     const now = new Date();
     const activePromotions = businessPromotions.filter(p => p.isActive && new Date(p.endTime) > now);
     const flashPromotions = activePromotions.filter(p => p.type === 'flash');
@@ -461,8 +461,16 @@ router.get("/owner-profile", authenticateToken, requireRole("business_owner"), a
 // Create business route
 router.post("/create", authenticateToken, requireRole("business_owner"), async (req, res) => {
   try {
-    // 🔒 SEGURIDAD: Comprobar el límite máximo de 2 bares
-    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
+    // 🔒 SEGURIDAD CORREGIDA: Solo contamos los bares que están ACTIVOS (no los eliminados lógicamente)
+    const userBusinesses = await db.select()
+      .from(businesses)
+      .where(
+        and(
+          eq(businesses.ownerId, req.user!.id),
+          eq(businesses.isActive, true) // Solo los activos
+        )
+      );
+
     if (userBusinesses.length >= 2) {
       return res.status(403).json({ error: "Has alcanzado el límite máximo de 2 bares permitidos por cuenta." });
     }
@@ -529,9 +537,18 @@ router.put("/:id", authenticateToken, requireRole("business_owner"), async (req,
     
     console.log('📝 Procesando datos del bar para el usuario:', req.user!.id);
     
-    // Obtenemos todos los negocios del usuario
-    const userBusinesses = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id));
-    const existingBusiness = userBusinesses.length > 0 ? userBusinesses[0] : null;
+    // Obtenemos todos los negocios ACTIVOS del usuario
+    const userBusinesses = await db.select()
+      .from(businesses)
+      .where(
+        and(
+          eq(businesses.ownerId, req.user!.id),
+          eq(businesses.isActive, true)
+        )
+      );
+      
+    // Encontrar si el negocio que queremos actualizar realmente existe
+    const [existingBusiness] = await db.select().from(businesses).where(eq(businesses.id, id)).limit(1);
     
     if (!existingBusiness) {
       // 🔒 SEGURIDAD: Comprobar el límite antes de crear (por si cae por aquí)
@@ -567,11 +584,11 @@ router.put("/:id", authenticateToken, requireRole("business_owner"), async (req,
     
     console.log('🔄 El bar ya existe. Actualizando datos...');
     const updatedBusiness = {
-      name: name || existingBusiness.name,
-      description: description || existingBusiness.description,
-      address: address || existingBusiness.address,
-      phone: phone || existingBusiness.phone,
-      image: image || existingBusiness.image,
+      name: name !== undefined ? name : existingBusiness.name,
+      description: description !== undefined ? description : existingBusiness.description,
+      address: address !== undefined ? address : existingBusiness.address,
+      phone: phone !== undefined ? phone : existingBusiness.phone,
+      image: image !== undefined ? image : existingBusiness.image,
       latitude: latitude !== undefined ? parseFloat(latitude) : existingBusiness.latitude,
       longitude: longitude !== undefined ? parseFloat(longitude) : existingBusiness.longitude,
       updatedAt: new Date()
