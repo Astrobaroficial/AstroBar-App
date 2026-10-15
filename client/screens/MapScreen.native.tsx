@@ -9,10 +9,9 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Feather, Ionicons } from "@expo/vector-icons"; // 🚀 Agregado Ionicons para marcadores sin clipping
+import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
-// @ts-ignore
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -25,7 +24,7 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
 
-export default function MapScreen() {
+export default function MapScreenNative() {
   const { theme } = useTheme();
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
@@ -150,26 +149,22 @@ export default function MapScreen() {
     return points;
   };
 
-  // -------------------------------------------------------------
-  // 🚀 LÓGICA VISUAL A PRUEBA DE CLIPPING EN ANDROID
-  // -------------------------------------------------------------
   const getMarkerDesign = (bar: any) => {
     const type = (bar.type || '').toLowerCase();
     const isClosed = !bar.isOpen;
     
-    // Vamos a usar Ionicons (location) que renderiza perfectamente
-    let config = { icon: "location", color: "#64748b", iconName: "map-pin" }; 
+    let config = { color: "#64748b", iconName: "map-pin" }; 
 
     if (type.includes('nightclub') || type.includes('discoteca')) {
-      config = { icon: "location", color: isClosed ? "#6b21a8" : "#9C27B0", iconName: "music" };
+      config = { color: isClosed ? "#6b21a8" : "#9C27B0", iconName: "music" };
     } else if (type.includes('pub')) {
-      config = { icon: "location", color: isClosed ? "#c2410c" : "#FF5722", iconName: "speaker" };
+      config = { color: isClosed ? "#c2410c" : "#FF5722", iconName: "speaker" };
     } else if (type.includes('bar') || type.includes('restaurant_bar')) {
-      config = { icon: "location", color: isClosed ? "#0284c7" : "#00f2fe", iconName: "coffee" };
+      config = { color: isClosed ? "#0284c7" : "#00f2fe", iconName: "coffee" };
     } else if (type.includes('lounge')) {
-      config = { icon: "location", color: isClosed ? "#312e81" : "#3F51B5", iconName: "moon" };
+      config = { color: isClosed ? "#312e81" : "#3F51B5", iconName: "moon" };
     } else if (type.includes('restaurant')) {
-      config = { icon: "location", color: isClosed ? "#b45309" : "#FF9800", iconName: "pie-chart" };
+      config = { color: isClosed ? "#b45309" : "#FF9800", iconName: "pie-chart" };
     }
 
     if (bar.hasFlashPromo && bar.isOpen) {
@@ -205,20 +200,6 @@ export default function MapScreen() {
         <ActivityIndicator size="large" color={AstroBarColors.primary} />
         <ThemedText type="body" style={styles.loadingText}>
           Cargando mapa...
-        </ThemedText>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Feather name="alert-circle" size={48} color={AstroBarColors.error} />
-        <ThemedText type="h3" style={styles.errorTitle}>
-          Error
-        </ThemedText>
-        <ThemedText type="body" style={styles.errorText}>
-          {error}
         </ThemedText>
       </View>
     );
@@ -270,16 +251,18 @@ export default function MapScreen() {
                 longitude: parseFloat(bar.longitude),
               }}
               onPress={() => handleMarkerPress(bar)}
-              anchor={{ x: 0.5, y: 0.8 }} // Ajuste fino para el ancla del icono de ubicacion
-              centerOffset={{ x: 0, y: -20 }}
+              anchor={{ x: 0.5, y: 0.5 }}
             >
-              {/* Usamos el ícono puro sin Views redondas de fondo para evitar clipping */}
-              <View style={[styles.markerContainer, { opacity: bar.isOpen ? 1 : 0.6 }]}>
-                 <Ionicons name="location" size={54} color={design.color} style={styles.pinIcon} />
-                 {/* Icono interior en lugar de View */}
-                 <View style={styles.innerIconContainer}>
-                    <Feather name={design.iconName as any} size={16} color="#FFF" />
-                 </View>
+              {/* MAGIA AQUÍ: collapsable={false} obliga a Android a renderizar la caja completa */}
+              <View style={styles.markerWrapper} collapsable={false}>
+                <View style={[styles.customMarker, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.7 }]}>
+                   <Feather name={design.iconName as any} size={22} color="#FFF" />
+                   {!bar.isOpen && (
+                     <View style={styles.closedBadge}>
+                       <View style={styles.closedBadgeInner} />
+                     </View>
+                   )}
+                </View>
               </View>
             </Marker>
           );
@@ -293,8 +276,11 @@ export default function MapScreen() {
             }}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            {/* Ícono nativo para el usuario también para evitar clipping */}
-            <Ionicons name="navigate-circle" size={32} color={AstroBarColors.primary} />
+            <View style={styles.markerWrapper} collapsable={false}>
+              <View style={styles.userMarker}>
+                <View style={styles.userMarkerInner} />
+              </View>
+            </View>
           </Marker>
         )}
 
@@ -392,23 +378,58 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  markerContainer: {
+  /* ESTILOS DEL MARCADOR BLINDADOS PARA ANDROID */
+  markerWrapper: {
     width: 60,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
-  pinIcon: {
-    position: 'absolute',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  innerIconContainer: {
-    position: 'absolute',
-    top: 13,
-    alignItems: 'center',
+  customMarker: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFF',
+    // ⚠️ NO AGREGAR elevation NI shadowColor AQUÍ. Rompe la caja en Android.
+  },
+  closedBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  closedBadgeInner: {
+    width: 6,
+    height: 2,
+    backgroundColor: '#FFF',
+    borderRadius: 1,
+  },
+  userMarker: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: AstroBarColors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  userMarkerInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
   },
   bottomSheet: {
     position: 'absolute',
