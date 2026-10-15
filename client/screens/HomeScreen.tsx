@@ -143,11 +143,11 @@ export default function HomeScreen() {
       const data = await response.json();
       const rawBusinesses = data.businesses || [];
       
-      const businessList: Business[] = rawBusinesses.map((b) => ({
+      const businessList: Business[] = rawBusinesses.map((b: any) => ({
         id: b.id,
         name: b.name,
         description: b.description || '',
-        type: b.type || 'restaurant',
+        type: b.type || 'restaurant', // ⚠️ Este es el tipo real de DB
         profileImage: b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
         bannerImage: b.cover_image || b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
         rating: (b.rating || 0) / 100,
@@ -193,36 +193,42 @@ export default function HomeScreen() {
           (b) =>
             b.name.toLowerCase().includes(query) ||
             b.description.toLowerCase().includes(query) ||
-            b.categories.some((cat) => cat.toLowerCase().includes(query)),
+            b.categories.some((cat) => cat.toLowerCase().includes(query)) ||
+            (b.type && b.type.toLowerCase().includes(query))
         );
       }
 
       if (activeCategory) {
+        // 🚀 CORRECCIÓN CLAVE: Agregamos las palabras en español, inglés y también las palabras parciales
         const categoryMap: Record<string, string[]> = {
           flash: ["flash", "promocion"],
-          bar: ["bar"],
-          nightclub: ["discoteca", "nightclub"],
-          pub: ["pub"],
-          lounge: ["lounge"],
-          promo: ["promocion", "oferta"],
+          bar: ["bar", "restaurant_bar", "pub"],
+          nightclub: ["discoteca", "nightclub", "boliche", "club"],
+          pub: ["pub", "bar"],
+          lounge: ["lounge", "resto"],
+          promo: ["promocion", "oferta", "descuento"],
         };
         const matchCategories = categoryMap[activeCategory] || [activeCategory];
-        filtered = filtered.filter((b) =>
-          b.categories.some((cat) =>
-            matchCategories.some((match) => cat.toLowerCase().includes(match)),
-          ),
-        );
+        
+        filtered = filtered.filter((b) => {
+          // Buscamos si la palabra clave coincide con el 'type' nativo de DB o alguna categoría extra
+          const hasMatchingType = b.type && matchCategories.some((match) => b.type.toLowerCase().includes(match));
+          const hasMatchingCategory = b.categories.some((cat) => matchCategories.some((match) => cat.toLowerCase().includes(match)));
+          
+          return hasMatchingType || hasMatchingCategory;
+        });
       }
 
       if (activeFilter) {
         switch (activeFilter) {
           case "cercano":
+            // Si estuviéramos guardando la distancia en el objeto, la usaríamos aquí.
             break;
           case "flash":
-            filtered = filtered.filter((b) => b.featured);
+            filtered = filtered.filter((b) => b.featured); // o revisar if (b.hasFlashPromo)
             break;
           case "popular":
-            filtered = filtered.filter((b) => b.rating >= 4.5);
+            filtered = filtered.filter((b) => b.rating >= 4.0); // Reducido a 4.0 para que sea menos restrictivo
             break;
         }
       }
@@ -263,13 +269,11 @@ export default function HomeScreen() {
 
   return (
     <ImageBackground source={astrobarBgImage} style={styles.container} resizeMode="cover">
-      {/* 🌌 Degradado espacial profundo continuo en lugar del negro plano */}
       <LinearGradient
         colors={['rgba(5, 8, 15, 0.94)', 'rgba(11, 17, 30, 0.88)', 'rgba(15, 23, 42, 0.82)']}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* ✨ Estrellas dinámicas en el firmamento */}
       {starList.map((star) => (
         <HomeStarParticle key={star.id} x={star.x} y={star.y} size={star.size} delay={star.delay} />
       ))}
@@ -293,7 +297,6 @@ export default function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Banner Header Premium */}
         <Animated.View
           entering={FadeInDown.delay(50).springify()}
           style={[styles.bannerContainer, Shadows.lg]}
@@ -316,7 +319,6 @@ export default function HomeScreen() {
           </LinearGradient>
         </Animated.View>
 
-        {/* Question Header */}
         <Animated.View
           entering={FadeInDown.delay(100).springify()}
           style={styles.questionContainer}
@@ -326,7 +328,6 @@ export default function HomeScreen() {
           </ThemedText>
         </Animated.View>
 
-        {/* Quick Access Icons */}
         <Animated.View
           entering={FadeInRight.delay(150).springify()}
           style={styles.quickAccessContainer}
@@ -394,7 +395,6 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Search Bar - Convertido en un contenedor tipo Cristal Esmerilado */}
         <BlurView intensity={25} tint="dark" style={[styles.searchContainer, Shadows.sm]}>
           <Feather name="search" size={20} color="#00f2fe" />
           <TextInput
@@ -406,7 +406,6 @@ export default function HomeScreen() {
           />
         </BlurView>
 
-        {/* Quick Filters */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -513,7 +512,6 @@ export default function HomeScreen() {
           </BlurView>
         ) : (
           <>
-            {/* Tarjeta Destacada Popular */}
             {!hasActiveFilters && featuredBusinesses.length > 0 ? (
               <View style={styles.section}>
                 <ThemedText type="h3" style={styles.sectionTitle}>
@@ -569,7 +567,6 @@ export default function HomeScreen() {
               </View>
             ) : null}
 
-            {/* Cuadrícula de Bares Populares */}
             <View style={styles.gridSection}>
               {bars.slice(0, 4).map((business) => (
                 <View key={business.id} style={styles.gridCard}>
@@ -620,7 +617,6 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {/* Mapa de Bares - Botón Principal */}
             <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.section}>
               <Pressable
                 onPress={() => {
@@ -661,7 +657,6 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Promociones Flash - Botón Secundario */}
             <Animated.View entering={FadeInDown.delay(350).springify()} style={styles.section}>
               <Pressable
                 onPress={() => {
@@ -702,7 +697,6 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Promociones Comunes - Botón Terciario */}
             <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.section}>
               <Pressable
                 onPress={() => {
@@ -743,7 +737,6 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Resultados Filtrados */}
             {hasActiveFilters && filteredBusinesses.length > 0 ? (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -829,6 +822,4 @@ const styles = StyleSheet.create({
   emptyStateText: { textAlign: "center", lineHeight: 22, marginBottom: Spacing.xl },
   emptyStateClearButton: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderRadius: BorderRadius.full },
 });
-
-
 
