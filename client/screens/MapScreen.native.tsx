@@ -150,33 +150,27 @@ export default function MapScreen() {
     return points;
   };
 
-  // -------------------------------------------------------------
-  // 🎨 LÓGICA VISUAL PERSONALIZADA PARA MARCADORES EN EL MAPA
-  // -------------------------------------------------------------
   const getMarkerDesign = (bar: any) => {
     const type = (bar.type || '').toLowerCase();
-    
-    // Si está cerrado, atenuamos un poco el pin pero mantenemos su ícono
     const isClosed = !bar.isOpen;
     
-    let config = { icon: "map-pin", color: "#64748b" }; // Por defecto (gris)
+    let config = { icon: "map-pin", color: "#64748b" };
 
     if (type.includes('nightclub') || type.includes('discoteca')) {
-      config = { icon: "music", color: isClosed ? "#6b21a8" : "#9C27B0" }; // Morado
+      config = { icon: "music", color: isClosed ? "#6b21a8" : "#9C27B0" };
     } else if (type.includes('pub')) {
-      config = { icon: "speaker", color: isClosed ? "#c2410c" : "#FF5722" }; // Naranja
+      config = { icon: "speaker", color: isClosed ? "#c2410c" : "#FF5722" };
     } else if (type.includes('bar') || type.includes('restaurant_bar')) {
-      config = { icon: "coffee", color: isClosed ? "#0284c7" : "#00f2fe" }; // Celeste AstroBar
+      config = { icon: "coffee", color: isClosed ? "#0284c7" : "#00f2fe" };
     } else if (type.includes('lounge')) {
-      config = { icon: "moon", color: isClosed ? "#312e81" : "#3F51B5" }; // Azul oscuro
+      config = { icon: "moon", color: isClosed ? "#312e81" : "#3F51B5" };
     } else if (type.includes('restaurant')) {
-      config = { icon: "pie-chart", color: isClosed ? "#b45309" : "#FF9800" }; // Ámbar
+      config = { icon: "pie-chart", color: isClosed ? "#b45309" : "#FF9800" };
     }
 
-    // Sobrescribir con dorado si tiene promos flash MUY importantes activas
     if (bar.hasFlashPromo && bar.isOpen) {
-      config.color = "#FFD700"; // Dorado
-      config.icon = "zap"; // Rayo
+      config.color = "#FFD700";
+      config.icon = "zap";
     }
 
     return config;
@@ -238,7 +232,7 @@ export default function MapScreen() {
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}
-        showsUserLocation
+        showsUserLocation={false} 
         showsMyLocationButton
         userInterfaceStyle="dark"
         customMapStyle={[
@@ -272,40 +266,46 @@ export default function MapScreen() {
                 longitude: parseFloat(bar.longitude),
               }}
               onPress={() => handleMarkerPress(bar)}
+              anchor={{ x: 0.5, y: 0.5 }} // Centrado perfecto
             >
-              <View style={[styles.customMarker, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.8 }]}>
-                <Feather name={design.icon as any} size={20} color="#FFF" />
-                {!bar.isOpen && (
-                  <View style={styles.closedBadge}>
-                    <View style={styles.closedBadgeInner} />
-                  </View>
-                )}
+              {/* Contenedor transparente extra para evitar recortes en Android */}
+              <View style={styles.markerContainer}>
+                <View style={[styles.customMarker, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.8 }]}>
+                  <Feather name={design.icon as any} size={20} color="#FFF" />
+                  {!bar.isOpen && (
+                    <View style={styles.closedBadge}>
+                      <View style={styles.closedBadgeInner} />
+                    </View>
+                  )}
+                </View>
               </View>
             </Marker>
           );
         })}
 
-        {location && routeCoords.length > 0 && (
-          <>
-            <Marker
-              coordinate={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              }}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
+        {location && (
+          <Marker
+            coordinate={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }}
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View style={styles.userMarkerContainer}>
               <View style={styles.userMarker}>
                 <View style={styles.userMarkerInner} />
               </View>
-            </Marker>
-            
-            <Polyline
-              coordinates={routeCoords}
-              strokeColor={AstroBarColors.primary}
-              strokeWidth={5}
-              lineDashPattern={[0]}
-            />
-          </>
+            </View>
+          </Marker>
+        )}
+
+        {location && routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeColor={AstroBarColors.primary}
+            strokeWidth={5}
+            lineDashPattern={[0]}
+          />
         )}
       </MapView>
 
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignitems: 'center',
+    alignItems: 'center',
   },
   fullContainer: {
     flex: 1,
@@ -393,6 +393,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
   },
+  markerContainer: {
+    padding: 6, // Este padding es el salvavidas para evitar el clipping en Android
+    backgroundColor: 'transparent',
+  },
   customMarker: {
     width: 44,
     height: 44,
@@ -401,11 +405,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#FFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 6,
+    // ELIMINADA la elevacion/sombra ya que rompe la caja en Android
   },
   closedBadge: {
     position: 'absolute',
@@ -425,6 +425,27 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#FFF',
     borderRadius: 1,
+  },
+  userMarkerContainer: {
+    padding: 6,
+    backgroundColor: 'transparent',
+  },
+  userMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: AstroBarColors.primary,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  userMarkerInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    top: 3,
+    left: 3,
   },
   bottomSheet: {
     position: 'absolute',
@@ -480,27 +501,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
-  },
-  userMarker: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: AstroBarColors.primary,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  userMarkerInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
-    position: 'absolute',
-    top: 3,
-    left: 3,
   },
 });
