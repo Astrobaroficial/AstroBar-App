@@ -1,0 +1,2302 @@
+commit 5ec7443a47f095f18229dbfd60bd3cd8bc4f46e5
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 16:24:24 2026 -0300
+
+    fix: corregir estado simulado de MP en WalletScreen y agregar menu de configuracion real para admins
+
+commit 2f5145db568869aec65c6f78b24cd6a160bfa589
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 15:30:52 2026 -0300
+
+    fix: corregir estado simulado de MP en WalletScreen y agregar menu de configuracion real para admins
+
+commit f406cd21c05e561ef4b22158f24942130a60cd81
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 14:19:53 2026 -0300
+
+    feat: personalizar iconos de pines en el mapa segun la categoria del comercio y aplicar estilo nocturno
+
+commit f6330ea128f09f02b59065f01f8f4cf55a5e10b7
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 14:10:42 2026 -0300
+
+    fix: corregir el mapeo de categorías en HomeScreen para que los botones de filtro funcionen correctamente
+
+commit 7de75ee1c08593a5ecdcb07b94ef0b2548930b72
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 13:24:44 2026 -0300
+
+    fix: ignorar bares eliminados logicamente al validar limite de creacion y actualizar
+
+commit b757463a187e863e28e70b8367acba1186dd1740
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Oct 15 01:23:30 2026 -0300
+
+    fix: resolve NaN error when updating business coordinates and filter soft-deleted businesses in frontend
+
+commit 56b661439bfded575a408ba8dcffd8949e9df484
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 13 20:33:51 2026 -0300
+
+    fix: agregar alerta de exito al registrarse y conectar modal con backend en Railway
+
+commit bcbbaa12c68ea63a03750dcaa742b06cd08af4de
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 13 20:29:05 2026 -0300
+
+    feat: limitar creación de negocios a un máximo de 2 por cuenta
+
+commit 666608e7e28456be2d039ea0c69b43f69b725b80
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 13 15:48:30 2026 -0300
+
+    fix: refactorizar AdminOperations a apiRequest y corregir rutas api para mostrar transacciones
+
+commit 3fcc834c583d4817e0e60425dd2a78427c7b7396
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 13 15:29:42 2026 -0300
+
+    feat: agregar doble validacion de email en frontend y backend para bloquear correos numericos y temporales
+
+commit 7d5f9da9d9dd2fc3292530f0d2d4e164ff2cdda6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Oct 9 16:37:19 2026 -0300
+
+    fix: refactorizar llamadas de api a apiRequest en AdminManagement para solucionar pantalla en blanco
+
+commit 315eea4963b6e89026f416a971e2d41286c385bd
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Oct 9 15:11:37 2026 -0300
+
+    fix: reemplazar api por apiRequest en AdminPanelScreen para arreglar pantalla de Gestion en blanco
+
+commit 31fc6dec0dd4fdb4038c4007e4ef4125c8b0ec25
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 6 19:05:30 2026 -0300
+
+    fix: actualizar importacion a apiRequest en AdminDashboard para solucionar crash de pantalla morada
+
+commit 7791707d0bdcc4a0a320650aae30139b88844974
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Oct 6 13:20:42 2026 -0300
+
+    fix: separar peticiones en AdminDashboard para evitar fallos en cadena y arreglar tarjetas en blanco
+
+commit 2b78f5a2e1d6f6187956460f885550a0f57e5cdc
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Oct 5 13:46:05 2026 -0300
+
+    fix: agregar importacion de sql en update profile para evitar error 500
+
+commit 1627414fe0ab387fc4b509d096f77068b7d7ccdb
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Oct 5 13:24:25 2026 -0300
+
+    fix: agregar importacion de sql en update profile para evitar error 500
+
+commit e230aad844aa13ef41eae7375ad5eeb2baab0e85
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Oct 5 12:49:51 2026 -0300
+
+    fix: agregar importacion de sql en update profile para evitar error 500
+
+commit 21f71cd8d9d5afaf7d04c33578d368bce22f1e3a
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 29 00:59:08 2026 -0300
+
+    fix: replace expo-router with react-navigation in AdminDashboardScreen to resolve EAS build failure
+
+commit 90c0d6a7faab3313c8b21a51a46ff1add69d9696
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 29 00:46:52 2026 -0300
+
+    fix: replace expo-router with react-navigation in AdminDashboardScreen to resolve EAS build failure
+
+commit f03648b438083439416bdfd690c7813ac5ea7c2e
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 29 00:39:23 2026 -0300
+
+    fix: register AdminDashboard screens in root stack to resolve navigation route error
+
+commit 303b0b69871c6abda70d68bf9dde1e467085e11f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 22:41:22 2026 -0300
+
+    fix: filter out invalid entries and safely handle dates in AdminManagement to prevent rendering loops
+
+commit 18823db41fc33e622be84c62b8b17c8a6919ee5f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 22:36:11 2026 -0300
+
+    fix: filter out invalid entries and safely handle dates in AdminManagement to prevent rendering loops
+
+commit 3a4c806f98b6e67100482674afabb92f2a5e1562
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:58:35 2026 -0300
+
+    fix: clean and self-contain client/constants/api.ts to resolve bundling errors
+
+commit 4a7cc306fad711d067821ddbfbf88d33e4c94c57
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:54:16 2026 -0300
+
+    fix: correct relative import path for API_CONFIG in lib/api.ts
+
+commit 6ca561220e663de46eee735ac5c6bc1338e481c8
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:45:00 2026 -0300
+
+    fix: handle direct and nested metrics response structures in AdminDashboardScreen
+
+commit dd61e65d747b88c6561a5c9c57ed1327c9ce23f1
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:27:20 2026 -0300
+
+    fix: handle direct and nested metrics response structures in AdminDashboardScreen
+
+commit f9a4383fba59ee51aea9b6560cd401db59318493
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:21:21 2026 -0300
+
+    fix: add robust key aliases to admin dashboard metrics API to match frontend components
+
+commit 505644fbbd978f17e7c7ac92adb81f35c8b3b163
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:04:46 2026 -0300
+
+    fix: support profileImage updates in user profile route to ensure persistence across login sessions
+
+commit cc860b52426b685a68a35f63cc41058c3ab6edab
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 21:01:16 2026 -0300
+
+    fix: support profileImage updates in user profile route to ensure persistence across login sessions
+
+commit 31b8318b5e0bdfb5605afdf58e7fa18af81b4732
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 20:57:14 2026 -0300
+
+    fix: support profileImage updates in user profile route to ensure persistence across login sessions
+
+commit 62eb489d8b306723962ee269b98652380dd6d64c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 19:58:28 2026 -0300
+
+    fix: optimize admin dashboard metrics with safe raw SQL queries to prevent ORM mapping crashes
+
+commit fadc611c026815be42d118a3c84ea42e8673703f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 19:27:57 2026 -0300
+
+    fix: populate admin dashboard stats and metrics state properly to display database counts
+
+commit 5a45fb59ae7bb0944b77e51d5ba8705501190d74
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 18:56:35 2026 -0300
+
+    fix: map admin dashboard metrics response correctly to resolve zero values
+
+commit 2325ff503cabcb97a74f9f3481e6b5d50a1ba155
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 28 13:21:44 2026 -0300
+
+    feat(users): add full profile editing and updated progressive commission calculation
+
+commit e08abdf4bdfbd3e999f05f9c0ec8ec32abc4a231
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 16 22:53:03 2026 -0300
+
+    fix: resolve 403 error on delete business route for owners
+
+commit 40e44cba3750f5e492ff669d08da802179c9a562
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 16 22:17:51 2026 -0300
+
+    fix: separate email and phone uniqueness checks in phone-signup
+
+commit f0ac1129e7dbcaa356e944d2c8d998593b8c8885
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sat Sep 12 02:49:34 2026 -0300
+
+    fix: prevent sponsor_id collision in orderRoutes
+
+commit 42090b752a4f7f53ad37e86e6e22da7749bd3375
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sat Sep 12 02:46:28 2026 -0300
+
+    fix: full mpRoutes update with duplicate check and sponsor_id fix
+
+commit 18f482346014b9dfea0f63a40ad7b79360955152
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sat Sep 12 02:34:40 2026 -0300
+
+    fix: remove queries to non-existing order_items table
+
+commit c1753de32230ca7be87abe3689c3622d4b86cb0c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sat Sep 12 02:30:59 2026 -0300
+
+    fix: include delivery_address field in orders insert
+
+commit 21a0e0bc9bc2776d0be1351ff9cc9ff189b90a7b
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Sep 10 02:39:18 2026 -0300
+
+    fix: add payment_method field to orders insert
+
+commit b06521f51872766e135e56a6646518020feb5f04
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 21:23:57 2026 -0300
+
+    fix: align orders insert with full schema mapping from drizzle studio
+
+commit 2b296247eebac35870e0825d62cc0fe1fe197ccc
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 20:08:24 2026 -0300
+
+    fix: include JSON stringified items field in orders insert
+
+commit 186b326478a3f0978a4d2656a435c13e7f47b0e0
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 19:08:15 2026 -0300
+
+    fix: include business_name field in orders insert
+
+commit 34d43fadd4b99ca0f1255d0053ff4aadae10fcc4
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 17:48:44 2026 -0300
+
+    fix: match orders table column name 'total' instead of 'total_amount'
+
+commit 11713cb1851172c17d3245bdad1307d884edd896
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 02:42:09 2026 -0300
+
+    fix: convert all mysql queries in orderRoutes to drizzle sql template strings
+
+commit cc1e183a1e31e75692ade28dc63eb28111448e79
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 02:29:29 2026 -0300
+
+    fix: apply drizzle sql parameterization to backend and payment screen fixes
+
+commit 31b85b4b56f0850b1052b6ad5378bcaa6669b7b6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 01:39:59 2026 -0300
+
+    fix: replace justify.content with justifyContent in OrderPaymentScreen
+
+commit c6a4f362e1619522048eb09968d7ed35f6341dad
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 01:32:08 2026 -0300
+
+    fix: restore frontend react native code in OrderPaymentScreen
+
+commit f817f4dd18531f27a25bd2a7c7fd9e920c7c77d6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 01:22:53 2026 -0300
+
+    fix: replace raw mysql placeholders with parameterized drizzle sql tag
+
+commit f4fcbda6177b0b2bbe26d7027a92f9072d34ee53
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 00:54:23 2026 -0300
+
+    fix: resolve justifyContent syntax in OrderPaymentScreen
+
+commit 04a7c81e3161d88e25d86b66e05ded937276a099
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 00:41:22 2026 -0300
+
+    fix: align order creation routes between server and client
+
+commit 7427df2f8f1710e74b196c8ece3ad7f3e59d8ce5
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Sep 9 00:15:54 2026 -0300
+
+    fix: force customer MP redirect URI to customer callback endpoint
+
+commit 39aefd9328bc2af2a33848e5f313f99f2dc0af85
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 23:13:57 2026 -0300
+
+    fix: complete isolated implementation for customer MP status in wallet screen
+
+commit 88b3c8788f053efd6ac785327f6110163b9f6cd7
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 21:47:52 2026 -0300
+
+    fix: remove strict role requirement and unify userId extraction in customer MP status
+
+commit fd0d7064853e256ebc0fce6620022cb69c657715
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 19:17:56 2026 -0300
+
+    fix: syntax error in justifyContent property
+
+commit 0663f292f2b1a7617be96d674099eda1f7232720
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 19:10:57 2026 -0300
+
+    fix: resolve customer mp status update and enable split payment checkout
+
+commit 033348b38f645dfcf245c58ba362305ee265b855
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 15:35:01 2026 -0300
+
+    fix: integrate Mercado Pago Split Payments for menu orders
+
+commit c697f5553c9a30b1d2d924b941e75b9686d7c179
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 15:25:05 2026 -0300
+
+    fix: map connectedAt and add createdAt to customer mp OAuth
+
+commit 46085d4f8ed69c04b040c5220eb16f47e2496631
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 13:27:25 2026 -0300
+
+    fix: refactor marketplace split payment using platform credentials and sponsor_id
+
+commit e6a75e0d0b4014e1d1d6960e1200bad66695e377
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 13:10:33 2026 -0300
+
+    fix: add focus effect and deep link listener to WalletScreen for real-time MP connection updates
+
+commit fb92d79161954355d64f4ca463c67352fa86efd0
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 8 13:08:13 2026 -0300
+
+    feat: add deep link listener for Mercado Pago callback auto-refresh
+
+commit 5ecffff0eb15e1ddd9007a8c46bf7ea29a0a2ee9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Sep 7 16:34:42 2026 -0300
+
+    fix: resolve Mercado Pago OAuth callback flow by removing PKCE dependency and passing businessId state
+
+commit 96a76d5b4d29926d053023aee5abde04ff02ed30
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 1 01:48:51 2026 -0300
+
+    style: remove theme selector and header theme toggle button
+
+commit 88ce5da3f7ab315dc9a055d2aaa013ab70317769
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Sep 1 01:13:47 2026 -0300
+
+    fix: update wallet icon to dollar-sign and remove invalid component imports
+
+commit 2d394cd320f6e7f613f9b34081d8c161edcf83de
+Author: historiayarte1505-netizen <historiayarte1505@gmail.com>
+Date:   Mon Aug 31 19:26:20 2026 -0300
+
+    Update index.html
+
+commit 5c434a0f1336635c3c87bba01ca2d499d87c3c5c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Aug 31 18:22:02 2026 -0300
+
+    fix: remove invalid WebView import and sanitize CustomerWalletScreen
+
+commit de31e101c04bb781aebf7374f6ab6ee16a04998f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Mon Aug 31 17:27:15 2026 -0300
+
+    fix: sanitize LinearGradient colors in BusinessMercadoPagoScreen
+
+commit 206b88e9bda9dba12c36d96bb4b140099ae3fc13
+Author: historiayarte1505-netizen <historiayarte1505@gmail.com>
+Date:   Mon Aug 31 17:18:23 2026 -0300
+
+    Update index.html
+
+commit 75e053bffc57f0768d3b94527f60aac675c18800
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Aug 30 01:51:04 2026 -0300
+
+    fix: replace react-native-webview with expo-web-browser to solve startup crash
+
+commit 35dbf36366f82a493f87d9f837a094aa604291e9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Aug 25 21:44:13 2026 -0300
+
+    fix: update APK link to GitHub release and package config
+
+commit 66b28dedc24903b04e3aa162f6280c01030a0963
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Aug 25 20:40:10 2026 -0300
+
+    fix: direct APK download from GitHub Release
+
+commit 0fa93e99cab34c6f49cb90c4d99b55d4868c4634
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Aug 25 17:42:41 2026 -0300
+
+    fix: update APK download link to direct Google Drive export
+
+commit b6d9aa24b10815bb3f5fd26bae64b6d0711fcf81
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Aug 12 21:30:47 2026 -0300
+
+    fix(mp): replace WebView with WebBrowser for native OAuth flow
+
+commit 45677f332042a164189d1a17323e355a246bbefe
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Aug 12 21:21:04 2026 -0300
+
+    fix(mp): replace WebView with WebBrowser for native OAuth flow
+
+commit 56292cc39cbcb58d6425a08939077bcabd1cb0ab
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Aug 11 17:33:35 2026 -0300
+
+    fix(mp): replace WebView with WebBrowser for native OAuth flow
+
+commit 3bc0df1838d8077bb39016b3720eacbadd4c178d
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Aug 7 20:18:43 2026 -0300
+
+    fix(mercadopago): implement PKCE flow for OAuth authorization
+
+commit 3ac3b3fde096cd5e65d28941590598ea2486fd6f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jul 28 18:58:14 2026 -0300
+
+    feat: agregar opcion para vincular Mercado Pago en el perfil de dueno de bar
+
+commit 0f0523a2b44aebf4d350a8055c5999be7465205a
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jul 28 18:22:15 2026 -0300
+
+    fix: mejorar flujo oauth callback y redirecciones de mercado pago
+
+commit bd67b58740bd8878ee89d7768aa0616678fe7e63
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jul 22 21:32:09 2026 -0300
+
+    feat: actualizar logo oficial de AstroBar a la nueva identidad corporativa
+
+commit 0975db8912ad5ef09bbea584e5a827b966798a03
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jul 16 22:35:58 2026 -0300
+
+    fix: agregar ruta de eliminación lógica de bares en backend
+
+commit 891d18f30942882cb6579e5986fc36444ecbe4e4
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jul 16 21:35:48 2026 -0300
+
+    feat:Mercado pago cambio de script
+
+commit a456cd5d674f963aaa4f5ef7ba374ed859c0d368
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jul 16 20:27:19 2026 -0300
+
+    cambio onboardin
+
+commit 3a7d00bf44304ece061d0ea97c2dcb6908820e60
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jul 16 19:50:15 2026 -0300
+
+    feat: landing page de descarga en subruta /descargar
+
+commit fe1b1a879cdfe1fab2c1b32a871b3e3ce116de78
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jul 16 19:42:01 2026 -0300
+
+    feat: landing page de descarga de APK y estilos cyberpunk
+
+commit a1280e75ca7889ee8ee09c9c3a2e0644b9126642
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 22:51:40 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit e4d36b77e05bc3cb735766303831c342eddc5663
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 22:28:50 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit b9325c16144e2ca8f8955e9c20345ff5d755dfaf
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 22:13:16 2026 -0300
+
+    feat: arreglo de precios en platos
+
+commit 2efe50bc36092810224e6703e465f5335d999efb
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 22:04:36 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit 0702b98110a962244df24ee4571a458afeb1df7e
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 21:43:15 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit e279e4065f72d9bb3c983ae0614ad13ee0be8f14
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 20:43:30 2026 -0300
+
+    fix(frontend): segundo intento de arreglar pago de usuario comun
+
+commit 41fee5494fa90e4900ccbc27bd0e8e6fa106a302
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 20:31:25 2026 -0300
+
+    feat: segundo intento de arreglo de pago cliente
+
+commit be38a3d3921b8dbfb2fe411daad896c0b7c45c02
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 20:09:08 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit 0eee4b36ded309a2b6e40d5bfa38ff55bf7b81e1
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 19:57:05 2026 -0300
+
+    fix: pago de cliente
+
+commit b8de3737fa1d53d5408b159012f6bc64a6b279a2
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 16:41:54 2026 -0300
+
+    fix(frontend): unificados iconos de gestion a familias validas de Feather y removidos signos de pregunta
+
+commit f013902d13e4772f6467271746e63609ed8f62bf
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 16:14:08 2026 -0300
+
+    fix: ocultado header nativo en BusinessTabNavigator para remover error del signo de pregunta
+
+commit da987482243a57928ffca9cefe76e1d62c753118
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 15:24:25 2026 -0300
+
+    feat: refactorización de adminRoutes alineado con esquema de Railway y pliego de puntos
+
+commit 5c25db21df5f4744b08dcf61e5a3f5d78b5c491b
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 14:04:55 2026 -0300
+
+    fix: reemplazo de Ionicons por Feather en barra superior de promociones y unificación estática2
+
+commit 7f4b21ae71ad3e05dc6f4dd45cf3f70558e7211c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 13:53:10 2026 -0300
+
+    fix: reemplazo de Ionicons por Feather en barra superior de promociones y unificación estática
+
+commit 466ad2b4f731f29c6a73ea071dffcc78616faa6d
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 24 13:05:10 2026 -0300
+
+    feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+
+commit 2d6d3974d0ee8db30b6df80bee2e6036ada0928f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 02:56:03 2026 -0300
+
+    design: restructuración completa cyberpunk con gradientes neón simétricos en detalle de bar
+
+commit 5657ddd438f7a8b992134107680a9dffb9760810
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 02:51:40 2026 -0300
+
+    style: alineación vertical milimétrica en botones de detalle de bar y fix ortográfico en dirección
+
+commit f5a5ca66eecb0af9d3abfdeff5c3ff2cf3307d57
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 02:44:02 2026 -0300
+
+    fix: remoción de getStyles fantasma e importación de Pressable en AdminDashboard
+
+commit 77b9360176bb18af174b458dca27b129b2563c9b
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 02:21:32 2026 -0300
+
+    fix: remoción definitiva del parseador getStyles inexistente en CreateFlashPromotion
+
+commit 21bffcf250d1c8145425414319f7b0e20a3382a9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 02:05:29 2026 -0300
+
+    fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+
+commit 15c6378dcc8457ac532fb29c76b9a7a8c2f58934
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 11 01:59:47 2026 -0300
+
+    fix: inclusión de ActivityIndicator en los imports desestructurados de react-native
+
+commit 94444b59b0bc6e6921292f5a5fb528c3ff21fd63
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 23:40:28 2026 -0300
+
+    fix: unificación de firmas y tipado de login con retorno de sesión en AuthContext
+
+commit d7acdaba972dfb731c02875a17f3ab7a5a55f8d5
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 20:37:16 2026 -0300
+
+    fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+
+commit 665f9e8731e6a9dad10835ae3e9bb2c32cbc53f8
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 20:30:47 2026 -0300
+
+    fix: re-encauzamiento seguro del login para cuentas business_owner a BusinessPromotions nativo
+
+commit 0e27cf3baaa5264ad679fc5c3be1d2bc393c6812
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 19:23:46 2026 -0300
+
+    fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+
+commit cb6e98c999f05fbc8c84ff501cf684a18a95d07c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 17:24:49 2026 -0300
+
+    fix: corrección del mapeo de roles en el dashboard de administración para leer 'user' real
+
+commit 6d58c0fa6ef8c91eaeb1ec0d0be08ab287c3ef75
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 15:52:51 2026 -0300
+
+    fix: corrección del mapeo de roles en el dashboard de administración para leer 'user' real
+
+commit d30d723c907f42853fb1bae31ebe10f81cda9f5b
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 15:19:48 2026 -0300
+
+    fix: corrección estructural del tipado y blindaje del ToastContext en CreateFlash
+
+commit 6043edeef582b3cd6214bc32c3e28a7a92769895
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 10:58:25 2026 -0300
+
+    design: rediseño del panel de promos y formulario flash a morado eléctrico espacial nativo
+
+commit d03ab7617739d740b51e0ad0957b592fea81d616
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 10 10:43:13 2026 -0300
+
+    fix: reordenamiento de ManagementStack para iniciar sesión directo en el panel de promociones
+
+commit d581c4e03f2c996455528bde7b54cd2e0297d442
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 17:32:06 2026 -0300
+
+    fix: migracion de proyecto a cuenta nueva y purga total de interfaces violetas
+
+commit 21a1e7c614a44801f9e65c94e6b7a2a270316e2f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 16:31:46 2026 -0300
+
+    design: rediseño de Mis Negocios y purga total de interfaces violetas por estética cian neón espacial premium
+
+commit 1597fcd37b942fe07eeaf4edd1838d64eea8b136
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 14:33:36 2026 -0300
+
+    fix: regeneración de prebuild nativo para extirpar splash violeta
+
+commit 53eefb995e3096c48163ae18c5f41e69337abf6c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 14:20:53 2026 -0300
+
+    design: rediseño galáctico premium para la pantalla de inicio con blurview
+
+commit 7f8a5df686dd8434525ee6d57e75518e388df505
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 12:42:38 2026 -0300
+
+    design: extirpado el violeta nativo y unificado el splash inicial con el fondo galáctico
+
+commit 848b2c52edbe8f0ddc2755de3dea984b91e5f9c2
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 03:05:00 2026 -0300
+
+    fix: ajuste exacto de dos niveles relativos para la raíz de assets
+
+commit 3c132ccd48984fecf97c2a8852248eb95c38da5c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 03:00:19 2026 -0300
+
+    fix: corrigiendo rutas relativas reales hacia la raíz del proyecto para los assets
+
+commit 15ba3226df162f8925fbe76311b039dec14c1757
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:53:42 2026 -0300
+
+    fix: reemplazo de alias conflictivo por rutas relativas tradicionales para recursos estáticos
+
+commit dc36b661ddced00db208c14c1540c5bc4863c730
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:48:55 2026 -0300
+
+    fix: importación estática limpia del logo en loginscreen eliminando require relativo
+
+commit c3c10eeee6b0fc5e9d113c9107696139b6a48439
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:36:28 2026 -0300
+
+    fix: importación estática final de la imagen del logo en auth context
+
+commit 14e14bda0f13d95db9fda3df884f4a89c53fd83c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:29:13 2026 -0300
+
+    fix: reemplazo definitivo de ruta con alias global para el logo en auth context
+
+commit 6405fa363e09ded2dc9d74b5ad7901d67ff7768c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:23:01 2026 -0300
+
+    design: corrección visual de onboarding encimado y unificación con la estética espacial de AstroBar
+
+commit 5ed75999813e064af815cba3fb166ae20c6bd3a5
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:19:16 2026 -0300
+
+    design: reemplazo de pantalla de carga rústica por splash screen animado premium con estrellas en vivo
+
+commit b42c49942f1016a9b31dbb3253b78704a353d14a
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 02:14:42 2026 -0300
+
+    feat: login configurado por correo y contraseña con fondo animado de estrellas
+
+commit 4a5599456d822ee15b27410a5f611f2250b125c5
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 01:31:38 2026 -0300
+
+    design: rediseño premium neón del panel comercial para dueños de bar
+
+commit 702cbf5200ca1deefc15a491f11f30e42ffce8c1
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Fri Jun 5 01:25:51 2026 -0300
+
+    design: rediseño premium de la pantalla de perfil y adaptación modo oscuro
+
+commit 908a3ed7f7a0c4133de2f23be57b7c6f18862bcf
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 22:02:18 2026 -0300
+
+    feat: rediseño de dashboard para dueños de bar y modo oscuro
+
+commit 3e692af674e805479737dd0f0021d9b220475bf8
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 16:54:17 2026 -0300
+
+    design: cambiar logos de la app a modo mundial en assets raiz
+
+commit 84fb0d03a887d91fc016510228860ff7db023276
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 16:06:50 2026 -0300
+
+    style: actualizar pantallas del frontend con ultimos cambios y tipeos
+
+commit 665fca25f5579ba8bf7524e0b4d4f71d6a03e9f1
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 16:04:04 2026 -0300
+
+    feat: arreglar rombos
+
+commit 77592080c185b5fb9326d003ae132b7635af5c99
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 14:31:35 2026 -0300
+
+    style: actualizar pantallas del frontend con ultimos cambios
+
+commit 500fa11dc8db94131b44d0855ee99d8c45c4fdf4
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 14:12:50 2026 -0300
+
+    feat: implementar endpoints de dashboard y métricas reales de usuarios y bares para el admin
+
+commit e082796ea10611f55be90733763c1bd7a6315452
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu Jun 4 02:42:37 2026 -0300
+
+    fix: mapear correctamente dashboardMetrics al componente DashboardTab para sincronizar contadores
+
+commit 270e18a9473fae791a8439fb724ee8f12adff163
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 21:53:40 2026 -0300
+
+    fix: restaurar formulario de gestion y corregir endpoint del switch de apertura
+
+commit 7eeb075066fb9da48f3e15e70e1f4cd2896a7eca
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 20:35:47 2026 -0300
+
+    fix: unificar objeto theme en BusinessManageScreen para evitar crash de background undefined
+
+commit f0b84df89b84941b2c89bfd5a91aede86d60e3e7
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 19:16:41 2026 -0300
+
+    fix: blindar consulta de referidos para evitar crash por array vacio
+
+commit 4f31f0f193902e0d738682d94a93cc53bbced005
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 18:17:09 2026 -0300
+
+    fix: enlazar server a la interfaz de red 0.0.0.0 para evitar caidas en railway
+
+commit 3ff1467202e9d246b0b5a9bf676589e69b08b883
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 18:02:02 2026 -0300
+
+    fix: unificar mapeos de base de datos y tipados en business_owner routes
+
+commit b77a7202805b7bdbf16f418f667ef00030c6166d
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 17:55:47 2026 -0300
+
+    fix: corregir owner_id typo y asegurar tipos numericos en dashboard
+
+commit 2691c8dd006e0dc743c70ad2a85514ce4e0c3040
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 17:45:14 2026 -0300
+
+    fix: ajustar owner_id en objetos de insercion para mysql
+
+commit 99286d082a790a797766f13acb60342027153fd9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 17:30:09 2026 -0300
+
+    fix: reordenar rutas de negocio y corregir duplicados para rol business_owner
+
+commit f51c59cd8302a29ef8e43bed117d08648e5f45aa
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 12:58:58 2026 -0300
+
+    Fix: color de fondo del modal de editar
+
+commit aa8321e3922603cb6a2d3a897ba9a9545ab76462
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 12:32:46 2026 -0300
+
+    Fix: color de fondo del modal de editar
+
+commit edee9e7ae25f8424455a55319647e628b7329e76
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 01:37:06 2026 -0300
+
+    fix: corregir estructura del topNav y mejorar legibilidad de inputs en BusinessManageScreen
+
+commit 79c513f6ebc682eeb46eee52183d2e18553af841
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 01:28:17 2026 -0300
+
+    fix: corregir codificación UTF-8, arreglar estilos visuales y textos en pantallas de gestión y privacidad y demas
+
+commit 940f522dbb3d365b0620a23d76d6beedaf743f1e
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 01:25:27 2026 -0300
+
+    fix: corregir codificación UTF-8, arreglar estilos visuales y textos en pantallas de gestión y privacidad
+
+commit 3fa9452549e38b6b716a50213cd6d135bd88cd58
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed Jun 3 00:44:02 2026 -0300
+
+    fix: corregir sintaxis, navegacion y dependencias en pantalla de ajustes del bar
+
+commit 03503587c8e2523996d17aebf690ca35fd8b30ed
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 23:00:05 2026 -0300
+
+    fix: geocoding inverso de google en formulario del bar
+
+commit 87921a21a0b9548bceabc7273c252fddfa66e4f9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 15:24:39 2026 -0300
+
+    design: ajustar color de fondo del splash screen para unificar el icono
+
+commit fb321802e1034b43aad5e671bc10c772987db91c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 15:00:58 2026 -0300
+
+    test: restaurar index original sin require cache
+
+commit 38e72878ce72f85bf132b4625deeebcf3cbe6413
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 14:52:10 2026 -0300
+
+    fix: subir limite de rate limit en produccion y ajustar upsert de bares
+
+commit 0af0d70fce2f6ba5c542dcd5464216bdb8f1b0b1
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 14:31:27 2026 -0300
+
+    fix: permitir creacion de bar desde formulario de bienvenida usando put
+
+commit 9ad986321ec3f3cd738f33ebbef4439ffa220b3c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 13:57:10 2026 -0300
+
+    feat: cambiar sistema de login y registro a texto plano sin encriptar
+
+commit de763c4f8c5785875ef93f8db4f3bcb2439fd66f
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 13:33:51 2026 -0300
+
+    feat: implementar ruta phone-signup y corregir verificacion de login por email
+
+commit 044b6fa0e13fb6c12a7692c3c8090bfd3e90976d
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 13:29:13 2026 -0300
+
+    fix(backend): permitir login real por email verificando hash de bcrypt
+
+commit 86553a1053f521035aea6b9c460568b5a220132c
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 13:23:16 2026 -0300
+
+    feat(backend): encriptar contraseña con bcrypt al registrar usuario
+
+commit 3dee723d20c1a4013c0e8f811819dfda4e61c47b
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 13:09:35 2026 -0300
+
+    feat(backend): agregar handler para endpoint POST phone-signup
+
+commit fc38747c1741bfbd6f002bbf7679b92711f462f9
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 12:57:15 2026 -0300
+
+    fix(navigation): corregir error de sintaxis jsx en BusinessTabNavigator
+
+commit d1f04e205753fe10e261c97b8e179d40fe3026a7
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 12:50:31 2026 -0300
+
+    fix: solucionar 404 de api en railway y corregir prefijo +54
+
+commit fa4f2bb0f1ce6bd49fc060fbf65ebf61d30bce5e
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Jun 2 12:39:43 2026 -0300
+
+    fix: apuntar API a Railway en desarrollo y agregar endpoint de registro
+
+commit c251f2a346bc334ed1acdcc9810b7aa52e5012b6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu May 28 00:37:21 2026 -0300
+
+    fix: eliminar comentario invalido en el Tab Navigator
+
+commit 733fb09f44b70a9c5e9cefc31ba802439300ebdd
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu May 28 00:22:25 2026 -0300
+
+    fix: mantener solo app.config.js limpio
+
+commit 6e97b5599ee0da0b8b077f8b02aab015aec64dba
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu May 28 00:14:15 2026 -0300
+
+    fix: cambiar temporalmente logos por icon.png para evitar error de formato
+
+commit 2b8c941f389eec64547c0f84ad2b91a05e89ec3e
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Thu May 28 00:03:18 2026 -0300
+
+    fix: remover configuracion extra huerfana de api.ts
+
+commit 3b2db7ac35fb4b6e5894b995fc8d8a73707133a8
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Wed May 27 23:26:16 2026 -0300
+
+    fix: bypass navegacion rota en web
+
+commit be813a55c36e5423bf30b0d26efec09a5d16c154
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 20:46:17 2026 -0300
+
+    fix: bypass twilio error and update dev login
+
+commit 17935e0e7be2c674d643ff55b43d0f04de2c6be6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 18:32:14 2026 -0300
+
+    Fix: actualizando webhooks de Mercado Pago a Railway
+
+commit 9bcdd310d9fb888c2557a1b935043b637bb795d6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 18:19:17 2026 -0300
+
+    Fix: backend url changed from render to railway
+
+commit bb7d36e90e8ce9e3a1a2e725e2528ff36a233783
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 15:52:31 2026 -0300
+
+    Bypass phone verification in RootStackNavigator
+
+commit fd376cb0d32c295eeb2f3d62d30a26c1136572a6
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 15:26:43 2026 -0300
+
+    Bypass verification logic
+
+commit dfd9e096dee88954a91ecb5701189bed934f8fe0
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 13:11:09 2026 -0300
+
+    chore: allow dist folder and upload web build
+
+commit e2af6c741b2a7596a199b03923eaa5496cd5d2ab
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Sun Apr 26 13:01:38 2026 -0300
+
+    dist: final production web files
+
+commit ec70a0ffd8c45c6137192af8ae2b64eb8bf45db8
+Author: AstroBar Admin <astrobar2026@gmail.com>
+Date:   Tue Apr 21 21:02:24 2026 -0300
+
+    fix: relax env validation and prepare for railway
+
+commit a35e0b229cdda5710bb28e674c6d1de6a48ea502
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 16 20:14:50 2026 -0400
+
+    Fix: Mejoras en logs de GPS y direcciones para diagnosticar errores
+
+commit f968daad48b14d4729cd62544b6473d7f919610c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 16 20:09:15 2026 -0400
+
+    Feature: Sistema de pagos completo con Checkout Pro + Split (Marketplace) - Implementado Checkout Pro con división automática de pagos (marketplace_fee) - Bar recibe 100% del precio del producto - AstroBar recibe comisión configurable (5%-30%) - WebView interno para Checkout Pro en PaymentScreen - Detección automática de redirecciones (success/failure/pending) - Logs detallados del split de pagos - Documentación completa en CHECKOUT_PRO_SETUP.md - Eliminada dependencia de OAuth del cliente (ahora opcional) - Sistema listo para producción con Mercado Pago Marketplace
+
+commit aba7416ac98bf97521d2ad11b9aa5ee60e11d84c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 20:26:08 2026 -0400
+
+    Fix: Correcciones de codificación UTF-8 y mejoras en WebView y GPS - Corregidos errores de codificación en ProfileScreen (tildes y caracteres especiales) - Cambiado expo-web-browser a react-native-webview en CustomerWalletScreen y PaymentScreen - Mejorada función de direcciones GPS en MapScreen con ruta visible y marcador de usuario - Agregado feedback háptico y mejor manejo de errores en navegación
+
+commit eb40c6acbd1ad5572cca3a523bfe8b68f18f5307
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 19:49:52 2026 -0400
+
+    feat: implement internal WebView for Mercado Pago OAuth instead of external browser
+
+commit f473cdbfd0c139d3079dfdecaf0dbd1f0523d616
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 19:43:02 2026 -0400
+
+    fix: use openAuthSessionAsync for Mercado Pago OAuth flow instead of external browser
+
+commit 73a78e4e2428bef4b3531974ebbf3897c2a4db7e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 19:22:32 2026 -0400
+
+    fix: replace useOrderCart with useUnifiedCart in OrderPaymentScreen and App.tsx
+
+commit 2c0c30939dbda5fc195f59d40d859ae9b715c54f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 19:12:43 2026 -0400
+
+    feat: unified cart system, business detail improvements, and responsive grid layout - Added unified cart supporting both products and promotions from same business - Fixed ActivePromotionsScreen to add promotions to cart instead of direct payment - Removed duplicate menu button and inline sections from BusinessDetailScreen - Implemented responsive grid layout for AstroBares populares (50% width) - Added favorites table migration and migration routes - Fixed React Native Maps web compatibility with mock file - Fixed price conversion bug in BarMenuScreen (multiply by 100) - Added useRoute import to ActivePromotionsScreen - Removed AdminScreenOld.tsx
+
+commit 19a92a2e7548ec77ab020da732bdae5536aa14d6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 18:02:08 2026 -0400
+
+    fix: Rename CollapsibleMap and NativeMap to native versions
+
+commit b5b4c7266845910b187ee230e59da81857f43473
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 17:56:04 2026 -0400
+
+    fix: Separate native and web versions of MapScreen and LocationPickerScreen
+
+commit ad5d87ec9a0d7be57e5f2acf125f2f9dca284896
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 17:47:04 2026 -0400
+
+    fix: Correct price conversion to cents in ProductDetailScreen
+
+commit d9dafb82240025c6c4d8942a896da3b4bd06dc95
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 14:40:55 2026 -0400
+
+    fix: Update OrderPaymentScreen and BarMenuScreen to use UnifiedCart
+
+commit 1a0b3a7fa92b864be98ab40cb8375b267559c929
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 14:34:33 2026 -0400
+
+    fix: Update ProductCard and ProductDetailScreen to use UnifiedCart
+
+commit 394dde68550581643890c2d3355526c5870233f3
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 14:30:11 2026 -0400
+
+    feat: Unify cart contexts into single UnifiedCartContext
+
+commit 92cdb0ef118861b0edb177c6be8ece443a1ce2bb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 14:20:57 2026 -0400
+
+    feat: Use WebView for Mercado Pago OAuth instead of external browser
+
+commit 9950d0eb90f3fbd509eeb39996ebca56a39bf03e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 13:40:21 2026 -0400
+
+    fix: Correct cart navigation from Cart to OrderCart
+
+commit fea919e8a8b037ac5f3f5816cd46da4adecabf67
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 14 13:27:29 2026 -0400
+
+    fix: Correct HeatmapScreen styles and Mercado Pago config
+
+commit 0c0c737da12e31ca09f39b990d038e23379b48be
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 20:56:40 2026 -0400
+
+    fix: Remove conflicting HeatmapScreen files - use only native version
+
+commit 875e748b22bc8efcbf03c7b31f02c88150808f26
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 20:50:00 2026 -0400
+
+    fix: Restore interactive heatmap with Google Maps and real data
+
+commit 49677eae2f3c009b8c01b4f5db67170c042e18bb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 20:38:12 2026 -0400
+
+    fix: Create HeatmapScreenNew to force recompilation and fix styles reference error
+
+commit d1077c23c3aba566f238711778a9d65f5159625c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 20:20:40 2026 -0400
+
+    fix: Remove fake peak hours data from HeatmapScreen - keep only real DB data
+
+commit 79b3506f6ffd05743847761b70531c53905cd99c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 20:18:28 2026 -0400
+
+    revert: Restore working HeatmapScreen with real database data
+
+commit 9d8f07f5d8654175dbb455c69d96a0f34596683c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 18:41:09 2026 -0400
+
+    fix: Refactor HeatmapScreen to arrow function - guarantee styles compilation
+
+commit d723916b88af75288e934730457db0978834df38
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 18:38:53 2026 -0400
+
+    fix: Force HeatmapScreen rebuild - ensure styles are properly compiled
+
+commit b4e0538cf1944aeafb8971243086b53e76de3b80
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:58:19 2026 -0400
+
+    feat: Add business hours GET/PUT endpoints - connect to cron system
+
+commit c65e169a2733c13be558c706f5f30a9e18df27a9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:54:45 2026 -0400
+
+    fix: Remove fake peak hours data from heatmap - show only real data
+
+commit 1288065f51c0f2690f4f6c013a0f5f9f225fb531
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:41:26 2026 -0400
+
+    fix: Remove centavos division in frontend - display amounts as-is from DB
+
+commit 7bb84580bdbd5698562537909a4ef267e3f74730
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:30:16 2026 -0400
+
+    fix: Convert all admin dashboard amounts from centavos to pesos
+
+commit 686890c57fb28c00f2cc50ae79a686c1d776910a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:27:32 2026 -0400
+
+    fix: Include pending transactions in revenue stats (money already in Mercado Pago)
+
+commit 9fa35a00b2990655c4bd62ec1e5298a37af9a5e8
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:25:27 2026 -0400
+
+    fix: Correct admin dashboard metrics to show all data (users, promotions, revenue, transactions)
+
+commit f24b1867167bca52aff22369e871c8673a684d24
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:09:06 2026 -0400
+
+    fix: Remove address screen references from ProfileStackNavigator
+
+commit 9fccb29638b940d1759851e1eb14fa5e2131e3be
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:06:14 2026 -0400
+
+    chore: Remove Cart, Checkout and Address screens (no delivery in app)
+
+commit 5a286a504890c102f8cbf624cb133ff9b5f1aa09
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 17:03:55 2026 -0400
+
+    feat: Add CheckoutScreen and OrderPaymentScreen for mobile (no delivery)
+
+commit d5cc3fd8b242606da913a13a6ea0ab6ef1e7da79
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 16:53:41 2026 -0400
+
+    fix: Remove CheckoutScreen import (web-only component)
+
+commit 32fa5dd15c1f83068cf84123e8e83afefb9d2b91
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 16:35:41 2026 -0400
+
+    chore: Point frontend to production backend (Render) for APK build
+
+commit 98c84e1533d0f4dcc4eed26b678dd6c7e7a0d6ec
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 16:33:16 2026 -0400
+
+    feat: Complete Mercado Pago integration for all user roles with payment history
+
+commit bdd4df4b9882265d87a7429c71f1c43bfb588c8f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 14:41:44 2026 -0400
+
+    feat: Implementar Mercado Pago global para todos los roles - BusinessMercadoPagoScreen: Pantalla para bares vincular MP - AdminPaymentsScreen: Panel monitoreo pagos y comisiones - Endpoint /admin/payment-stats con estadísticas completas - Integrar BusinessMercadoPago en WalletScreen - Actualizar navegación ProfileStackNavigator - Sistema MP completo: clientes pagan, bares reciben, admins monitorean
+
+commit 7431b01d21d226e28fb25a8e5917edd8521523bf
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 14:34:46 2026 -0400
+
+    fix: Permitir eliminar promociones activas - Remover restricción que impedía eliminar promociones flash activas - Business owners ahora pueden eliminar cualquier promoción propia
+
+commit a7b9c2d18e1355654def522d7ac6296c98766588
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 14:20:41 2026 -0400
+
+    feat: Agregar endpoint de pago para clientes y deep linking - Crear customerPaymentRoutes.ts para pagos con MP - Actualizar PaymentScreen para usar endpoint correcto - Configurar deep linking en App.tsx para callbacks de MP - Registrar rutas en apiRoutes.ts
+
+commit 4672ccbfc12115ad9fb85b5f41edaee4759e74b6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 13:20:59 2026 -0400
+
+    fix: Corregir error de sintaxis en promotionRoutes.ts - Agregar declaración de ruta /redeem faltante - Integrar CustomerWalletScreen en ProfileScreen - PaymentScreen detecta MP y permite vincular en flujo - Webhook de Mercado Pago mejorado
+
+commit e9b276282555e331149f9ec26b747c9b8955acbc
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 13:17:42 2026 -0400
+
+    feat: Sistema de vinculación Mercado Pago para clientes - Tabla customer_mercadopago_accounts creada - Rutas /api/customer-mp/* para OAuth de clientes - CustomerWalletScreen para vincular cuenta MP - PaymentScreen detecta y permite vincular MP en flujo de compra - Migración add_mp_payment_id ejecutada
+
+commit 03715167d1881d24677dbd0773ad5dda0dd19035
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:54:59 2026 -0400
+
+    Feat: Implementar webhook de Mercado Pago, agregar mpPaymentId a transacciones y completar sistema de pagos
+
+commit c4b115ab6212549e087ad2b52080b9731c0a5f58
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:53:05 2026 -0400
+
+    Feat: Agregar endpoint POST /promotions/:id/pay para procesar pagos con Mercado Pago
+
+commit 805669e78f8b72085cde7e3549c3c2f9fed5425e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:33:18 2026 -0400
+
+    Feat: Agregar validación de fechas de vencimiento en tarjetas de pago (cliente y servidor)
+
+commit 768198c47fd7ab470ea50a67b46415da91291d5b
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:28:03 2026 -0400
+
+    Fix: Corregir formato de año de vencimiento en tarjetas de pago (guardar y mostrar solo últimos 2 dígitos)
+
+commit b6d0c47ff039e2542f3858ad601584d414b64d4d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:21:52 2026 -0400
+
+    Fix: Corregir importación de api en pantallas de métodos de pago y actualizar baseURL en api.ts
+
+commit e49cee4e9fa8c601757aa312463288b49d01b91b
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 12:09:31 2026 -0400
+
+    feat: guardar tarjetas de pago en base de datos
+
+commit f98e9bd20e2a43d7bff86641cbabb691794e7a82
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 11:56:31 2026 -0400
+
+    feat: agregar sistema de métodos de pago para clientes
+
+commit 89eef53767fa928abe676750f493178a60ddb69a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 11:23:05 2026 -0400
+
+    feat: agregar credenciales reales de Mercado Pago y hacer variables opcionales en dev
+
+commit b2006ee328a564c4a33302ff4869ad9a9b3f5251
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 11:09:36 2026 -0400
+
+    feat: agregar logs detallados para debugging en Render
+
+commit f3c2339d4ed44f1cf777a83fa3873b330d8924cb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 11:02:31 2026 -0400
+
+    fix: reemplazar todas las referencias a Stripe por Mercado Pago en screens
+
+commit c0e098b9d4466e265874e15eb611fa5d0a5a7d6f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:59:30 2026 -0400
+
+    fix: actualizar CSP security headers para Mercado Pago
+
+commit cacf6f726d0f6e9d1dfe2ab9e45e782d875cdd60
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:56:06 2026 -0400
+
+    fix: eliminar dependencias de Stripe del package.json
+
+commit 010534cf8a7cf673f816a36472af2b7dbb13c615
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:55:14 2026 -0400
+
+    fix: eliminar todas las referencias a Stripe del cliente (App.tsx, AuthContext, types, navigation, screens)
+
+commit 3958340bafe1ffff2cb054d14f45c3414f93a5b6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:51:25 2026 -0400
+
+    fix: eliminar completamente Stripe, actualizar env.ts para Mercado Pago
+
+commit 6b2a11fc0c6b81285d6fbb58f30be1ca3fe9bb06
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:47:54 2026 -0400
+
+    fix: eliminar referencias restantes a Stripe en apiRoutes y archivos de paymentRoutes
+
+commit f000be07f52cf6ceaa0b3bb751074979fe4a9724
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:32:12 2026 -0400
+
+    fix: actualizar variables de entorno Mercado Pago y corregir nombres en mercadopagoRoutes
+
+commit 42e3cc6fe3cbdecb96aaa160676f1d984945880f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Thu Mar 12 10:13:24 2026 -0400
+
+    feat: Integrar flujo completo de pagos con Mercado Pago - Actualizar ConfirmPromotionScreen para crear pago con MP - Crear PaymentPendingScreen para esperar confirmación - Agregar endpoint GET /api/promotions/transactions/:id - Verificar estado de pago cada 3 segundos - Flujo: Aceptar promo → Crear pago MP → Abrir checkout → Verificar → Mostrar QR
+
+commit 9f7ed72841fb63b349bf98b4d92762447f9e1708
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 20:21:44 2026 -0400
+
+    fix: Usar theme.background en modales de negocios - Corregir transparencia usando el color de fondo global del tema - Mantener padding adicional para botones
+
+commit 0a1781e575ad588b82e4794779b2964c6dff0ecd
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 20:08:04 2026 -0400
+
+    fix: Agregar padding inferior a modales de negocios - Evitar que botón Actualizar quede pegado a botones del teléfono - Agregar paddingBottom a ScrollView de modales crear/editar negocio
+
+commit d076401ed69a8a3f4fdf981ce372a9979d7f418b
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 20:04:24 2026 -0400
+
+    fix: Corregir error 'styles is not defined' en CreateFlashPromotionScreen - Agregar llamada a getStyles(theme) para generar estilos correctamente
+
+commit 75d852a5952595d986c04ef30cbd19e4cdea4150
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 19:08:56 2026 -0400
+
+    feat: Implementar mejoras críticas de UX - Pins en mapa con estados (verde/rojo/amarillo/dorado) - Estado abierto/cerrado sincronizado con horarios (cron cada 5 min) - Eliminar promociones expiradas (solo business owner) - GPS integrado con ruta, distancia y tiempo (endpoint backend) - Mejorar marcadores de mapa con iconos map-pin estándar
+
+commit 19ff7b855897b249d0747c1d408e78082b8e2d67
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 19:01:17 2026 -0400
+
+    Fix: Corregir errores de sintaxis en archivos de pantallas - Reemplazar backtick-n inválidos por newlines correctos
+
+commit baa5eb0466573bcc22ef90dcb42a09531563a936
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:55:52 2026 -0400
+
+    Convert BarMenuScreen to dynamic theme with getStyles
+
+commit 525ca36426f3e75893435e0947f68fc12d2548f3
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:49:55 2026 -0400
+
+    Fix useTheme import in HomeScreen
+
+commit 09ada91ff5d148cbc864c2fd8b1c8482d2b56f6e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:46:14 2026 -0400
+
+    Fix theme references in MyBusinessesScreen
+
+commit 81237e38e103793eb6042fe174d783a42b61b365
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:45:12 2026 -0400
+
+    Sync theme changes from server
+
+commit 3b995b38c75cd03ca9f28d582bb715d433174068
+Merge: 1f3fb5a 832a148
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:15:12 2026 -0400
+
+    Resolve merge conflict in HomeScreen
+
+commit 1f3fb5ac98c4f90cb68be68a57dcb8e11824a90a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 18:13:33 2026 -0400
+
+    FIX TEMA BLANCO OSCURO
+
+commit 832a148c919190b4d0d4cbbf3cea3cfc2b67cace
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 17:26:23 2026 -0400
+
+    Restore HomeScreen with getStyles(theme)
+
+commit c2a6903ff4a0faa360fe49d5cd7267e6556f5c35
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 17:11:50 2026 -0400
+
+    Restore HomeScreen + ThemedText adapted
+
+commit 9a8d099295c75370936d3b13366006efd24b2347
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 17:10:50 2026 -0400
+
+    Restore theme toggle + adapted screens
+
+commit fa8e11b9987000c271aaef1cf01fad275b811d04
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 17:02:12 2026 -0400
+
+    Fix useAuth import
+
+commit 576c46a1cb880192ae476fca9eaca75458d11176
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 16:45:24 2026 -0400
+
+    Fix HomeScreen syntax
+
+commit 71279e2d33d394b3b332b1daa3cb53553240cafb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 16:41:59 2026 -0400
+
+    Fix admin dashboard
+
+commit 0f93f0df7ea23bfc1ac30fb070399eb23da0f823
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 15:12:17 2026 -0400
+
+    Fix: Syntax error in theme.ts
+
+commit c603461e30fb6dfd3df38e9cbcb63f2d64450f9f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 15:10:13 2026 -0400
+
+    Final: Adaptive theme system that actually works
+
+commit 0448aa9620dce3b8d950cad508dc686cd380d25d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 15:03:02 2026 -0400
+
+    Fix: White theme implementation and git conflicts
+
+commit 256654814ef1910f3e603512781082f54debb5a6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 14:49:50 2026 -0400
+
+    Fix: Proper adaptive theme system
+
+commit f84b0ca0a80094ab56f3d98e3bf76eb9867dfe99
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 14:45:17 2026 -0400
+
+    Simplify: Direct light theme colors for testing
+
+commit dfb2d0a7ec57d155dfa9b45e6debbb4eb2fec61f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 14:41:01 2026 -0400
+
+    Test: Force light theme to debug theme system
+
+commit 2dbee6e104827d4294b98a8ad6c6d7b2ad6cb502
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 14:36:04 2026 -0400
+
+    Fix: Update splash screen colors to match adaptive theme
+
+commit f344ff5adec6bddfb477e2954acbddc93744d9d9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 14:35:04 2026 -0400
+
+    Fix: Implement adaptive light/dark theme system
+
+commit 1cf6b67b15d0fb6ca8c3e69303b851aed861796d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 13:31:03 2026 -0400
+
+    Fix: Restaurar endpoint correcto /api/public/businesses que funcionaba
+
+commit fcd4a4090ac7821f4b80417a63d7769bb65614d8
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 13:16:28 2026 -0400
+
+    Fix: Resolver conflicto en authRoutes.ts
+
+commit 6a41b4ca1f241517bba5d950a6be33c94acb1860
+Merge: 8e7a1ce 6c26480
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 12:40:08 2026 -0400
+
+    Merge: Resolviendo conflictos automáticamente
+
+commit 8e7a1ce61d6c17da1528945695edd0918db12bd9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 12:38:51 2026 -0400
+
+    Fix: Corregir URLs backend para apuntar a Render correctamente
+
+commit 6c26480b12c9609c7a9194c9c0fe1c6bdfefbff1
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 12:13:19 2026 -0400
+
+    Fix: MapScreen endpoint correcto + splash screen configurado - Restaurado MapScreen funcional del commit 8a54bf0 - Corregido endpoint de /api/public/businesses a /api/businesses/featured - Configurado splash screen con logo AstroBar correcto - Android regenerado sin errores de codegen
+
+commit fb0ba35c1ca2b2c8d5e2e94798f7f79724451441
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 09:39:32 2026 -0400
+
+    Fix: Splash screen purpura con logo AstroBar + MapScreen restaurado - Configurado splash screen con logo correcto - Color purpura en splash screen - MapScreen restaurado a version funcional - Android regenerado correctamente
+
+commit a4071a6566d962887179e13c6006419a25bace5f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 08:15:06 2026 -0400
+
+    fix: Proper splash screen configuration with purple background + AstroBar logo
+
+commit c95f798779868b2b5d343baee4059f7228603af2
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 08:09:18 2026 -0400
+
+    fix: Restore EXACT working MapScreen from commit 8a54bf0
+
+commit f8bfcea276d6e551ee94f7ce30f2399d804bd477
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 08:01:58 2026 -0400
+
+    fix: Restore working MapScreen + Complete splash screen implementation
+
+commit 558fec3edd3153c6cc05a8ddd585d2d72250eff4
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 07:50:44 2026 -0400
+
+    fix: Restore working MapScreen functionality
+
+commit 2ae35fcf21ac7320789ae01e3113c6aba2e530cc
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 07:41:58 2026 -0400
+
+    fix: Resolve splash screen and map crashes - AstroBar production ready
+
+commit 03ecdb7702732350f2b7bba35e8ac6c31f0c6f7f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 07:20:48 2026 -0400
+
+    feat: Complete AstroBar Buenos Aires implementation with all bug fixes and new features
+
+commit 30a7fd9757b77eb44284f514c786e19a14c498df
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Mar 10 00:14:10 2026 -0400
+
+    Add: react-native-maps para mapa profesional con GPS y pines de colores
+
+commit 7e0561faf1b961a8700f36625f2c059812349f50
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 23:38:10 2026 -0400
+
+    Fix: Configurar APK con react-native-maps y gradle.properties para compilación nativa
+
+commit 8a54bf04d29b9ba521c0feba92e95c9f3487cb8c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 20:06:40 2026 -0400
+
+    Fix: Restaurar config de react-native-maps para APK
+
+commit 309e79a9d5c55d1dd3ead1c4e8def4b51a523ce9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 19:59:14 2026 -0400
+
+    Fix: Quitar emojis corruptos de textos
+
+commit cb4affab834473eefd4f70d08675d1cb35a4dddb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 19:56:47 2026 -0400
+
+    Fix: Separar pantallas de promociones flash y comunes + corregir acentos
+
+commit 675c698b819a8ff478aea15f90109a9549ae832f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 19:21:15 2026 -0400
+
+    Add: MapScreen.web.tsx para web sin react-native-maps
+
+commit da6476559e40b8552500e7d2c4d13ea97e553259
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 18:24:26 2026 -0400
+
+    Feature: Mapa GPS interactivo con Google Maps Directions API y horarios reales
+
+commit 42a4aaf22d586083f48bdfdffa9983ff02f4b6cc
+Merge: fde7e1e 60fb787
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 18:21:28 2026 -0400
+
+    Fix: Mapa GPS pantalla completa con bares reales y 4 estados - conflictos resueltos
+
+commit fde7e1edc64b0a34d86b5f933a30c3b3ff0eb2ff
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 18:20:40 2026 -0400
+
+    Fix: Mapa GPS pantalla completa con bares reales y 4 estados
+
+commit 60fb7870ce8b15187af222f09d08fd43c24c3fcc
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 18:18:53 2026 -0400
+
+    Fix: Mapa GPS con 4 estados de pines y navegacion correcta
+
+commit 868bb5b05f3614a42bbbba458ebda0374e6c17a9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 17:55:53 2026 -0400
+
+    Fix: Convertir precios de centavos a pesos y agregar sección Promociones Comunes en HomeScreen
+
+commit 337f9102df75b5c8c3102da04a183e8e35d5bdd4
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 15:56:03 2026 -0400
+
+    Perf: Sistema de logging profesional y eliminacion de console.log en servidor
+
+commit 4bbc2d023de627aea929f854e36e50a58e095311
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 15:53:56 2026 -0400
+
+    Perf: Eliminar console.log para mejorar rendimiento
+
+commit 3803decc9c448415f40da85af93caec16138a7d0
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 15:18:41 2026 -0400
+
+    Debug: Agregar logs en PromotionTransactionsScreen
+
+commit 1a37445668ae0361fecb5a1442b50ccb59fa2116
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 15:17:22 2026 -0400
+
+    Fix: Corregir navegacion en PromotionTransactionsScreen y agregar boton Historial en BusinessMenuScreen
+
+commit 9ff87d1abae297faa815fd96078ee083fbba6cf2
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 15:14:40 2026 -0400
+
+    Fix: Agregar logs y rutas faltantes en navegacion de Business
+
+commit ffdb276a056886f2f2af77afe71dc74c83f9d26c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:52:47 2026 -0400
+
+    Fix: Agregar navegacion al QR desde historial de promociones pendientes
+
+commit 65a35bb4ef050fbe87023e8b4b133c862a7921ad
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:50:41 2026 -0400
+
+    Fix: Corregir carga de imagenes de perfil - detectar data URI base64
+
+commit 4a25b34d3488251ab14213abfd2ab98d7ff5026f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:23:26 2026 -0400
+
+    Fix: Refresh imagen perfil + instrucciones permisos cámara
+
+commit 75acf5bc4df0791ca0d013a97cb0ff7c79794739
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:21:10 2026 -0400
+
+    Add: Historial transacciones + fix navegación promociones
+
+commit f3a11214b08ed1883f7a2c88934796ed28466f6c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:17:51 2026 -0400
+
+    Fix: Eliminar conversiones centavos en productos - precio real
+
+commit e625889a93b201d6a5059f1320cf1dad0e207367
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 14:05:11 2026 -0400
+
+    Add: Ruta profile-image con base64 + spinner en BusinessMenuScreen
+
+commit 4c2531d44128535f9b733c47997a6148c4050d0f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 13:48:57 2026 -0400
+
+    Fix: Syntax error - coma doble
+
+commit d76b3b3ff09bec3862b2837023471f8b8e9771c6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 13:43:56 2026 -0400
+
+    Fix: Eliminar TODAS las conversiones centavos - valores reales ARS
+
+commit 16ae11cf73b8d6e35b96c81a3af11d8fc84f3e86
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 13:20:21 2026 -0400
+
+    Fix: Stats endpoint usa businessId del query parameter
+
+commit b078d71cca26f63f02026c0e28d5934e02147f2e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 13:18:39 2026 -0400
+
+    Fix: Auto-refresh del dashboard usa negocio seleccionado
+
+commit f6243889a6e26f3383aa14fe50d6be0014c1a70c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 13:08:31 2026 -0400
+
+    Fix: Dashboard muestra transacciones del negocio seleccionado
+
+commit 92e5c90080cc4d39ad6de21f06611ba5c8725037
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 12:48:17 2026 -0400
+
+    Fix: Billetera suma transacciones de TODOS los negocios del usuario
+
+commit ca675f09ed64826624b8d1461edc1c42eebd6f06
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 12:34:11 2026 -0400
+
+    Fix: Cambiar splash screen a color púrpura y ajustar diseño de promociones
+
+commit 7fda4fa73ae54ba850cd326f3ddddee17b184cee
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 12:29:36 2026 -0400
+
+    Add: Editar promociones flash con imagen
+
+commit 782de25a7c0d7a16271b20c91f6c700a32914fe6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 12:11:28 2026 -0400
+
+    Fix: Detectar y mostrar imágenes base64 correctamente
+
+commit 8abd8255d3523aa385c092ea9a5344b36e7d73b6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 12:05:02 2026 -0400
+
+    Add: Spinner de carga al procesar imagen en MyBusinessesScreen
+
+commit 1e620abe98f9c4765340c415e6233b437dc38c5f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:55:32 2026 -0400
+
+    Fix: Guardar imagen base64 directamente en MyBusinessesScreen
+
+commit d1915a4490f9db72726902ba18d30bd79c74daeb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:45:06 2026 -0400
+
+    Fix: Convertir imagen de negocio a base64 para subida correcta
+
+commit 613d0b6f7994f4733342c89d4e54cc8cc52e61b7
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:35:48 2026 -0400
+
+    Debug: Agregar logs para wallet-stats y campos faltantes
+
+commit f5613342e2d4d3ffc83588838006b88b3caa2533
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:29:50 2026 -0400
+
+    Fix: Cambiar columnas image a LONGTEXT para soportar base64
+
+commit 6b604b899e8893e82d89c8905d7f96f7a674e66e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:19:51 2026 -0400
+
+    Fix: Restaurar import de StripeConnectStatusScreen
+
+commit d9c28ea048e1210bf96645b5c47081a310644472
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 11:02:36 2026 -0400
+
+    Fix: Split MP detecta comisión específica de cada bar desde business_commissions
+
+commit a9af7709aa143d56cf654df885602fbb6c5f7fc9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:59:30 2026 -0400
+
+    Feature: Pantallas Mercado Pago - Bar conectar cuenta, Admin ver cuentas, Usuario pagar con MP
+
+commit 826b8c155ffe8d2e359528bb0bcba02f26f0a44a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:53:16 2026 -0400
+
+    Feature: Implementar Mercado Pago Marketplace con split automático - OAuth, pagos, webhooks
+
+commit 0a65f1eeb0acf4e08dc353eed85224969372f73a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:34:59 2026 -0400
+
+    Clean: Eliminar pantallas duplicadas de billetera - solo WalletScreen es la real
+
+commit 45146b55f62b4942d9b3372dc30666f00fc087fa
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:33:30 2026 -0400
+
+    Remove: Eliminar mapa de calor del panel del bar - no aporta valor
+
+commit 9bd17578b1de6332cfd7af3e01aca2292b6effa0
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:23:07 2026 -0400
+
+    Fix: Solucionar bugs reportados - foto de producto en modal, selector de productos en flash, pago con apiRequest
+
+commit 3f51c3988bfe1b1d48a1292aecb24b6e8ab5aeb7
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 10:01:04 2026 -0400
+
+    Feature: Agregar subida de foto de producto en BusinessMenuScreen
+
+commit dc0ed33b1d72dd6cb2512f3d002db1d952ac2d56
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 09:58:56 2026 -0400
+
+    Feature: Foto de perfil usuario + Notificaciones flash cercanas + Pines colores mapa
+
+commit 6d0cac61ee968ab124856515d11c541675cb70f2
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 04:47:47 2026 -0400
+
+    Fix: Agregar endpoint GET /api/business para obtener negocio con productos
+
+commit bfa13c2e57f2d61c7347338eea01f6efa6c0cc6e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 04:41:16 2026 -0400
+
+    Fix: Guardar imágenes como base64 en DB para persistencia en Render
+
+commit 24c01503a82909c2ff5ba01de8401e0eedaaddff
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 04:39:23 2026 -0400
+
+    Fix: Agregar endpoint POST /api/business/create
+
+commit 68f28a6dc46ee93f06218cbb89e2d38e2646a2ef
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 04:29:18 2026 -0400
+
+    Fix: Cerrar tag ScrollView en BusinessManageScreen
+
+commit ef5ced984eb98fe7b4f1a6c2f6609d1f6da76cd5
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 04:25:38 2026 -0400
+
+    Fix: Agregar GPS en MyBusinessesScreen + Eliminar productos de Ajustes + Fix latitude/longitude en PUT business
+
+commit 6d85bbe53c19efc9dedec60f01c973c57ab83b4c
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 03:59:49 2026 -0400
+
+    Fix: Agregar navegación entre Promociones/Menú/Ajustes en todas las pantallas de gestión
+
+commit 3e270cc05a963e485479a478365026877faa0efb
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 03:58:27 2026 -0400
+
+    Fix: Cambiar tab por defecto en BusinessManageScreen a Ajustes
+
+commit 28b15300971d97b6945ffcadc61c39544ed5f09d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 03:50:22 2026 -0400
+
+    Fix: Agregar endpoint /api/upload/business-image para subir foto del bar
+
+commit dfce3afa1767249bb27a5353b3a9f417df8bb4bf
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 03:12:09 2026 -0400
+
+    Fix: Agregar pantalla de Promociones en tab Gestión con navegación a Menú y Ajustes
+
+commit 73ac52bdd8114c4e2d91cac4fe896a0769012754
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 02:40:27 2026 -0400
+
+    TODOS LOS PROBLEMAS RESUELTOS: GPS con distancias, fotos en promociones, cronómetro visible, upload completo
+
+commit b01e108819e88fb06db7ba5cf6f2e126693eff75
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 02:36:13 2026 -0400
+
+    Problemas 2 y 3: Mejorar manejo de errores en crear promoción flash y verificar límites
+
+commit 275835906c505c8ba8129575257d5ae77a539b50
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 9 02:35:10 2026 -0400
+
+    Problema 1 resuelto: Agregar configuración de ubicación GPS y foto del bar en BusinessManageScreen
+
+commit fa98a48a7efd3d374a5f50461d6028acf30c5904
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 12:02:49 2026 -0400
+
+    Mejorar HeatmapScreen: mapa real Google Maps, ubicación usuario, bares visibles, datos ejemplo Buenos Aires
+
+commit 5a4d8793081702152a8823eaa5fccf90576e9793
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 11:10:06 2026 -0400
+
+    fix: Agregar Google Maps API Key al AndroidManifest.xml para APK
+
+commit fa8cb76cd52398871e13167ad1adf20e6aeac115
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 10:14:45 2026 -0400
+
+    feat: FASE 1 + FASE 2 completas y funcionales - Sistema completo verificado
+
+commit 268521e1663a73290049378af3e5a019d5305023
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 01:06:21 2026 -0400
+
+    feat: FASE 2 completa - Integrar todas las pantallas en navegadores (Referidos, Heatmap, Ranking, Promos Programadas)
+
+commit 8b0e6f17acdc917bb48ab7cddc1f07408fdaed1d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 00:51:22 2026 -0400
+
+    fix: OrderPaymentScreen conditional import for web
+
+commit 6d36cd4f8a64b047dddb516f044a39ea2783e2f6
+Merge: a58f8cc f3a9233
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 00:48:56 2026 -0400
+
+    merge: Integrar cambios de pedidos con Stripe
+
+commit a58f8cce2483de231d05c4c36e611a71d239965d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 00:47:37 2026 -0400
+
+    feat: Sistema de pedidos completo con Stripe - Pago real en móvil, demo en web
+
+commit f3a923306485a6ae06aa8df2fe7f6ac0d7c3f234
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 00:35:02 2026 -0400
+
+    fix: Web compatible toast notifications in BarMenuScreen
+
+commit a963c4497bea04973a3061cf195d97bfa759bfc7
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sun Mar 8 00:23:53 2026 -0400
+
+    feat: Sistema de pedidos completo - Menu, carrito, pago y QR con puntos (1pt/$1 al pagar)
+
+commit 9c7530db376f34e3a64fb1618998e72afbdb7e21
+Merge: 64ef35d d6e55f0
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 23:50:08 2026 -0400
+
+    Merge branch 'main' of https://github.com/Caskiuz/AstroBar-App
+
+commit d6e55f081921ca7445219895042144e8cd9db67f
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 23:48:08 2026 -0400
+
+    Fix: GPS map with correct pin states (closed/opening_soon/open/hot_promo) as per client specs
+
+commit 98fcb9d074c5f3f691fa57e5797c5b8251156184
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 23:42:29 2026 -0400
+
+    Feature: Add full menu screen and future promotions view
+
+commit 8fd8f9688f4a460a35d1d4df1ff1006243e0168a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 23:12:18 2026 -0400
+
+    Fix: Show revenue for all paid transactions (pending + redeemed), not just redeemed
+
+commit 2bdf1faea3538ece77cf29bf03c3f510ae962fa3
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 22:52:45 2026 -0400
+
+    Fix: Commission reading from DB using correct array access [0][0]
+
+commit 64ef35d1874c3e21da93b556acd1014f85f319a5
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 20:07:32 2026 -0400
+
+    Resolve merge conflict
+
+commit a8c2630e8200bd7c25186c3bd0609ca27900be01
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 20:04:46 2026 -0400
+
+    Fix: SSL configuration for Aiven MySQL + Activate FASE 2 modules
+
+commit 8fb080a894920400a2a626eaaa036d75fffd4519
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 19:12:47 2026 -0400
+
+    feat: Agregar migraciones SQL de FASE 2
+
+commit 2bbd8aecacd5e30d75fbedf673de0841b2e593f4
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 19:11:53 2026 -0400
+
+    chore: Limpiar repositorio - solo README.md y archivos esenciales
+
+commit 70dcc6c62375edf227c7bd1b202f87b80e1a4b82
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 19:05:07 2026 -0400
+
+    feat: FASE 2 Frontend completo - 6 pantallas + componente de mensajes
+
+commit 9cbd93765c1cfea59e30dc31c9b8ee9733e92df9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Sat Mar 7 18:55:54 2026 -0400
+
+    feat: FASE 2 completa - 8 módulos implementados con feature flags
+
+commit 37a3de53da2c3abc52994d8d0e7ae59e35e5b665
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 2 14:53:47 2026 -0400
+
+    Cambiar nombre de NEMY a AstroBar en toda la app
+
+commit 554b79cfdbf414e03d8d5ec8536d1dee893dd75e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 2 10:32:01 2026 -0400
+
+    Change country code from Mexico +52 to Argentina +54
+
+commit e5cc5490f8a52a5ff035fba38838b3d28472af11
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 2 10:26:15 2026 -0400
+
+    Update auth routes
+
+commit 0dc802002fceee52731d9d490dad454d64033689
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Mon Mar 2 09:05:29 2026 -0400
+
+    Fix server:prod for Linux
+
+commit 3985142b2af2ea75be86d01be1ca77e49cc797c5
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Wed Feb 25 00:14:37 2026 -0400
+
+    feat: Complete MVP to 100% - Final missing features
+
+commit 9cc014ca69047f958d5d952695b45c3b9aebf228
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Wed Feb 25 00:10:31 2026 -0400
+
+    feat: Add missing critical MVP features
+
+commit 2988f9b3fc4a9613b8e8cc1f8d89b015cc362bc4
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Wed Feb 25 00:04:12 2026 -0400
+
+    feat: Implement complete wallet system with Stripe Connect integration
+
+commit b4a5bafad2a3313f25ae0c3149e944f200be4189
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:52:46 2026 -0400
+
+    fix: Conflicto de variable businesses en adminRoutes
+
+commit b6a7ccf1135560153a58f7229b497e53cb01e88a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:49:01 2026 -0400
+
+    docs: README profesional completo
+
+commit c4b99462ccff5d2704760b52162a0aae0ea59c13
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:44:17 2026 -0400
+
+    feat: Sistema de notificaciones push (ALTA)
+
+commit dca2e4b2f23ce627c2ce1330e185de0da643d078
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:43:05 2026 -0400
+
+    feat: Admin - Aprobar/Rechazar bares (ALTA)
+
+commit 799bf0aeb2955705dcfd03c353848a32ad874b06
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:36:39 2026 -0400
+
+    feat: Admin - Gestión de comisiones (ALTA)
+
+commit 359309fe75d9116d5319d0eac428159c60dd2c43
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:35:23 2026 -0400
+
+    feat: Admin - Dashboard de promociones (ALTA)
+
+commit 98425850a245167336d325215205c0e44a32842a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:34:21 2026 -0400
+
+    feat: Bar - Dashboard adaptado a promociones (ALTA)
+
+commit b2b817bc016464f693dc8f884a10db22fe8dcdf0
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:32:31 2026 -0400
+
+    feat: Cliente - Perfil con estadísticas (ALTA)
+
+commit 064217731efe89855758d9506973ba57e3e49bb2
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:30:57 2026 -0400
+
+    feat: Admin - Monitor de transacciones (CRÍTICO)
+
+commit 1f2974142cee9e10f9ee29d16ed6bbf974fb512a
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:29:20 2026 -0400
+
+    feat: Bar - Panel de promociones activas (CRÍTICO)
+
+commit fb061fee07aba7d749a532c19d5f40e95ab2d1a9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:26:48 2026 -0400
+
+    feat: Bar - Escáner QR funcional (CRÍTICO)\n\n✅ ScanQRScreen:\n- Escaneo de QR con cámara (expo-camera)\n- Validación en tiempo real\n- Ingreso manual de código\n- Feedback visual (corners dorados)\n- Confirmación de canje exitoso\n- Muestra que cliente ganó 10 puntos\n- Manejo de errores (QR inválido, ya canjeado)\n\nFase 1 Bar: 50% completo\nFalta: Panel de promociones activas
+
+commit 845f185ad32a58429e4d521fb9248314bd139daf
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:25:29 2026 -0400
+
+    feat: Cliente - Promoción activa + Historial (CRÍTICO)\n\n✅ ActivePromotionsScreen:\n- Muestra QR activo del cliente\n- Timer de cancelación en tiempo real\n- Botón cancelar si está dentro de 60s\n- Estado vacío si no hay promo activa\n- Refresh manual\n\n✅ HistoryScreen:\n- Lista todas las promociones del usuario\n- Estados: Canjeado, Pendiente, Cancelado, Expirado\n- Muestra QR code, fecha, bar, monto\n- Badge +10 puntos en canjeados\n- Pull to refresh\n\nFase 1 Cliente: 100% completo
+
+commit f133e6c3c7b88879c03494d1d802e1e2b033f273
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:18:33 2026 -0400
+
+    feat: MapScreen funcional con lista de bares cercanos - MVP 100%\n\n- MapScreen muestra lista de bares con geolocalización\n- Estados visuales: Abierto (verde), Cerrado (gris), Flash (dorado)\n- Navegación directa a BusinessDetail al tocar un bar\n- Solicita permisos de ubicación\n- Carga bares desde API\n\n🎉 MVP COMPLETO AL 100%:\n✅ Registro +18 con validación\n✅ Sistema de promociones (flash/comunes)\n✅ Confirmación con timer 60s\n✅ Generación de QR único\n✅ Sistema de puntos y niveles\n✅ Mapa/lista de bares cercanos\n✅ Flujo completo funcional\n✅ Datos de prueba\n\nFlujo MVP:\n1. Usuario ve mapa/lista de bares\n2. Selecciona bar → Ve promociones\n3. Acepta promoción → Confirma (60s)\n4. Recibe QR → Canjea en bar\n5. Gana 10 puntos automáticamente
+
+commit 2fbf1abf87f89265c8d4e977a93c90ca11b5b5c7
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:17:06 2026 -0400
+
+    feat: BusinessDetailScreen con promociones + datos de prueba\n\n- BusinessDetailScreen muestra promociones activas del bar\n- Cards de promociones con descuento, precio, stock\n- Diferenciación visual para promociones flash (dorado)\n- Botón ACEPTAR navega a ConfirmPromotionScreen\n- Promociones de prueba en DB: 2 flash + 3 comunes\n- Bar de prueba 'La Noche Bar' creado\n\nFlujo completo:\n1. Ver bar → Ver promociones\n2. Aceptar → Confirmar (60s timer)\n3. QR generado → Canjear en bar\n\nMVP: ~85% completo\nFalta: Mapa funcional con pines
+
+commit 21d89c3aa1eecfcb40f5094a5c81fddb1b305bdd
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:13:51 2026 -0400
+
+    feat: Sistema completo de promociones MVP\n\n- Tablas DB: promotions, promotion_transactions, user_points\n- API completa: crear, listar, aceptar, cancelar, canjear QR\n- Pantallas: ConfirmPromotionScreen (timer 60s), PromotionQRScreen\n- Sistema de puntos: 10 puntos por canje, niveles automáticos\n- Comisiones: Bar 100%, Plataforma 30% adicional al usuario\n- QR único por transacción con librería react-native-qrcode-svg\n\nPendiente:\n- Actualizar BusinessDetailScreen para mostrar promociones\n- Mapa funcional con pines de bares\n- Integración completa del flujo
+
+commit 7c8af43962c8369f7b1663598bff8f1e34fc2b48
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 19:08:02 2026 -0400
+
+    feat: Migración completa de NEMY a AstroBar - Fase 1 MVP (40%)\n\n- Eliminado todo branding NEMY (logos, textos, referencias)\n- Actualizado a AstroBar: promociones nocturnas en Buenos Aires\n- Cambiado código país de México (+52) a Argentina (+54)\n- Eliminados roles delivery_driver, convertidos a customer\n- Limpieza completa de lógica de delivery/drivers\n\nCambios principales:\n- Splash screen y logos actualizados (astrobarlogo.jpg, astrobarbanner.jpg)\n- HomeScreen adaptado: bares nocturnos en lugar de comida\n- SignupScreen: validación edad +18, tipos de negocio nocturnos\n- ProfileScreen: roles adaptados (customer, business_owner, admin)\n- MapScreen: placeholder preparado para mapa con pines\n- Panel Admin: limpiado, solo tabs esenciales\n\nServicios implementados:\n- googleMaps.ts: geolocalización y cálculo de distancias\n- pushNotifications.ts: sistema completo de notificaciones\n- userRoutes.ts: endpoint de perfil de usuario\n- businessRoutes.ts: rutas públicas para listar bares\n\nMigraciones SQL ejecutadas:\n- fix_roles.sql: conversión delivery_driver → customer\n- add_push_token.sql: campo para notificaciones push\n- create_test_users.sql: usuarios de prueba por rol\n\nPendiente para MVP completo:\n- Sistema de promociones (flash/comunes)\n- Mapa funcional con pines de bares\n- Flujo de aceptación de promociones\n- Generación y validación de QR\n- Pantalla de confirmación con timer 60s
+
+commit b892d70f385b5b79c30d49ce32fb003a67f05f6e
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:51:38 2026 -0400
+
+    fix: Corregir imports database a db en cart y stats routes
+
+commit 3634376ab7155437157e00100d3abe73d076852d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:50:35 2026 -0400
+
+    fix: Recrear apiRoutes y corregir imports
+
+commit ad68d2b6262588d4c5ec61c311c2a04b8c99557d
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:49:10 2026 -0400
+
+    refactor: Limpiar codigo NEMY y aplicar branding AstroBar
+
+commit 810391180df033d0405adb4141211aa2a1376064
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:41:24 2026 -0400
+
+    rebrand: Cambiar NEMY a AstroBar en LoginScreen
+
+commit 8a78e945718090cebb6d2d630ed48637f34cb374
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:39:57 2026 -0400
+
+    rebrand: Cambiar NEMY a AstroBar en toda la app
+
+commit 1fcc16585f423e6f55ed408c749110ebfc3393c7
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 16:36:07 2026 -0400
+
+    fix: Corregir imports en adminPanelRoutes
+
+commit 76ef71987637679eb20912848b066c0c29b2f6c6
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 15:30:52 2026 -0400
+
+    docs: Actualizar stack tecnologico - split automatico configurable
+
+commit 7f767865558bd9ad00036e34af05e5fcfbbdae57
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 15:28:25 2026 -0400
+
+    feat: Implementar split automatico con Stripe Connect
+
+commit 79717d64b75d7a1de43594df3b03150d1548c603
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 15:26:45 2026 -0400
+
+    fix: Corregir logica de comisiones - bar recibe 100% del producto
+
+commit bfd4fbb2f362250b41637fd1f8ce113db39c996b
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 15:21:39 2026 -0400
+
+    feat: Panel admin completo con comisiones configurables
+
+commit 5dcb12f6ce506b220898176470b47a1ed21afda9
+Author: Caskiuz <rijarwow@gmail.com>
+Date:   Tue Feb 24 14:02:59 2026 -0400
+
+    feat: AstroBar MVP - Plataforma de promociones nocturnas (Buenos Aires)

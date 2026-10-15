@@ -1,0 +1,383 @@
+5ec7443 fix: corregir estado simulado de MP en WalletScreen y agregar menu de configuracion real para admins
+2f5145d fix: corregir estado simulado de MP en WalletScreen y agregar menu de configuracion real para admins
+f406cd2 feat: personalizar iconos de pines en el mapa segun la categoria del comercio y aplicar estilo nocturno
+f6330ea fix: corregir el mapeo de categorías en HomeScreen para que los botones de filtro funcionen correctamente
+7de75ee fix: ignorar bares eliminados logicamente al validar limite de creacion y actualizar
+b757463 fix: resolve NaN error when updating business coordinates and filter soft-deleted businesses in frontend
+56b6614 fix: agregar alerta de exito al registrarse y conectar modal con backend en Railway
+bcbbaa1 feat: limitar creación de negocios a un máximo de 2 por cuenta
+666608e fix: refactorizar AdminOperations a apiRequest y corregir rutas api para mostrar transacciones
+3fcc834 feat: agregar doble validacion de email en frontend y backend para bloquear correos numericos y temporales
+7d5f9da fix: refactorizar llamadas de api a apiRequest en AdminManagement para solucionar pantalla en blanco
+315eea4 fix: reemplazar api por apiRequest en AdminPanelScreen para arreglar pantalla de Gestion en blanco
+31fc6de fix: actualizar importacion a apiRequest en AdminDashboard para solucionar crash de pantalla morada
+7791707 fix: separar peticiones en AdminDashboard para evitar fallos en cadena y arreglar tarjetas en blanco
+2b78f5a fix: agregar importacion de sql en update profile para evitar error 500
+1627414 fix: agregar importacion de sql en update profile para evitar error 500
+e230aad fix: agregar importacion de sql en update profile para evitar error 500
+21f71cd fix: replace expo-router with react-navigation in AdminDashboardScreen to resolve EAS build failure
+90c0d6a fix: replace expo-router with react-navigation in AdminDashboardScreen to resolve EAS build failure
+f03648b fix: register AdminDashboard screens in root stack to resolve navigation route error
+303b0b6 fix: filter out invalid entries and safely handle dates in AdminManagement to prevent rendering loops
+18823db fix: filter out invalid entries and safely handle dates in AdminManagement to prevent rendering loops
+3a4c806 fix: clean and self-contain client/constants/api.ts to resolve bundling errors
+4a7cc30 fix: correct relative import path for API_CONFIG in lib/api.ts
+6ca5612 fix: handle direct and nested metrics response structures in AdminDashboardScreen
+dd61e65 fix: handle direct and nested metrics response structures in AdminDashboardScreen
+f9a4383 fix: add robust key aliases to admin dashboard metrics API to match frontend components
+505644f fix: support profileImage updates in user profile route to ensure persistence across login sessions
+cc860b5 fix: support profileImage updates in user profile route to ensure persistence across login sessions
+31b8318 fix: support profileImage updates in user profile route to ensure persistence across login sessions
+62eb489 fix: optimize admin dashboard metrics with safe raw SQL queries to prevent ORM mapping crashes
+fadc611 fix: populate admin dashboard stats and metrics state properly to display database counts
+5a45fb5 fix: map admin dashboard metrics response correctly to resolve zero values
+2325ff5 feat(users): add full profile editing and updated progressive commission calculation
+e08abdf fix: resolve 403 error on delete business route for owners
+40e44cb fix: separate email and phone uniqueness checks in phone-signup
+f0ac112 fix: prevent sponsor_id collision in orderRoutes
+42090b7 fix: full mpRoutes update with duplicate check and sponsor_id fix
+18f4823 fix: remove queries to non-existing order_items table
+c1753de fix: include delivery_address field in orders insert
+21a0e0b fix: add payment_method field to orders insert
+b06521f fix: align orders insert with full schema mapping from drizzle studio
+2b29624 fix: include JSON stringified items field in orders insert
+186b326 fix: include business_name field in orders insert
+34d43fa fix: match orders table column name 'total' instead of 'total_amount'
+11713cb fix: convert all mysql queries in orderRoutes to drizzle sql template strings
+cc1e183 fix: apply drizzle sql parameterization to backend and payment screen fixes
+31b85b4 fix: replace justify.content with justifyContent in OrderPaymentScreen
+c6a4f36 fix: restore frontend react native code in OrderPaymentScreen
+f817f4d fix: replace raw mysql placeholders with parameterized drizzle sql tag
+f4fcbda fix: resolve justifyContent syntax in OrderPaymentScreen
+04a7c81 fix: align order creation routes between server and client
+7427df2 fix: force customer MP redirect URI to customer callback endpoint
+39aefd9 fix: complete isolated implementation for customer MP status in wallet screen
+88b3c87 fix: remove strict role requirement and unify userId extraction in customer MP status
+fd0d706 fix: syntax error in justifyContent property
+0663f29 fix: resolve customer mp status update and enable split payment checkout
+033348b fix: integrate Mercado Pago Split Payments for menu orders
+c697f55 fix: map connectedAt and add createdAt to customer mp OAuth
+46085d4 fix: refactor marketplace split payment using platform credentials and sponsor_id
+e6a75e0 fix: add focus effect and deep link listener to WalletScreen for real-time MP connection updates
+fb92d79 feat: add deep link listener for Mercado Pago callback auto-refresh
+5ecffff fix: resolve Mercado Pago OAuth callback flow by removing PKCE dependency and passing businessId state
+96a76d5 style: remove theme selector and header theme toggle button
+88ce5da fix: update wallet icon to dollar-sign and remove invalid component imports
+2d394cd Update index.html
+5c434a0 fix: remove invalid WebView import and sanitize CustomerWalletScreen
+de31e10 fix: sanitize LinearGradient colors in BusinessMercadoPagoScreen
+206b88e Update index.html
+75e053b fix: replace react-native-webview with expo-web-browser to solve startup crash
+35dbf36 fix: update APK link to GitHub release and package config
+66b28de fix: direct APK download from GitHub Release
+0fa93e9 fix: update APK download link to direct Google Drive export
+b6d9aa2 fix(mp): replace WebView with WebBrowser for native OAuth flow
+45677f3 fix(mp): replace WebView with WebBrowser for native OAuth flow
+56292cc fix(mp): replace WebView with WebBrowser for native OAuth flow
+3bc0df1 fix(mercadopago): implement PKCE flow for OAuth authorization
+3ac3b3f feat: agregar opcion para vincular Mercado Pago en el perfil de dueno de bar
+0f0523a fix: mejorar flujo oauth callback y redirecciones de mercado pago
+bd67b58 feat: actualizar logo oficial de AstroBar a la nueva identidad corporativa
+0975db8 fix: agregar ruta de eliminación lógica de bares en backend
+891d18f feat:Mercado pago cambio de script
+a456cd5 cambio onboardin
+3a7d00b feat: landing page de descarga en subruta /descargar
+fe1b1a8 feat: landing page de descarga de APK y estilos cyberpunk
+a1280e7 feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+e4d36b7 feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+b9325c1 feat: arreglo de precios en platos
+2efe50b feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+0702b98 feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+e279e40 fix(frontend): segundo intento de arreglar pago de usuario comun
+41fee54 feat: segundo intento de arreglo de pago cliente
+be38a3d feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+0eee4b3 fix: pago de cliente
+b8de373 fix(frontend): unificados iconos de gestion a familias validas de Feather y removidos signos de pregunta
+f013902 fix: ocultado header nativo en BusinessTabNavigator para remover error del signo de pregunta
+da98748 feat: refactorización de adminRoutes alineado con esquema de Railway y pliego de puntos
+5c25db2 fix: reemplazo de Ionicons por Feather en barra superior de promociones y unificación estática2
+7f4b21a fix: reemplazo de Ionicons por Feather en barra superior de promociones y unificación estática
+466ad2b feat: optimización de pasarela con split usando instancia SDK v2 en create-payment
+2d6d397 design: restructuración completa cyberpunk con gradientes neón simétricos en detalle de bar
+5657ddd style: alineación vertical milimétrica en botones de detalle de bar y fix ortográfico en dirección
+f5a5ca6 fix: remoción de getStyles fantasma e importación de Pressable en AdminDashboard
+77b9360 fix: remoción definitiva del parseador getStyles inexistente en CreateFlashPromotion
+21bffcf fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+15c6378 fix: inclusión de ActivityIndicator en los imports desestructurados de react-native
+94444b5 fix: unificación de firmas y tipado de login con retorno de sesión en AuthContext
+d7acdab fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+665f9e8 fix: re-encauzamiento seguro del login para cuentas business_owner a BusinessPromotions nativo
+0e27cf3 fix: corrección estructural de navegación a CreatePromotion con tipado dinámico
+cb6e98c fix: corrección del mapeo de roles en el dashboard de administración para leer 'user' real
+6d58c0f fix: corrección del mapeo de roles en el dashboard de administración para leer 'user' real
+d30d723 fix: corrección estructural del tipado y blindaje del ToastContext en CreateFlash
+6043ede design: rediseño del panel de promos y formulario flash a morado eléctrico espacial nativo
+d03ab76 fix: reordenamiento de ManagementStack para iniciar sesión directo en el panel de promociones
+d581c4e fix: migracion de proyecto a cuenta nueva y purga total de interfaces violetas
+21a1e7c design: rediseño de Mis Negocios y purga total de interfaces violetas por estética cian neón espacial premium
+1597fcd fix: regeneración de prebuild nativo para extirpar splash violeta
+53eefb9 design: rediseño galáctico premium para la pantalla de inicio con blurview
+7f8a5df design: extirpado el violeta nativo y unificado el splash inicial con el fondo galáctico
+848b2c5 fix: ajuste exacto de dos niveles relativos para la raíz de assets
+3c132cc fix: corrigiendo rutas relativas reales hacia la raíz del proyecto para los assets
+15ba322 fix: reemplazo de alias conflictivo por rutas relativas tradicionales para recursos estáticos
+dc36b66 fix: importación estática limpia del logo en loginscreen eliminando require relativo
+c3c10ee fix: importación estática final de la imagen del logo en auth context
+14e14bd fix: reemplazo definitivo de ruta con alias global para el logo en auth context
+6405fa3 design: corrección visual de onboarding encimado y unificación con la estética espacial de AstroBar
+5ed7599 design: reemplazo de pantalla de carga rústica por splash screen animado premium con estrellas en vivo
+b42c499 feat: login configurado por correo y contraseña con fondo animado de estrellas
+4a55994 design: rediseño premium neón del panel comercial para dueños de bar
+702cbf5 design: rediseño premium de la pantalla de perfil y adaptación modo oscuro
+908a3ed feat: rediseño de dashboard para dueños de bar y modo oscuro
+3e692af design: cambiar logos de la app a modo mundial en assets raiz
+84fb0d0 style: actualizar pantallas del frontend con ultimos cambios y tipeos
+665fca2 feat: arreglar rombos
+7759208 style: actualizar pantallas del frontend con ultimos cambios
+500fa11 feat: implementar endpoints de dashboard y métricas reales de usuarios y bares para el admin
+e082796 fix: mapear correctamente dashboardMetrics al componente DashboardTab para sincronizar contadores
+270e18a fix: restaurar formulario de gestion y corregir endpoint del switch de apertura
+7eeb075 fix: unificar objeto theme en BusinessManageScreen para evitar crash de background undefined
+f0b84df fix: blindar consulta de referidos para evitar crash por array vacio
+4f31f0f fix: enlazar server a la interfaz de red 0.0.0.0 para evitar caidas en railway
+3ff1467 fix: unificar mapeos de base de datos y tipados en business_owner routes
+b77a720 fix: corregir owner_id typo y asegurar tipos numericos en dashboard
+2691c8d fix: ajustar owner_id en objetos de insercion para mysql
+99286d0 fix: reordenar rutas de negocio y corregir duplicados para rol business_owner
+f51c59c Fix: color de fondo del modal de editar
+aa8321e Fix: color de fondo del modal de editar
+edee9e7 fix: corregir estructura del topNav y mejorar legibilidad de inputs en BusinessManageScreen
+79c513f fix: corregir codificación UTF-8, arreglar estilos visuales y textos en pantallas de gestión y privacidad y demas
+940f522 fix: corregir codificación UTF-8, arreglar estilos visuales y textos en pantallas de gestión y privacidad
+3fa9452 fix: corregir sintaxis, navegacion y dependencias en pantalla de ajustes del bar
+0350358 fix: geocoding inverso de google en formulario del bar
+87921a2 design: ajustar color de fondo del splash screen para unificar el icono
+fb32180 test: restaurar index original sin require cache
+38e7287 fix: subir limite de rate limit en produccion y ajustar upsert de bares
+0af0d70 fix: permitir creacion de bar desde formulario de bienvenida usando put
+9ad9863 feat: cambiar sistema de login y registro a texto plano sin encriptar
+de763c4 feat: implementar ruta phone-signup y corregir verificacion de login por email
+044b6fa fix(backend): permitir login real por email verificando hash de bcrypt
+86553a1 feat(backend): encriptar contraseña con bcrypt al registrar usuario
+3dee723 feat(backend): agregar handler para endpoint POST phone-signup
+fc38747 fix(navigation): corregir error de sintaxis jsx en BusinessTabNavigator
+d1f04e2 fix: solucionar 404 de api en railway y corregir prefijo +54
+fa4f2bb fix: apuntar API a Railway en desarrollo y agregar endpoint de registro
+c251f2a fix: eliminar comentario invalido en el Tab Navigator
+733fb09 fix: mantener solo app.config.js limpio
+6e97b55 fix: cambiar temporalmente logos por icon.png para evitar error de formato
+2b8c941 fix: remover configuracion extra huerfana de api.ts
+3b2db7a fix: bypass navegacion rota en web
+be813a5 fix: bypass twilio error and update dev login
+17935e0 Fix: actualizando webhooks de Mercado Pago a Railway
+9bcdd31 Fix: backend url changed from render to railway
+bb7d36e Bypass phone verification in RootStackNavigator
+fd376cb Bypass verification logic
+dfd9e09 chore: allow dist folder and upload web build
+e2af6c7 dist: final production web files
+ec70a0f fix: relax env validation and prepare for railway
+a35e0b2 Fix: Mejoras en logs de GPS y direcciones para diagnosticar errores
+f968daa Feature: Sistema de pagos completo con Checkout Pro + Split (Marketplace) - Implementado Checkout Pro con división automática de pagos (marketplace_fee) - Bar recibe 100% del precio del producto - AstroBar recibe comisión configurable (5%-30%) - WebView interno para Checkout Pro en PaymentScreen - Detección automática de redirecciones (success/failure/pending) - Logs detallados del split de pagos - Documentación completa en CHECKOUT_PRO_SETUP.md - Eliminada dependencia de OAuth del cliente (ahora opcional) - Sistema listo para producción con Mercado Pago Marketplace
+aba7416 Fix: Correcciones de codificación UTF-8 y mejoras en WebView y GPS - Corregidos errores de codificación en ProfileScreen (tildes y caracteres especiales) - Cambiado expo-web-browser a react-native-webview en CustomerWalletScreen y PaymentScreen - Mejorada función de direcciones GPS en MapScreen con ruta visible y marcador de usuario - Agregado feedback háptico y mejor manejo de errores en navegación
+eb40c6a feat: implement internal WebView for Mercado Pago OAuth instead of external browser
+f473cdb fix: use openAuthSessionAsync for Mercado Pago OAuth flow instead of external browser
+73a78e4 fix: replace useOrderCart with useUnifiedCart in OrderPaymentScreen and App.tsx
+2c0c309 feat: unified cart system, business detail improvements, and responsive grid layout - Added unified cart supporting both products and promotions from same business - Fixed ActivePromotionsScreen to add promotions to cart instead of direct payment - Removed duplicate menu button and inline sections from BusinessDetailScreen - Implemented responsive grid layout for AstroBares populares (50% width) - Added favorites table migration and migration routes - Fixed React Native Maps web compatibility with mock file - Fixed price conversion bug in BarMenuScreen (multiply by 100) - Added useRoute import to ActivePromotionsScreen - Removed AdminScreenOld.tsx
+19a92a2 fix: Rename CollapsibleMap and NativeMap to native versions
+b5b4c72 fix: Separate native and web versions of MapScreen and LocationPickerScreen
+ad5d87e fix: Correct price conversion to cents in ProductDetailScreen
+d9dafb8 fix: Update OrderPaymentScreen and BarMenuScreen to use UnifiedCart
+1a0b3a7 fix: Update ProductCard and ProductDetailScreen to use UnifiedCart
+394dde6 feat: Unify cart contexts into single UnifiedCartContext
+92cdb0e feat: Use WebView for Mercado Pago OAuth instead of external browser
+9950d0e fix: Correct cart navigation from Cart to OrderCart
+fea919e fix: Correct HeatmapScreen styles and Mercado Pago config
+0c0c737 fix: Remove conflicting HeatmapScreen files - use only native version
+875e748 fix: Restore interactive heatmap with Google Maps and real data
+49677ea fix: Create HeatmapScreenNew to force recompilation and fix styles reference error
+d1077c2 fix: Remove fake peak hours data from HeatmapScreen - keep only real DB data
+79b3506 revert: Restore working HeatmapScreen with real database data
+9d8f07f fix: Refactor HeatmapScreen to arrow function - guarantee styles compilation
+d723916 fix: Force HeatmapScreen rebuild - ensure styles are properly compiled
+b4e0538 feat: Add business hours GET/PUT endpoints - connect to cron system
+c65e169 fix: Remove fake peak hours data from heatmap - show only real data
+1288065 fix: Remove centavos division in frontend - display amounts as-is from DB
+7bb8458 fix: Convert all admin dashboard amounts from centavos to pesos
+686890c fix: Include pending transactions in revenue stats (money already in Mercado Pago)
+9fa35a0 fix: Correct admin dashboard metrics to show all data (users, promotions, revenue, transactions)
+f24b186 fix: Remove address screen references from ProfileStackNavigator
+9fccb29 chore: Remove Cart, Checkout and Address screens (no delivery in app)
+5a286a5 feat: Add CheckoutScreen and OrderPaymentScreen for mobile (no delivery)
+d5cc3fd fix: Remove CheckoutScreen import (web-only component)
+32fa5dd chore: Point frontend to production backend (Render) for APK build
+98c84e1 feat: Complete Mercado Pago integration for all user roles with payment history
+bdd4df4 feat: Implementar Mercado Pago global para todos los roles - BusinessMercadoPagoScreen: Pantalla para bares vincular MP - AdminPaymentsScreen: Panel monitoreo pagos y comisiones - Endpoint /admin/payment-stats con estadísticas completas - Integrar BusinessMercadoPago en WalletScreen - Actualizar navegación ProfileStackNavigator - Sistema MP completo: clientes pagan, bares reciben, admins monitorean
+7431b01 fix: Permitir eliminar promociones activas - Remover restricción que impedía eliminar promociones flash activas - Business owners ahora pueden eliminar cualquier promoción propia
+a7b9c2d feat: Agregar endpoint de pago para clientes y deep linking - Crear customerPaymentRoutes.ts para pagos con MP - Actualizar PaymentScreen para usar endpoint correcto - Configurar deep linking en App.tsx para callbacks de MP - Registrar rutas en apiRoutes.ts
+4672ccb fix: Corregir error de sintaxis en promotionRoutes.ts - Agregar declaración de ruta /redeem faltante - Integrar CustomerWalletScreen en ProfileScreen - PaymentScreen detecta MP y permite vincular en flujo - Webhook de Mercado Pago mejorado
+e9b2762 feat: Sistema de vinculación Mercado Pago para clientes - Tabla customer_mercadopago_accounts creada - Rutas /api/customer-mp/* para OAuth de clientes - CustomerWalletScreen para vincular cuenta MP - PaymentScreen detecta y permite vincular MP en flujo de compra - Migración add_mp_payment_id ejecutada
+0371516 Feat: Implementar webhook de Mercado Pago, agregar mpPaymentId a transacciones y completar sistema de pagos
+c4b115a Feat: Agregar endpoint POST /promotions/:id/pay para procesar pagos con Mercado Pago
+805669e Feat: Agregar validación de fechas de vencimiento en tarjetas de pago (cliente y servidor)
+768198c Fix: Corregir formato de año de vencimiento en tarjetas de pago (guardar y mostrar solo últimos 2 dígitos)
+b6d0c47 Fix: Corregir importación de api en pantallas de métodos de pago y actualizar baseURL en api.ts
+e49cee4 feat: guardar tarjetas de pago en base de datos
+f98e9bd feat: agregar sistema de métodos de pago para clientes
+89eef53 feat: agregar credenciales reales de Mercado Pago y hacer variables opcionales en dev
+b2006ee feat: agregar logs detallados para debugging en Render
+f3c2339 fix: reemplazar todas las referencias a Stripe por Mercado Pago en screens
+c0e098b fix: actualizar CSP security headers para Mercado Pago
+cacf6f7 fix: eliminar dependencias de Stripe del package.json
+010534c fix: eliminar todas las referencias a Stripe del cliente (App.tsx, AuthContext, types, navigation, screens)
+3958340 fix: eliminar completamente Stripe, actualizar env.ts para Mercado Pago
+6b2a11f fix: eliminar referencias restantes a Stripe en apiRoutes y archivos de paymentRoutes
+f000be0 fix: actualizar variables de entorno Mercado Pago y corregir nombres en mercadopagoRoutes
+42e3cc6 feat: Integrar flujo completo de pagos con Mercado Pago - Actualizar ConfirmPromotionScreen para crear pago con MP - Crear PaymentPendingScreen para esperar confirmación - Agregar endpoint GET /api/promotions/transactions/:id - Verificar estado de pago cada 3 segundos - Flujo: Aceptar promo → Crear pago MP → Abrir checkout → Verificar → Mostrar QR
+9f7ed72 fix: Usar theme.background en modales de negocios - Corregir transparencia usando el color de fondo global del tema - Mantener padding adicional para botones
+0a1781e fix: Agregar padding inferior a modales de negocios - Evitar que botón Actualizar quede pegado a botones del teléfono - Agregar paddingBottom a ScrollView de modales crear/editar negocio
+d076401 fix: Corregir error 'styles is not defined' en CreateFlashPromotionScreen - Agregar llamada a getStyles(theme) para generar estilos correctamente
+75d852a feat: Implementar mejoras críticas de UX - Pins en mapa con estados (verde/rojo/amarillo/dorado) - Estado abierto/cerrado sincronizado con horarios (cron cada 5 min) - Eliminar promociones expiradas (solo business owner) - GPS integrado con ruta, distancia y tiempo (endpoint backend) - Mejorar marcadores de mapa con iconos map-pin estándar
+19ff7b8 Fix: Corregir errores de sintaxis en archivos de pantallas - Reemplazar backtick-n inválidos por newlines correctos
+baa5eb0 Convert BarMenuScreen to dynamic theme with getStyles
+525ca36 Fix useTheme import in HomeScreen
+09ada91 Fix theme references in MyBusinessesScreen
+81237e3 Sync theme changes from server
+3b995b3 Resolve merge conflict in HomeScreen
+1f3fb5a FIX TEMA BLANCO OSCURO
+832a148 Restore HomeScreen with getStyles(theme)
+c2a6903 Restore HomeScreen + ThemedText adapted
+9a8d099 Restore theme toggle + adapted screens
+fa8e11b Fix useAuth import
+576c46a Fix HomeScreen syntax
+71279e2 Fix admin dashboard
+0f93f0d Fix: Syntax error in theme.ts
+c603461 Final: Adaptive theme system that actually works
+0448aa9 Fix: White theme implementation and git conflicts
+2566548 Fix: Proper adaptive theme system
+f84b0ca Simplify: Direct light theme colors for testing
+dfb2d0a Test: Force light theme to debug theme system
+2dbee6e Fix: Update splash screen colors to match adaptive theme
+f344ff5 Fix: Implement adaptive light/dark theme system
+1cf6b67 Fix: Restaurar endpoint correcto /api/public/businesses que funcionaba
+fcd4a40 Fix: Resolver conflicto en authRoutes.ts
+6a41b4c Merge: Resolviendo conflictos automáticamente
+8e7a1ce Fix: Corregir URLs backend para apuntar a Render correctamente
+6c26480 Fix: MapScreen endpoint correcto + splash screen configurado - Restaurado MapScreen funcional del commit 8a54bf0 - Corregido endpoint de /api/public/businesses a /api/businesses/featured - Configurado splash screen con logo AstroBar correcto - Android regenerado sin errores de codegen
+fb0ba35 Fix: Splash screen purpura con logo AstroBar + MapScreen restaurado - Configurado splash screen con logo correcto - Color purpura en splash screen - MapScreen restaurado a version funcional - Android regenerado correctamente
+a4071a6 fix: Proper splash screen configuration with purple background + AstroBar logo
+c95f798 fix: Restore EXACT working MapScreen from commit 8a54bf0
+f8bfcea fix: Restore working MapScreen + Complete splash screen implementation
+558fec3 fix: Restore working MapScreen functionality
+2ae35fc fix: Resolve splash screen and map crashes - AstroBar production ready
+03ecdb7 feat: Complete AstroBar Buenos Aires implementation with all bug fixes and new features
+30a7fd9 Add: react-native-maps para mapa profesional con GPS y pines de colores
+7e0561f Fix: Configurar APK con react-native-maps y gradle.properties para compilación nativa
+8a54bf0 Fix: Restaurar config de react-native-maps para APK
+309e79a Fix: Quitar emojis corruptos de textos
+cb4affa Fix: Separar pantallas de promociones flash y comunes + corregir acentos
+675c698 Add: MapScreen.web.tsx para web sin react-native-maps
+da64765 Feature: Mapa GPS interactivo con Google Maps Directions API y horarios reales
+42a4aaf Fix: Mapa GPS pantalla completa con bares reales y 4 estados - conflictos resueltos
+fde7e1e Fix: Mapa GPS pantalla completa con bares reales y 4 estados
+60fb787 Fix: Mapa GPS con 4 estados de pines y navegacion correcta
+868bb5b Fix: Convertir precios de centavos a pesos y agregar sección Promociones Comunes en HomeScreen
+337f910 Perf: Sistema de logging profesional y eliminacion de console.log en servidor
+4bbc2d0 Perf: Eliminar console.log para mejorar rendimiento
+3803dec Debug: Agregar logs en PromotionTransactionsScreen
+1a37445 Fix: Corregir navegacion en PromotionTransactionsScreen y agregar boton Historial en BusinessMenuScreen
+9ff87d1 Fix: Agregar logs y rutas faltantes en navegacion de Business
+ffdb276 Fix: Agregar navegacion al QR desde historial de promociones pendientes
+65a35bb Fix: Corregir carga de imagenes de perfil - detectar data URI base64
+4a25b34 Fix: Refresh imagen perfil + instrucciones permisos cámara
+75acf5b Add: Historial transacciones + fix navegación promociones
+f3a1121 Fix: Eliminar conversiones centavos en productos - precio real
+e625889 Add: Ruta profile-image con base64 + spinner en BusinessMenuScreen
+4c2531d Fix: Syntax error - coma doble
+d76b3b3 Fix: Eliminar TODAS las conversiones centavos - valores reales ARS
+16ae11c Fix: Stats endpoint usa businessId del query parameter
+b078d71 Fix: Auto-refresh del dashboard usa negocio seleccionado
+f624388 Fix: Dashboard muestra transacciones del negocio seleccionado
+92e5c90 Fix: Billetera suma transacciones de TODOS los negocios del usuario
+ca675f0 Fix: Cambiar splash screen a color púrpura y ajustar diseño de promociones
+7fda4fa Add: Editar promociones flash con imagen
+782de25 Fix: Detectar y mostrar imágenes base64 correctamente
+8abd825 Add: Spinner de carga al procesar imagen en MyBusinessesScreen
+1e620ab Fix: Guardar imagen base64 directamente en MyBusinessesScreen
+d1915a4 Fix: Convertir imagen de negocio a base64 para subida correcta
+613d0b6 Debug: Agregar logs para wallet-stats y campos faltantes
+f561334 Fix: Cambiar columnas image a LONGTEXT para soportar base64
+6b604b8 Fix: Restaurar import de StripeConnectStatusScreen
+d9c28ea Fix: Split MP detecta comisión específica de cada bar desde business_commissions
+a9af770 Feature: Pantallas Mercado Pago - Bar conectar cuenta, Admin ver cuentas, Usuario pagar con MP
+826b8c1 Feature: Implementar Mercado Pago Marketplace con split automático - OAuth, pagos, webhooks
+0a65f1e Clean: Eliminar pantallas duplicadas de billetera - solo WalletScreen es la real
+45146b5 Remove: Eliminar mapa de calor del panel del bar - no aporta valor
+9bd1757 Fix: Solucionar bugs reportados - foto de producto en modal, selector de productos en flash, pago con apiRequest
+3f51c39 Feature: Agregar subida de foto de producto en BusinessMenuScreen
+dc0ed33 Feature: Foto de perfil usuario + Notificaciones flash cercanas + Pines colores mapa
+6d0cac6 Fix: Agregar endpoint GET /api/business para obtener negocio con productos
+bfa13c2 Fix: Guardar imágenes como base64 en DB para persistencia en Render
+24c0150 Fix: Agregar endpoint POST /api/business/create
+68f28a6 Fix: Cerrar tag ScrollView en BusinessManageScreen
+ef5ced9 Fix: Agregar GPS en MyBusinessesScreen + Eliminar productos de Ajustes + Fix latitude/longitude en PUT business
+6d85bbe Fix: Agregar navegación entre Promociones/Menú/Ajustes en todas las pantallas de gestión
+3e270cc Fix: Cambiar tab por defecto en BusinessManageScreen a Ajustes
+28b1530 Fix: Agregar endpoint /api/upload/business-image para subir foto del bar
+dfce3af Fix: Agregar pantalla de Promociones en tab Gestión con navegación a Menú y Ajustes
+73ac52b TODOS LOS PROBLEMAS RESUELTOS: GPS con distancias, fotos en promociones, cronómetro visible, upload completo
+b01e108 Problemas 2 y 3: Mejorar manejo de errores en crear promoción flash y verificar límites
+2758359 Problema 1 resuelto: Agregar configuración de ubicación GPS y foto del bar en BusinessManageScreen
+fa98a48 Mejorar HeatmapScreen: mapa real Google Maps, ubicación usuario, bares visibles, datos ejemplo Buenos Aires
+5a4d879 fix: Agregar Google Maps API Key al AndroidManifest.xml para APK
+fa8cb76 feat: FASE 1 + FASE 2 completas y funcionales - Sistema completo verificado
+268521e feat: FASE 2 completa - Integrar todas las pantallas en navegadores (Referidos, Heatmap, Ranking, Promos Programadas)
+8b0e6f1 fix: OrderPaymentScreen conditional import for web
+6d36cd4 merge: Integrar cambios de pedidos con Stripe
+a58f8cc feat: Sistema de pedidos completo con Stripe - Pago real en móvil, demo en web
+f3a9233 fix: Web compatible toast notifications in BarMenuScreen
+a963c44 feat: Sistema de pedidos completo - Menu, carrito, pago y QR con puntos (1pt/$1 al pagar)
+9c7530d Merge branch 'main' of https://github.com/Caskiuz/AstroBar-App
+d6e55f0 Fix: GPS map with correct pin states (closed/opening_soon/open/hot_promo) as per client specs
+98fcb9d Feature: Add full menu screen and future promotions view
+8fd8f96 Fix: Show revenue for all paid transactions (pending + redeemed), not just redeemed
+2bdf1fa Fix: Commission reading from DB using correct array access [0][0]
+64ef35d Resolve merge conflict
+a8c2630 Fix: SSL configuration for Aiven MySQL + Activate FASE 2 modules
+8fb080a feat: Agregar migraciones SQL de FASE 2
+2bbd8ae chore: Limpiar repositorio - solo README.md y archivos esenciales
+70dcc6c feat: FASE 2 Frontend completo - 6 pantallas + componente de mensajes
+9cbd937 feat: FASE 2 completa - 8 módulos implementados con feature flags
+37a3de5 Cambiar nombre de NEMY a AstroBar en toda la app
+554b79c Change country code from Mexico +52 to Argentina +54
+e5cc549 Update auth routes
+0dc8020 Fix server:prod for Linux
+3985142 feat: Complete MVP to 100% - Final missing features
+9cc014c feat: Add missing critical MVP features
+2988f9b feat: Implement complete wallet system with Stripe Connect integration
+b4a5baf fix: Conflicto de variable businesses en adminRoutes
+b6a7ccf docs: README profesional completo
+c4b9946 feat: Sistema de notificaciones push (ALTA)
+dca2e4b feat: Admin - Aprobar/Rechazar bares (ALTA)
+799bf0a feat: Admin - Gestión de comisiones (ALTA)
+359309f feat: Admin - Dashboard de promociones (ALTA)
+9842585 feat: Bar - Dashboard adaptado a promociones (ALTA)
+b2b817b feat: Cliente - Perfil con estadísticas (ALTA)
+0642177 feat: Admin - Monitor de transacciones (CRÍTICO)
+1f29741 feat: Bar - Panel de promociones activas (CRÍTICO)
+fb061fe feat: Bar - Escáner QR funcional (CRÍTICO)\n\n✅ ScanQRScreen:\n- Escaneo de QR con cámara (expo-camera)\n- Validación en tiempo real\n- Ingreso manual de código\n- Feedback visual (corners dorados)\n- Confirmación de canje exitoso\n- Muestra que cliente ganó 10 puntos\n- Manejo de errores (QR inválido, ya canjeado)\n\nFase 1 Bar: 50% completo\nFalta: Panel de promociones activas
+845f185 feat: Cliente - Promoción activa + Historial (CRÍTICO)\n\n✅ ActivePromotionsScreen:\n- Muestra QR activo del cliente\n- Timer de cancelación en tiempo real\n- Botón cancelar si está dentro de 60s\n- Estado vacío si no hay promo activa\n- Refresh manual\n\n✅ HistoryScreen:\n- Lista todas las promociones del usuario\n- Estados: Canjeado, Pendiente, Cancelado, Expirado\n- Muestra QR code, fecha, bar, monto\n- Badge +10 puntos en canjeados\n- Pull to refresh\n\nFase 1 Cliente: 100% completo
+f133e6c feat: MapScreen funcional con lista de bares cercanos - MVP 100%\n\n- MapScreen muestra lista de bares con geolocalización\n- Estados visuales: Abierto (verde), Cerrado (gris), Flash (dorado)\n- Navegación directa a BusinessDetail al tocar un bar\n- Solicita permisos de ubicación\n- Carga bares desde API\n\n🎉 MVP COMPLETO AL 100%:\n✅ Registro +18 con validación\n✅ Sistema de promociones (flash/comunes)\n✅ Confirmación con timer 60s\n✅ Generación de QR único\n✅ Sistema de puntos y niveles\n✅ Mapa/lista de bares cercanos\n✅ Flujo completo funcional\n✅ Datos de prueba\n\nFlujo MVP:\n1. Usuario ve mapa/lista de bares\n2. Selecciona bar → Ve promociones\n3. Acepta promoción → Confirma (60s)\n4. Recibe QR → Canjea en bar\n5. Gana 10 puntos automáticamente
+2fbf1ab feat: BusinessDetailScreen con promociones + datos de prueba\n\n- BusinessDetailScreen muestra promociones activas del bar\n- Cards de promociones con descuento, precio, stock\n- Diferenciación visual para promociones flash (dorado)\n- Botón ACEPTAR navega a ConfirmPromotionScreen\n- Promociones de prueba en DB: 2 flash + 3 comunes\n- Bar de prueba 'La Noche Bar' creado\n\nFlujo completo:\n1. Ver bar → Ver promociones\n2. Aceptar → Confirmar (60s timer)\n3. QR generado → Canjear en bar\n\nMVP: ~85% completo\nFalta: Mapa funcional con pines
+21d89c3 feat: Sistema completo de promociones MVP\n\n- Tablas DB: promotions, promotion_transactions, user_points\n- API completa: crear, listar, aceptar, cancelar, canjear QR\n- Pantallas: ConfirmPromotionScreen (timer 60s), PromotionQRScreen\n- Sistema de puntos: 10 puntos por canje, niveles automáticos\n- Comisiones: Bar 100%, Plataforma 30% adicional al usuario\n- QR único por transacción con librería react-native-qrcode-svg\n\nPendiente:\n- Actualizar BusinessDetailScreen para mostrar promociones\n- Mapa funcional con pines de bares\n- Integración completa del flujo
+7c8af43 feat: Migración completa de NEMY a AstroBar - Fase 1 MVP (40%)\n\n- Eliminado todo branding NEMY (logos, textos, referencias)\n- Actualizado a AstroBar: promociones nocturnas en Buenos Aires\n- Cambiado código país de México (+52) a Argentina (+54)\n- Eliminados roles delivery_driver, convertidos a customer\n- Limpieza completa de lógica de delivery/drivers\n\nCambios principales:\n- Splash screen y logos actualizados (astrobarlogo.jpg, astrobarbanner.jpg)\n- HomeScreen adaptado: bares nocturnos en lugar de comida\n- SignupScreen: validación edad +18, tipos de negocio nocturnos\n- ProfileScreen: roles adaptados (customer, business_owner, admin)\n- MapScreen: placeholder preparado para mapa con pines\n- Panel Admin: limpiado, solo tabs esenciales\n\nServicios implementados:\n- googleMaps.ts: geolocalización y cálculo de distancias\n- pushNotifications.ts: sistema completo de notificaciones\n- userRoutes.ts: endpoint de perfil de usuario\n- businessRoutes.ts: rutas públicas para listar bares\n\nMigraciones SQL ejecutadas:\n- fix_roles.sql: conversión delivery_driver → customer\n- add_push_token.sql: campo para notificaciones push\n- create_test_users.sql: usuarios de prueba por rol\n\nPendiente para MVP completo:\n- Sistema de promociones (flash/comunes)\n- Mapa funcional con pines de bares\n- Flujo de aceptación de promociones\n- Generación y validación de QR\n- Pantalla de confirmación con timer 60s
+b892d70 fix: Corregir imports database a db en cart y stats routes
+3634376 fix: Recrear apiRoutes y corregir imports
+ad68d2b refactor: Limpiar codigo NEMY y aplicar branding AstroBar
+8103911 rebrand: Cambiar NEMY a AstroBar en LoginScreen
+8a78e94 rebrand: Cambiar NEMY a AstroBar en toda la app
+1fcc165 fix: Corregir imports en adminPanelRoutes
+76ef719 docs: Actualizar stack tecnologico - split automatico configurable
+7f76786 feat: Implementar split automatico con Stripe Connect
+79717d6 fix: Corregir logica de comisiones - bar recibe 100% del producto
+bfd4fbb feat: Panel admin completo con comisiones configurables
+5dcb12f feat: AstroBar MVP - Plataforma de promociones nocturnas (Buenos Aires)
