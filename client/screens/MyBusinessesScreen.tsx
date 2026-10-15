@@ -61,6 +61,9 @@ export default function MyBusinessesScreen() {
     deleteBusiness,
   } = useBusiness();
 
+  // 1️⃣ FILTRO MAESTRO: Escondemos a la fuerza cualquier bar que haya sido marcado como inactivo (borrado lógico)
+  const activeBusinesses = businesses.filter(b => b.isActive !== false);
+
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -69,9 +72,8 @@ export default function MyBusinessesScreen() {
   const [businessToDelete, setBusinessToDelete] = useState<Business | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [businessLat, setBusinessLat] = useState<number | null>(null);
-  const [businessLng, setBusinessLng] = useState<number | null>(null);
-
+  
+  // SOLUCIÓN 2: Eliminamos los hooks de lat/lng aislados, usaremos los valores directamente del editingBusiness
   const [newBusiness, setNewBusiness] = useState({
     name: "",
     description: "",
@@ -79,6 +81,8 @@ export default function MyBusinessesScreen() {
     address: "",
     phone: "",
     image: "",
+    latitude: 0,
+    longitude: 0,
   });
 
   useEffect(() => {
@@ -163,9 +167,12 @@ export default function MyBusinessesScreen() {
         ? `${geocode[0].street || ""} ${geocode[0].streetNumber || ""}, ${geocode[0].city || ""}, ${geocode[0].region || ""}`.trim()
         : "Buenos Aires, Argentina";
 
-      setNewBusiness(prev => ({ ...prev, address: fullAddress }));
-      setBusinessLat(location.coords.latitude);
-      setBusinessLng(location.coords.longitude);
+      setNewBusiness(prev => ({ 
+        ...prev, 
+        address: fullAddress,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      }));
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Éxito", "Ubicación obtenida");
@@ -176,6 +183,7 @@ export default function MyBusinessesScreen() {
 
   const handleEditBusiness = (business: Business) => {
     setEditingBusiness(business);
+    // SOLUCIÓN 2: Rellenamos lat/lng con lo que ya tiene el bar para evitar enviar nulls y causar error NaN
     setNewBusiness({
       name: business.name,
       description: business.description || "",
@@ -183,6 +191,8 @@ export default function MyBusinessesScreen() {
       address: business.address || "",
       phone: business.phone || "",
       image: business.image || "",
+      latitude: business.latitude || 0,
+      longitude: business.longitude || 0,
     });
     setShowEditModal(true);
   };
@@ -195,11 +205,13 @@ export default function MyBusinessesScreen() {
 
     setSubmitting(true);
     try {
-      const response = await apiRequest("PUT", `/api/business/${editingBusiness.id}`, {
-        ...newBusiness,
-        latitude: businessLat,
-        longitude: businessLng,
-      });
+      // 2️⃣ SOLUCIÓN ANTI-NAN: Forzamos la validación en la estructura de salida.
+      const payloadData = { ...newBusiness };
+      if (!payloadData.latitude) delete (payloadData as any).latitude;
+      if (!payloadData.longitude) delete (payloadData as any).longitude;
+
+      const response = await apiRequest("PUT", `/api/business/${editingBusiness.id}`, payloadData);
+      
       const data = await response.json();
       
       if (data.success) {
@@ -236,7 +248,11 @@ export default function MyBusinessesScreen() {
         address: "",
         phone: "",
         image: "",
+        latitude: 0,
+        longitude: 0,
       });
+      // Obligamos a recargar la lista para reflejar el nuevo comercio
+      await loadBusinesses();
     } catch (error: any) {
       Alert.alert("Error", error.message || "No se pudo crear el negocio");
     } finally {
@@ -258,6 +274,8 @@ export default function MyBusinessesScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowDeleteModal(false);
       setBusinessToDelete(null);
+      // Obligamos a recargar la lista al finalizar el borrado
+      await loadBusinesses();
     } catch (error: any) {
       Alert.alert("Error", error.message || "No se pudo eliminar el negocio");
     } finally {
@@ -278,7 +296,7 @@ export default function MyBusinessesScreen() {
     return `${getApiUrl()}${imagePath}`;
   };
 
-  if (isLoading && businesses.length === 0) {
+  if (isLoading && activeBusinesses.length === 0) {
     return (
       <View style={[styles.container, styles.centerView]}>
         <ActivityIndicator size="large" color="#00f2fe" />
@@ -288,7 +306,6 @@ export default function MyBusinessesScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 🪐 NUEVA CABECERA ULTRA MODERNA CYBERPUNK (Adiós bloque violeta sólido) */}
       <BlurView intensity={40} tint="dark" style={[styles.headerContainer, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.headerCore}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backButtonNative}>
@@ -297,7 +314,7 @@ export default function MyBusinessesScreen() {
           <View style={styles.headerContent}>
             <ThemedText style={styles.headerTitle}>Mis Negocios</ThemedText>
             <ThemedText style={styles.headerSubtitle}>
-              {businesses.length} {businesses.length === 1 ? "negocio" : "negocios"} en la red AstroBar
+              {activeBusinesses.length} {activeBusinesses.length === 1 ? "negocio" : "negocios"} en la red AstroBar
             </ThemedText>
           </View>
         </View>
@@ -311,7 +328,6 @@ export default function MyBusinessesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00f2fe" />
         }
       >
-        {/* 🪐 BOTÓN AGREGAR CON REESTRUCTURACIÓN CIAN NEÓN */}
         <Pressable style={({ pressed }) => [
           styles.addButtonNative,
           { backgroundColor: pressed ? "rgba(0, 242, 254, 0.85)" : "#00f2fe" }
@@ -320,7 +336,7 @@ export default function MyBusinessesScreen() {
           <ThemedText style={styles.addButtonTextNative}>Agregar Nuevo Negocio</ThemedText>
         </Pressable>
 
-        {businesses.length === 0 ? (
+        {activeBusinesses.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Feather name="briefcase" size={32} color="#94a3b8" />
@@ -329,7 +345,7 @@ export default function MyBusinessesScreen() {
             <ThemedText style={styles.emptySubtext}>Vinculá tu primer bar para empezar a lanzar promos.</ThemedText>
           </View>
         ) : (
-          businesses.map((business: any, index: number) => {
+          activeBusinesses.map((business: any, index: number) => {
             const isSelected = selectedBusiness?.id === business.id;
             return (
               <Animated.View key={business.id} entering={FadeInDown.delay(index * 80)}>
@@ -346,7 +362,6 @@ export default function MyBusinessesScreen() {
                     resizeMode="cover"
                   />
                   
-                  {/* Sutil difuminado oscuro sobre el asset gráfico */}
                   <LinearGradient colors={['transparent', 'rgba(11, 17, 30, 0.95)']} style={styles.imageGradient} />
 
                   <View style={styles.businessInfoNative}>
@@ -383,7 +398,6 @@ export default function MyBusinessesScreen() {
                     )}
                   </View>
 
-                  {/* 🪐 ACCIONES INTERNAS REDISEÑADAS EN FILA */}
                   <View style={styles.actionsRowNative}>
                     <Pressable style={styles.actionButtonNative} onPress={() => handleEditBusiness(business)}>
                       <Feather name="edit-3" size={16} color="#00f2fe" style={{ marginRight: 6 }} />
@@ -401,7 +415,7 @@ export default function MyBusinessesScreen() {
         )}
       </ScrollView>
 
-      {/* 🪐 MODAL AGREGAR NEGOCIO ESTILIZADO */}
+      {/* MODAL AGREGAR NEGOCIO */}
       <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
         <View style={styles.modalOverlayNative}>
           <View style={styles.modalContentNative}>
@@ -457,7 +471,7 @@ export default function MyBusinessesScreen() {
         </View>
       </Modal>
 
-      {/* 🪐 MODAL EDITAR NEGOCIO ESTILIZADO */}
+      {/* MODAL EDITAR NEGOCIO */}
       <Modal visible={showEditModal} transparent animationType="slide" onRequestClose={() => { setShowEditModal(false); setEditingBusiness(null); }}>
         <View style={styles.modalOverlayNative}>
           <View style={styles.modalContentNative}>
@@ -488,7 +502,7 @@ export default function MyBusinessesScreen() {
         </View>
       </Modal>
 
-      {/* 🪐 MODAL CONFIRMACIÓN DE BORRADO */}
+      {/* MODAL CONFIRMACIÓN DE BORRADO */}
       <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
         <View style={[styles.modalOverlayNative, { justifyContent: 'center', backgroundColor: 'rgba(5, 8, 15, 0.9)' }]}>
           <View style={styles.deleteContentCardNative}>
