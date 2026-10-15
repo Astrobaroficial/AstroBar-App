@@ -44,11 +44,11 @@ export default function WalletScreen() {
 
   useEffect(() => {
     loadWalletStats();
-    if (user?.role === 'business_owner') {
+    // 🚀 AHORA TAMBIÉN CARGAMOS ESTADO PARA ADMINS
+    if (user?.role === 'business_owner' || user?.role === 'admin' || user?.role === 'super_admin') {
       loadMercadoPagoStatus();
     }
 
-    // 🚀 Listener de Deep Linking para detectar el retorno automático desde el navegador
     const subscription = Linking.addEventListener('url', (event) => {
       if (event.url.includes('mp-connected')) {
         loadMercadoPagoStatus();
@@ -60,11 +60,10 @@ export default function WalletScreen() {
     return () => subscription.remove();
   }, [user?.role]);
 
-  // 🔄 Recarga automática cada vez que la pantalla toma foco en la app
   useFocusEffect(
     useCallback(() => {
       loadWalletStats();
-      if (user?.role === 'business_owner') {
+      if (user?.role === 'business_owner' || user?.role === 'admin' || user?.role === 'super_admin') {
         loadMercadoPagoStatus();
       }
     }, [user?.role])
@@ -120,7 +119,9 @@ export default function WalletScreen() {
     Linking.openURL('https://www.mercadopago.com.ar/balance');
   };
 
+  // --------------------------------------------------------
   // Vista para CLIENTES
+  // --------------------------------------------------------
   if (user?.role === 'customer') {
     return (
       <LinearGradient
@@ -225,7 +226,9 @@ export default function WalletScreen() {
     );
   }
 
+  // --------------------------------------------------------
   // Vista para BARES (business_owner)
+  // --------------------------------------------------------
   if (user?.role === 'business_owner') {
     return (
       <LinearGradient
@@ -391,7 +394,9 @@ export default function WalletScreen() {
     );
   }
 
+  // --------------------------------------------------------
   // Vista para ADMIN/SUPER_ADMIN
+  // --------------------------------------------------------
   return (
     <LinearGradient
       colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
@@ -437,26 +442,26 @@ export default function WalletScreen() {
           </View>
         </View>
 
-        {/* Mercado Pago Platform Status */}
-        <View style={[styles.mpCard, { backgroundColor: '#E8F5E9' }, Shadows.sm]}>
+        {/* 🚀 ESTADO REAL DE MERCADO PAGO PLATAFORMA */}
+        <View style={[styles.mpCard, { backgroundColor: mpStatus.connected ? '#E8F5E9' : '#FFF3E0' }, Shadows.sm]}>
           <View style={styles.mpHeader}>
-            <View style={[styles.mpIcon, { backgroundColor: '#4CAF50' }]}>
-              <Feather name="check" size={20} color="#FFFFFF" />
+            <View style={[styles.mpIcon, { backgroundColor: mpStatus.connected ? '#4CAF50' : '#FF9800' }]}>
+              <Feather name={mpStatus.connected ? "check" : "alert-circle"} size={20} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1, marginLeft: Spacing.md }}>
               <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Mercado Pago Conectado
+                Mercado Pago {mpStatus.connected ? 'Conectado' : 'No Conectado'}
               </ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 2 }}>
-                Cuenta de la plataforma configurada
+                {mpStatus.connected ? 'Cuenta maestra configurada' : 'Faltan credenciales maestras (Access Token)'}
               </ThemedText>
             </View>
           </View>
-          <View style={{ marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: '#C8E6C9' }}>
+          <View style={{ marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: mpStatus.connected ? '#C8E6C9' : '#FFE0B2' }}>
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               • Las comisiones se cobran automáticamente{"\n"}
               • El dinero llega directo a tu cuenta MP{"\n"}
-              • Split payment configurado correctamente{"\n"}
+              • Split payment {mpStatus.connected ? 'habilitado' : 'detenido'}{"\n"}
               • "Pendiente Entrega" = Ya pagado, esperando escaneo QR
             </ThemedText>
           </View>
@@ -485,12 +490,47 @@ export default function WalletScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
+        {/* 🚀 QUICK ACTIONS PARA ADMIN (MERCADO PAGO) */}
         <View style={[styles.section, { backgroundColor: theme.card }, Shadows.sm]}>
           <ThemedText type="h4" style={styles.sectionTitle}>Acciones Rápidas</ThemedText>
           
           <Pressable
             style={[styles.actionItem, { borderBottomColor: theme.border }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.navigate('BusinessMercadoPago');
+            }}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+              <Feather name="settings" size={20} color="#009EE3" />
+            </View>
+            <View style={styles.actionContent}>
+              <ThemedText type="body">Credenciales Mercado Pago</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                {mpStatus.connected ? 'Actualizar token maestro' : 'Configurar cuenta de recaudo'}
+              </ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+
+          {mpStatus.connected && (
+            <Pressable
+              style={[styles.actionItem, { borderBottomColor: theme.border }]}
+              onPress={openMercadoPago}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
+                <Feather name="external-link" size={20} color="#009EE3" />
+              </View>
+              <View style={styles.actionContent}>
+                <ThemedText type="body">Ver en Mercado Pago</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>Consultar ingresos de plataforma</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          )}
+
+          <Pressable
+            style={[styles.actionItem, { borderBottomColor: 'transparent' }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.navigate('PaymentHistory');
@@ -502,23 +542,6 @@ export default function WalletScreen() {
             <View style={styles.actionContent}>
               <ThemedText type="body">Historial Completo</ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary }}>Ver todas las transacciones del sistema</ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
-
-          <Pressable
-            style={[styles.actionItem, { borderBottomColor: 'transparent' }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              openMercadoPago();
-            }}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#009EE320' }]}>
-              <Feather name="external-link" size={20} color="#009EE3" />
-            </View>
-            <View style={styles.actionContent}>
-              <ThemedText type="body">Ver en Mercado Pago</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>Consultar saldo y movimientos</ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
