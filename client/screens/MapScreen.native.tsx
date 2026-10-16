@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
@@ -253,16 +253,29 @@ export default function MapScreenNative() {
               onPress={() => handleMarkerPress(bar)}
               anchor={{ x: 0.5, y: 0.5 }}
             >
-              {/* MAGIA AQUÍ: collapsable={false} obliga a Android a renderizar la caja completa */}
-              <View style={styles.markerWrapper} collapsable={false}>
-                <View style={[styles.customMarker, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.7 }]}>
-                   <Feather name={design.iconName as any} size={22} color="#FFF" />
-                   {!bar.isOpen && (
-                     <View style={styles.closedBadge}>
-                       <View style={styles.closedBadgeInner} />
-                     </View>
-                   )}
-                </View>
+              {/* TRUCO MAESTRO: Apilamos fuentes (iconos) para hacer el circulo y evitamos 
+                  completamente el uso de borderRadius, evitando que Android corte la caja */}
+              <View style={styles.markerContainer} collapsable={false}>
+                {/* 1. Fondo Blanco (Borde) */}
+                <Ionicons name="ellipse" size={50} color="#FFFFFF" style={styles.absoluteLayer} />
+                
+                {/* 2. Círculo de Color interior */}
+                <Ionicons 
+                  name="ellipse" 
+                  size={44} 
+                  color={design.color} 
+                  style={[styles.absoluteLayer, { opacity: bar.isOpen ? 1 : 0.7 }]} 
+                />
+                
+                {/* 3. Ícono Principal */}
+                <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={styles.absoluteLayer} />
+
+                {/* Badge de negocio cerrado */}
+                {!bar.isOpen && (
+                  <View style={styles.closedBadge}>
+                    <View style={styles.closedBadgeInner} />
+                  </View>
+                )}
               </View>
             </Marker>
           );
@@ -276,10 +289,11 @@ export default function MapScreenNative() {
             }}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={styles.markerWrapper} collapsable={false}>
-              <View style={styles.userMarker}>
-                <View style={styles.userMarkerInner} />
-              </View>
+            {/* Aplicamos el mismo truco apilando fuentes para el marcador del usuario */}
+            <View style={styles.markerContainer} collapsable={false}>
+              <Ionicons name="ellipse" size={26} color="#FFFFFF" style={styles.absoluteLayer} />
+              <Ionicons name="ellipse" size={20} color={AstroBarColors.primary} style={styles.absoluteLayer} />
+              <Ionicons name="ellipse" size={8} color="#FFFFFF" style={styles.absoluteLayer} />
             </View>
           </Marker>
         )}
@@ -378,28 +392,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  /* ESTILOS DEL MARCADOR BLINDADOS PARA ANDROID */
-  markerWrapper: {
-    width: 60,
-    height: 60,
+  markerContainer: {
+    width: 52,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
-  customMarker: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFF',
-    // ⚠️ NO AGREGAR elevation NI shadowColor AQUÍ. Rompe la caja en Android.
+  absoluteLayer: {
+    position: 'absolute',
   },
   closedBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: 0,
+    right: 0,
     width: 14,
     height: 14,
     borderRadius: 7,
@@ -408,28 +414,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
+    elevation: 0, // Quitamos sombras aquí también por si acaso
   },
   closedBadgeInner: {
     width: 6,
     height: 2,
     backgroundColor: '#FFF',
     borderRadius: 1,
-  },
-  userMarker: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: AstroBarColors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  userMarkerInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
   },
   bottomSheet: {
     position: 'absolute',
