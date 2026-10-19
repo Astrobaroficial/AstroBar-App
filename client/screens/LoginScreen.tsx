@@ -180,6 +180,20 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 🛠️ Función Helper para parsear errores crudos del servidor
+  const extractCleanErrorMessage = (rawMessage: string) => {
+    try {
+      if (rawMessage.includes('{')) {
+        const jsonStr = rawMessage.substring(rawMessage.indexOf('{'));
+        const parsed = JSON.parse(jsonStr);
+        return parsed.error || parsed.message || "Error al iniciar sesión";
+      }
+      return rawMessage;
+    } catch (e) {
+      return rawMessage;
+    }
+  };
+
   const handlePasswordLogin = async () => {
     if (!validate()) return;
     setIsLoading(true);
@@ -192,9 +206,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         navigation.navigate("VerifyPhone", { phone: identifier });
         return;
       }
-      // La navegación manual se eliminó aquí. El RootStackNavigator se encarga.
     } catch (error: any) {
-      showToast(error.message || "Error al iniciar sesión", "error");
+      // 🚀 Aplicamos el filtro para sacar el JSON del texto
+      const cleanError = extractCleanErrorMessage(error.message || "");
+      showToast(cleanError, "error");
     } finally {
       setIsLoading(false);
     }
@@ -216,7 +231,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         navigation.navigate("VerifyPhone", { phone: normalizedPhone });
       }
     } catch (error: any) {
-      showToast(error.message || "Error al enviar código", "error");
+      // 🚀 Filtro también para la versión SMS por si acaso
+      const cleanError = extractCleanErrorMessage(error.message || "");
+      showToast(cleanError, "error");
     } finally {
       setIsLoading(false);
     }
