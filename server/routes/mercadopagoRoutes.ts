@@ -12,27 +12,26 @@ const router = express.Router();
 const MP_CLIENT_ID = process.env.MERCADO_PAGO_CLIENT_ID || "";
 const MP_CLIENT_SECRET = process.env.MERCADO_PAGO_CLIENT_SECRET || "";
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://astrobar-app-production-4821.up.railway.app";
-
-// 💡 Redirección unificada para evitar discrepancias en el panel
 const MP_REDIRECT_URI = `${BASE_URL}/api/mp/callback`;
-const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token Maestro de AstroBar
-
-// Instancia Maestra del SDK con tus credenciales de Plataforma
-const platformClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
+const MP_ACCESS_TOKEN_ENV = process.env.MERCADO_PAGO_ACCESS_TOKEN || ""; // Token Maestro de backup
 
 // ==========================================
-// 1. OAUTH - Iniciar vinculación de cuenta MP del bar
+// 1. OAUTH - Iniciar vinculación de cuenta MP (Bares o Admin)
 // ==========================================
-router.get("/connect", authenticateToken, requireRole("business_owner"), async (req, res) => {
+// 🚀 Eliminado el restrictivo requireRole("business_owner") para permitir paso a admins
+router.get("/connect", authenticateToken, async (req, res) => {
   try {
-    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
-    
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
+    let stateParam = "PLATFORM"; // ID especial para la cuenta recaudadora maestra del Admin
 
-    // ✅ Enviamos el ID del negocio directo en el 'state'
-    const stateParam = business.id;
+    if (req.user!.role === "business_owner") {
+      const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+      if (!business) {
+        return res.status(404).json({ error: "Negocio no encontrado" });
+      }
+      stateParam = business.id;
+    } else if (req.user!.role !== "admin" && req.user!.role !== "super_admin") {
+      return res.status(403).json({ error: "No tienes permisos para esta acción" });
+    }
 
     const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${stateParam}&redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}`;
 
@@ -58,19 +57,19 @@ router.get("/callback", async (req, res) => {
       return res.status(400).send("Código de autorización o estado faltante.");
     }
 
-    let businessId: string | null = null;
+    let targetId: string | null = null;
     try {
       const parsedState = JSON.parse(decodeURIComponent(state as string));
-      businessId = parsedState.businessId || state;
+      targetId = parsedState.businessId || state;
     } catch (e) {
-      businessId = state as string;
+      targetId = state as string;
     }
 
-    if (!businessId) {
+    if (!targetId) {
       return res.status(400).send("Sesión de autorización inválida o expirada.");
     }
 
-    // Intercambio directo del código de autorización por el Access Token
+    // Intercambio directo del código por el Access Token
     const tokenResponse = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,14 +89,14 @@ router.get("/callback", async (req, res) => {
       throw new Error(tokenData.message || "No se pudo obtener el token de acceso de Mercado Pago.");
     }
 
-    // 🛡️ VALIDACIÓN: Verificar si esta cuenta de MP ya está vinculada a OTRO bar
+    // 🛡️ VALIDACIÓN: Evitar que 2 bares conecten la misma cuenta
     const existingAccounts = await db
       .select()
       .from(mercadopagoAccounts)
       .where(eq(mercadopagoAccounts.mpUserId, String(tokenData.user_id)))
       .limit(1);
 
-    if (existingAccounts.length > 0 && existingAccounts[0].businessId !== businessId) {
+    if (existingAccounts.length > 0 && existingAccounts[0].businessId !== targetId && targetId !== "PLATFORM") {
       return res.status(400).send(`
         <!DOCTYPE html>
         <html lang="es">
@@ -106,37 +105,11 @@ router.get("/callback", async (req, res) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Cuenta Ya Vinculada - AstroBar</title>
           <style>
-            body {
-              background-color: #11011E;
-              color: #FFFFFF;
-              font-family: system-ui, -apple-system, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              margin: 0;
-              text-align: center;
-            }
-            .card {
-              background: #1A042B;
-              border: 2px solid #ef4444;
-              border-radius: 20px;
-              padding: 30px;
-              max-width: 360px;
-              box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
-            }
+            body { background-color: #11011E; color: #FFFFFF; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }
+            .card { background: #1A042B; border: 2px solid #ef4444; border-radius: 20px; padding: 30px; max-width: 360px; }
             h1 { color: #ef4444; font-size: 22px; margin-bottom: 10px; }
             p { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
-            .btn {
-              display: inline-block;
-              margin-top: 20px;
-              background: #F16A30;
-              color: #fff;
-              padding: 12px 24px;
-              text-decoration: none;
-              border-radius: 50px;
-              font-weight: bold;
-            }
+            .btn { display: inline-block; margin-top: 20px; background: #F16A30; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 50px; font-weight: bold; }
           </style>
         </head>
         <body>
@@ -151,12 +124,12 @@ router.get("/callback", async (req, res) => {
     }
 
     // Limpiar vinculaciones previas e insertar nuevas credenciales
-    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, businessId));
+    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, targetId));
 
     const accountId = uuidv4();
     await db.insert(mercadopagoAccounts).values({
       id: accountId,
-      businessId: businessId,
+      businessId: targetId,
       mpUserId: String(tokenData.user_id),
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
@@ -165,7 +138,7 @@ router.get("/callback", async (req, res) => {
       isActive: true,
     });
 
-    console.log(`✅ Cuenta de Mercado Pago conectada con éxito para el Bar ID: ${businessId}`);
+    console.log(`✅ Cuenta de Mercado Pago conectada con éxito para: ${targetId}`);
 
     res.send(`
       <!DOCTYPE html>
@@ -175,49 +148,21 @@ router.get("/callback", async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Conexión Exitosa - AstroBar</title>
         <style>
-          body {
-            background-color: #11011E;
-            color: #FFFFFF;
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            text-align: center;
-          }
-          .card {
-            background: #1A042B;
-            border: 2px solid #F16A30;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 360px;
-            box-shadow: 0 0 30px rgba(241, 106, 48, 0.3);
-          }
+          body { background-color: #11011E; color: #FFFFFF; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }
+          .card { background: #1A042B; border: 2px solid #F16A30; border-radius: 20px; padding: 30px; max-width: 360px; box-shadow: 0 0 30px rgba(241, 106, 48, 0.3); }
           h1 { color: #22c55e; font-size: 24px; margin-bottom: 10px; }
           p { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
-          .btn {
-            display: inline-block;
-            margin-top: 20px;
-            background: #F16A30;
-            color: #fff;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-          }
+          .btn { display: inline-block; margin-top: 20px; background: #F16A30; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 50px; font-weight: bold; }
         </style>
       </head>
       <body>
         <div class="card">
           <h1>¡Mercado Pago Conectado! 🎉</h1>
-          <p>Tu bar ya está listo para recibir pagos e ingresos automáticos por la venta de promociones.</p>
+          <p>La cuenta ya está lista para recibir pagos e ingresos automáticos.</p>
           <a href="astrobar://mp-connected?success=true" class="btn">Volver a AstroBar App</a>
         </div>
         <script>
-          setTimeout(function() {
-            window.location.href = "astrobar://mp-connected?success=true";
-          }, 1500);
+          setTimeout(function() { window.location.href = "astrobar://mp-connected?success=true"; }, 1500);
         </script>
       </body>
       </html>
@@ -237,15 +182,19 @@ router.get("/callback", async (req, res) => {
 // ==========================================
 // 3. ESTADO DE CONEXIÓN
 // ==========================================
-router.get("/status", authenticateToken, requireRole("business_owner"), async (req, res) => {
+router.get("/status", authenticateToken, async (req, res) => {
   try {
-    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
-    
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
+    let targetId = "PLATFORM";
+
+    if (req.user!.role === "business_owner") {
+      const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+      if (!business) return res.status(404).json({ error: "Negocio no encontrado" });
+      targetId = business.id;
+    } else if (req.user!.role !== "admin" && req.user!.role !== "super_admin") {
+      return res.status(403).json({ error: "No tienes permisos" });
     }
 
-    const [mpAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, business.id)).limit(1);
+    const [mpAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, targetId)).limit(1);
 
     if (!mpAccount) {
       return res.json({ success: true, connected: false });
@@ -267,15 +216,19 @@ router.get("/status", authenticateToken, requireRole("business_owner"), async (r
 // ==========================================
 // 4. DESCONECTAR CUENTA MP
 // ==========================================
-router.post("/disconnect", authenticateToken, requireRole("business_owner"), async (req, res) => {
+router.post("/disconnect", authenticateToken, async (req, res) => {
   try {
-    const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
-    
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
+    let targetId = "PLATFORM";
+
+    if (req.user!.role === "business_owner") {
+      const [business] = await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
+      if (!business) return res.status(404).json({ error: "Negocio no encontrado" });
+      targetId = business.id;
+    } else if (req.user!.role !== "admin" && req.user!.role !== "super_admin") {
+      return res.status(403).json({ error: "No tienes permisos" });
     }
 
-    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, business.id));
+    await db.delete(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, targetId));
 
     res.json({ success: true, message: "Cuenta de Mercado Pago desconectada con éxito" });
   } catch (error: any) {
@@ -297,11 +250,23 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Transacción no encontrada" });
     }
 
-    const [mpAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, transaction.businessId)).limit(1);
+    // Obtener cuenta MP del Bar
+    const [barAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, transaction.businessId)).limit(1);
 
-    if (!mpAccount || !mpAccount.accessToken) {
+    if (!barAccount || !barAccount.accessToken) {
       return res.status(400).json({ error: "El bar aún no vinculó su cuenta de Mercado Pago para recibir ventas." });
     }
+
+    // 🚀 Recuperar cuenta MP de la Plataforma vinculada por el Admin
+    const [platformAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, "PLATFORM")).limit(1);
+    const activePlatformToken = platformAccount?.accessToken || MP_ACCESS_TOKEN_ENV;
+
+    if (!activePlatformToken) {
+       return res.status(500).json({ error: "La plataforma AstroBar no tiene una cuenta recaudadora maestra configurada." });
+    }
+
+    // Inicializar SDK de MP con el token real de la plataforma en la BD
+    const dynamicPlatformClient = new MercadoPagoConfig({ accessToken: activePlatformToken });
 
     const { sql } = await import("drizzle-orm");
     const commissionResult: any = await db.execute(sql`
@@ -320,11 +285,10 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
     const platformFee = Number(transaction.platformCommission) || (totalAmount * commissionRate); 
     const businessAmount = totalAmount - platformFee; 
 
-    // Obtener ID de usuario del token de plataforma para comparar
-    const sellerMpUserId = Number(mpAccount.mpUserId);
+    const sellerMpUserId = Number(barAccount.mpUserId);
     let platformUserId: number | null = null;
     try {
-      const tokenParts = MP_ACCESS_TOKEN.split('-');
+      const tokenParts = activePlatformToken.split('-');
       if (tokenParts.length > 1 && !isNaN(Number(tokenParts[1]))) {
         platformUserId = Number(tokenParts[1]);
       }
@@ -353,13 +317,13 @@ router.post("/create-payment", authenticateToken, async (req, res) => {
       auto_return: "approved",
     };
 
-    // Solo se incluye sponsor_id si no es la misma cuenta de la plataforma
+    // Solo se incluye sponsor_id si no es la misma cuenta de la plataforma probando
     if (!platformUserId || platformUserId !== sellerMpUserId) {
       preferenceBody.sponsor_id = sellerMpUserId;
     }
 
-    // 🚀 La preferencia se crea con el CLIENTE MAESTRO DE ASTROBAR
-    const mpPreference = new Preference(platformClient);
+    // Crear preferencia de pago
+    const mpPreference = new Preference(dynamicPlatformClient);
     const result = await mpPreference.create({ body: preferenceBody });
 
     res.json({
@@ -386,9 +350,13 @@ router.post("/webhook", async (req, res) => {
     if (type === "payment" && data?.id) {
       const paymentId = data.id;
 
+      // Obtener el Token Maestro de BD o .env
+      const [platformAccount] = await db.select().from(mercadopagoAccounts).where(eq(mercadopagoAccounts.businessId, "PLATFORM")).limit(1);
+      const activePlatformToken = platformAccount?.accessToken || MP_ACCESS_TOKEN_ENV;
+
       const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
-          "Authorization": `Bearer ${MP_ACCESS_TOKEN}`,
+          "Authorization": `Bearer ${activePlatformToken}`,
         },
       });
 
@@ -423,13 +391,13 @@ router.get("/admin/accounts", authenticateToken, requireRole("admin"), async (re
       SELECT 
         ma.id,
         ma.business_id as businessId,
-        b.name as businessName,
+        COALESCE(b.name, 'Plataforma AstroBar') as businessName,
         ma.mp_user_id as mpUserId,
         ma.is_active as isActive,
         ma.expires_at as expiresAt,
         ma.created_at as createdAt
       FROM mercadopago_accounts ma
-      JOIN businesses b ON ma.business_id = b.id
+      LEFT JOIN businesses b ON ma.business_id = b.id
       ORDER BY ma.created_at DESC
     `);
 
