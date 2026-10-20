@@ -27,7 +27,7 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width, height } = Dimensions.get('window');
 
 // ==========================================
-// RENDERIZADOR DE ÍCONOS SVG PUROS (SIN FUENTES)
+// RENDERIZADOR DE ÍCONOS SVG PUROS (24x24)
 // ==========================================
 const renderSvgIcon = (iconName: string) => {
   switch (iconName) {
@@ -122,17 +122,19 @@ const renderSvgIcon = (iconName: string) => {
 };
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA LOS BARES (100% SVG)
+// COMPONENTE MARCADOR DE BARES (MARGEN SEGURO)
 // ==========================================
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTracksViewChanges(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleLayout = () => {
+    if (Platform.OS === 'android') {
+      const timer = setTimeout(() => {
+        setTracksViewChanges(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  };
 
   return (
     <Marker
@@ -144,21 +146,25 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <View style={{ width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }} collapsable={false}>
-        <Svg width="50" height="50" viewBox="0 0 50 50">
-          {/* Fondo blanco */}
-          <Circle cx="25" cy="25" r="25" fill="#FFFFFF" />
+      <View 
+        style={{ width: 70, height: 70, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' }} 
+        collapsable={false}
+        onLayout={handleLayout}
+      >
+        <Svg width="60" height="60" viewBox="0 0 60 60">
+          {/* Fondo blanco (radio 25 centrado en 30,30 -> 5px de aire en los bordes) */}
+          <Circle cx="30" cy="30" r="25" fill="#FFFFFF" />
           {/* Círculo de color dinámico */}
-          <Circle cx="25" cy="25" r="22" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
+          <Circle cx="30" cy="30" r="21" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
           
-          {/* Ícono vectorial centrado en (13,13) */}
-          <G transform="translate(13, 13)">
+          {/* Ícono vectorial centrado exactamente en el medio (translate 18,18) */}
+          <G transform="translate(18, 18)">
             {renderSvgIcon(design.iconName)}
           </G>
 
           {/* Badge de local cerrado */}
           {!bar.isOpen && (
-            <G transform="translate(32, 2)">
+            <G transform="translate(38, 4)">
               <Circle cx="7" cy="7" r="7" fill="#EF4444" stroke="#FFFFFF" strokeWidth="2" />
               <Path d="M4 7h6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
             </G>
@@ -170,17 +176,19 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
 });
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA EL USUARIO (100% SVG)
+// COMPONENTE MARCADOR DE USUARIO
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTracksViewChanges(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleLayout = () => {
+    if (Platform.OS === 'android') {
+      const timer = setTimeout(() => {
+        setTracksViewChanges(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  };
 
   return (
     <Marker
@@ -189,11 +197,15 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
       zIndex={999}
     >
-      <View style={{ width: 26, height: 26, justifyContent: 'center', alignItems: 'center' }} collapsable={false}>
-        <Svg width="26" height="26" viewBox="0 0 26 26">
-          <Circle cx="13" cy="13" r="13" fill="#FFFFFF" />
-          <Circle cx="13" cy="13" r="10" fill={AstroBarColors.primary} />
-          <Circle cx="13" cy="13" r="4" fill="#FFFFFF" />
+      <View 
+        style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' }} 
+        collapsable={false}
+        onLayout={handleLayout}
+      >
+        <Svg width="30" height="30" viewBox="0 0 30 30">
+          <Circle cx="15" cy="15" r="13" fill="#FFFFFF" />
+          <Circle cx="15" cy="15" r="10" fill={AstroBarColors.primary} />
+          <Circle cx="15" cy="15" r="4" fill="#FFFFFF" />
         </Svg>
       </View>
     </Marker>
