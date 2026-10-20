@@ -14,6 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
+import Svg, { Circle } from "react-native-svg";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -26,7 +27,7 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width, height } = Dimensions.get('window');
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA LOS BARES
+// COMPONENTE INTELIGENTE PARA LOS BARES (SVG)
 // ==========================================
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -49,11 +50,13 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
       <View style={styles.markerWrapper} collapsable={false}>
-        <View style={styles.markerWhiteCircle}>
-          <View style={[styles.markerColorCircle, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.7 }]}>
-            <Feather name={design.iconName as any} size={20} color="#FFFFFF" />
-          </View>
-        </View>
+        <Svg width="50" height="50" viewBox="0 0 50 50" style={{ position: 'absolute' }}>
+          <Circle cx="25" cy="25" r="25" fill="#FFFFFF" />
+          <Circle cx="25" cy="25" r="22" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
+        </Svg>
+        
+        <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={{ zIndex: 1 }} />
+
         {!bar.isOpen && (
           <View style={styles.closedBadge}>
             <View style={styles.closedBadgeInner} />
@@ -65,7 +68,7 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
 });
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA EL USUARIO
+// COMPONENTE INTELIGENTE PARA EL USUARIO (SVG)
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -84,12 +87,12 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
       zIndex={999}
     >
-      <View style={styles.markerWrapper} collapsable={false}>
-        <View style={[styles.markerWhiteCircle, { width: 26, height: 26, borderRadius: 13, elevation: 2, shadowRadius: 2 }]}>
-          <View style={[styles.markerColorCircle, { backgroundColor: AstroBarColors.primary, width: 20, height: 20, borderRadius: 10 }]}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' }} />
-          </View>
-        </View>
+      <View style={{ width: 26, height: 26, justifyContent: 'center', alignItems: 'center' }} collapsable={false}>
+        <Svg width="26" height="26" viewBox="0 0 26 26" style={{ position: 'absolute' }}>
+          <Circle cx="13" cy="13" r="13" fill="#FFFFFF" />
+          <Circle cx="13" cy="13" r="10" fill={AstroBarColors.primary} />
+          <Circle cx="13" cy="13" r="4" fill="#FFFFFF" />
+        </Svg>
       </View>
     </Marker>
   );
@@ -138,11 +141,8 @@ export default function MapScreenNative() {
     }
   };
 
-  // ==========================================
-  // LOGICA PARA ENCONTRAR EL MÁS CERCANO
-  // ==========================================
   const calcularDistancia = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radio de la Tierra en km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -158,7 +158,6 @@ export default function MapScreenNative() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    // Filtramos solo los locales del tipo que queremos y que estén abiertos (opcional)
     const localesFiltrados = bars.filter((bar) => {
       const type = (bar.type || '').toLowerCase();
       if (tipoBusqueda === 'bar') return type.includes('bar') || type.includes('pub');
@@ -344,7 +343,7 @@ export default function MapScreenNative() {
           longitudeDelta: 0.05,
         }}
         showsUserLocation={false} 
-        showsMyLocationButton={false} // Lo apagamos porque choca con nuestros botones, podés dejarlo si preferís
+        showsMyLocationButton={false} 
         userInterfaceStyle="dark"
         customMapStyle={[
           { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
@@ -395,9 +394,6 @@ export default function MapScreenNative() {
         )}
       </MapView>
 
-      {/* ========================================== */}
-      {/* BOTONES FLOTANTES DE BÚSQUEDA RÁPIDA       */}
-      {/* ========================================== */}
       <View style={styles.floatingButtonsContainer}>
         <Pressable 
           style={({ pressed }) => [styles.floatingButton, { opacity: pressed ? 0.7 : 1 }]} 
@@ -418,7 +414,6 @@ export default function MapScreenNative() {
           <Feather name="pie-chart" size={22} color="#FFFFFF" />
         </Pressable>
         <View style={styles.floatingDivider} />
-        {/* Botón para centrar en el usuario */}
         <Pressable 
           style={({ pressed }) => [styles.floatingButton, { backgroundColor: theme.card, opacity: pressed ? 0.7 : 1 }]} 
           onPress={() => {
@@ -496,29 +491,14 @@ export default function MapScreenNative() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullContainer: {
-    flex: 1,
-  },
-  map: {
-    width,
-    height,
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-  },
-  errorTitle: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
-  },
-  errorText: {
-    textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  fullContainer: { flex: 1 },
+  map: { width, height },
+  loadingText: { marginTop: Spacing.md },
+  errorTitle: { marginTop: Spacing.md, marginBottom: Spacing.xs },
+  errorText: { textAlign: 'center', paddingHorizontal: Spacing.xl },
+  
+  // Ajustes del SVG Wrapper
   markerWrapper: {
     width: 60,
     height: 60,
@@ -526,26 +506,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
-  markerWhiteCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  markerColorCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  
   closedBadge: {
     position: 'absolute',
     top: 5,
@@ -559,6 +520,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFF',
     elevation: 6, 
+    zIndex: 2,
   },
   closedBadgeInner: {
     width: 6,
@@ -566,7 +528,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 1,
   },
-  // --- Estilos para Botones Flotantes ---
   floatingButtonsContainer: {
     position: 'absolute',
     right: Spacing.md,
@@ -578,7 +539,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#00f2fe', // Color por defecto (Bar)
+    backgroundColor: '#00f2fe',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -593,7 +554,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     marginVertical: 4,
   },
-  // --------------------------------------
   bottomSheet: {
     position: 'absolute',
     bottom: 0,
@@ -608,39 +568,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
   },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.md,
-  },
-  closeButton: {
-    padding: Spacing.xs,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  routeInfo: {
-    flexDirection: 'row',
-    gap: Spacing.lg,
-    marginBottom: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  routeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
+  sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.md },
+  closeButton: { padding: Spacing.xs },
+  statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm, gap: Spacing.xs },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  routeInfo: { flexDirection: 'row', gap: Spacing.lg, marginBottom: Spacing.md, paddingVertical: Spacing.sm },
+  routeItem: { flexDirection: 'row', alignItems: 'center' },
+  buttonRow: { flexDirection: 'row', gap: Spacing.md },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
