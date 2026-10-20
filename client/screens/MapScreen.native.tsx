@@ -122,19 +122,17 @@ const renderSvgIcon = (iconName: string) => {
 };
 
 // ==========================================
-// COMPONENTE MARCADOR DE BARES (MARGEN SEGURO)
+// COMPONENTE MARCADOR DE BARES (SVG DIRECTO)
 // ==========================================
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
-  const handleLayout = () => {
-    if (Platform.OS === 'android') {
-      const timer = setTimeout(() => {
-        setTracksViewChanges(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTracksViewChanges(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Marker
@@ -146,49 +144,37 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <View 
-        style={{ width: 70, height: 70, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' }} 
-        collapsable={false}
-        onLayout={handleLayout}
-      >
-        <Svg width="60" height="60" viewBox="0 0 60 60">
-          {/* Fondo blanco (radio 25 centrado en 30,30 -> 5px de aire en los bordes) */}
-          <Circle cx="30" cy="30" r="25" fill="#FFFFFF" />
-          {/* Círculo de color dinámico */}
-          <Circle cx="30" cy="30" r="21" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
-          
-          {/* Ícono vectorial centrado exactamente en el medio (translate 18,18) */}
-          <G transform="translate(18, 18)">
-            {renderSvgIcon(design.iconName)}
-          </G>
+      <Svg width="60" height="60" viewBox="0 0 60 60">
+        <Circle cx="30" cy="30" r="26" fill="#FFFFFF" />
+        <Circle cx="30" cy="30" r="22" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
+        
+        <G transform="translate(18, 18)">
+          {renderSvgIcon(design.iconName)}
+        </G>
 
-          {/* Badge de local cerrado */}
-          {!bar.isOpen && (
-            <G transform="translate(38, 4)">
-              <Circle cx="7" cy="7" r="7" fill="#EF4444" stroke="#FFFFFF" strokeWidth="2" />
-              <Path d="M4 7h6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-            </G>
-          )}
-        </Svg>
-      </View>
+        {!bar.isOpen && (
+          <G transform="translate(42, 4)">
+            <Circle cx="7" cy="7" r="7" fill="#EF4444" stroke="#FFFFFF" strokeWidth="2" />
+            <Path d="M4 7h6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+          </G>
+        )}
+      </Svg>
     </Marker>
   );
 });
 
 // ==========================================
-// COMPONENTE MARCADOR DE USUARIO
+// COMPONENTE MARCADOR DE USUARIO (SVG DIRECTO)
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
-  const handleLayout = () => {
-    if (Platform.OS === 'android') {
-      const timer = setTimeout(() => {
-        setTracksViewChanges(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTracksViewChanges(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Marker
@@ -197,17 +183,11 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
       zIndex={999}
     >
-      <View 
-        style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' }} 
-        collapsable={false}
-        onLayout={handleLayout}
-      >
-        <Svg width="30" height="30" viewBox="0 0 30 30">
-          <Circle cx="15" cy="15" r="13" fill="#FFFFFF" />
-          <Circle cx="15" cy="15" r="10" fill={AstroBarColors.primary} />
-          <Circle cx="15" cy="15" r="4" fill="#FFFFFF" />
-        </Svg>
-      </View>
+      <Svg width="30" height="30" viewBox="0 0 30 30">
+        <Circle cx="15" cy="15" r="14" fill="#FFFFFF" />
+        <Circle cx="15" cy="15" r="11" fill={AstroBarColors.primary} />
+        <Circle cx="15" cy="15" r="4" fill="#FFFFFF" />
+      </Svg>
     </Marker>
   );
 });
