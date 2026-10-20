@@ -279,7 +279,6 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
       if (result?.requiresVerification) {
         navigation.navigate("VerifyPhone", { phone: formattedPhone });
       } else {
-        // ✨ FEEDBACK VISUAL AGREGADO AL CREAR LA CUENTA CORRECTAMENTE
         if (showToast) {
           showToast("¡Cuenta creada exitosamente! Bienvenido a AstroBar 🚀", "success");
         } else {
@@ -367,6 +366,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               error={errors.name}
               autoCapitalize="words"
               testID="input-name"
+              style={styles.textInputColorOverride}
             />
 
             <Input
@@ -383,6 +383,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               keyboardType="email-address"
               autoComplete="email"
               testID="input-email"
+              style={styles.textInputColorOverride}
             />
 
             <View style={styles.inputWrapper}>
@@ -702,6 +703,7 @@ export default function SignupScreen({ navigation, route }: SignupScreenProps) {
               autoCapitalize="characters"
               maxLength={10}
               testID="input-referral"
+              style={styles.textInputColorOverride}
             />
 
             <ThemedText type="small" style={styles.roleLabel}>
@@ -849,7 +851,13 @@ const styles = StyleSheet.create({
   inputBox: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15, 23, 42, 0.6)", borderRadius: BorderRadius.md, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)", paddingHorizontal: Spacing.md, height: 48 },
   inputBoxError: { borderColor: AstroBarColors.error },
   inputBoxIcon: { marginRight: Spacing.xs },
-  textInput: { flex: 1, height: "100%", fontSize: 15, color: "#FFF", fontWeight: "500" },
+  
+  // ASEGURADO COLOR BLANCO AQUÍ (Para componentes TextInput base)
+  textInput: { flex: 1, height: "100%", fontSize: 15, color: "#FFFFFF", fontWeight: "500" },
+  
+  // OVERRIDE DE COLOR PARA COMPONENTES CUSTOM (<Input>)
+  textInputColorOverride: { color: "#FFFFFF" },
+
   inputError: { color: AstroBarColors.error, marginTop: Spacing.xs },
   phoneHint: { color: "#94a3b8", marginTop: Spacing.xs, fontSize: 11, fontWeight: "500" },
   roleLabel: { fontWeight: "700", marginBottom: Spacing.sm, color: "#cbd5e1", fontSize: 14 },

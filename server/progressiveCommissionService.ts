@@ -30,21 +30,29 @@ export class ProgressiveCommissionService {
 
       const registrationDate = new Date(business.createdAt);
       const now = new Date();
-      const monthsDiff = this.getMonthsDifference(registrationDate, now);
+      
+      // Calculate exact months difference considering the day of the month
+      let monthsDiff = this.getMonthsDifference(registrationDate, now);
+      if (now.getDate() < registrationDate.getDate()) {
+        monthsDiff--;
+      }
+      
+      const monthNumber = Math.max(1, monthsDiff + 1);
 
       // Progressive commission system:
       // Month 1: 0% (free)
-      // Month 2: 5%
-      // Month 3: 10%
-      // Month 4+: 15%
-      if (monthsDiff < 1) {
-        return 0.00; // First month free
-      } else if (monthsDiff < 2) {
-        return 0.05; // Second month 5%
-      } else if (monthsDiff < 3) {
-        return 0.10; // Third month 10%
-      } else {
-        return 0.15; // Fourth month onwards 15%
+      // Month 2: 3%
+      // Month 3: 6%
+      // Month 4: 9%
+      // Month 5: 13%
+      // Month 6+: 15%
+      switch (monthNumber) {
+        case 1: return 0.00;
+        case 2: return 0.03;
+        case 3: return 0.06;
+        case 4: return 0.09;
+        case 5: return 0.13;
+        default: return 0.15;
       }
     } catch (error) {
       console.error("Error calculating progressive commission:", error);
@@ -83,9 +91,10 @@ export class ProgressiveCommissionService {
   static async calculateProgressiveSplit(businessId: string, productPrice: number) {
     const platformCommission = await this.getProgressiveCommission(businessId);
     
-    const businessAmount = productPrice; // Bar gets 100% of product price
-    const platformAmount = Math.round(productPrice * platformCommission); // Platform charges commission
-    const totalAmount = businessAmount + platformAmount; // Total user pays
+    // CORRECCIÓN: El usuario paga el total (ej. $10.000). De ahí se descuenta la parte de AstroBar.
+    const totalAmount = productPrice; 
+    const platformAmount = Math.round(totalAmount * platformCommission); // AstroBar cobra su %
+    const businessAmount = totalAmount - platformAmount; // El comercio se lleva el resto
 
     return {
       platform: platformAmount,
@@ -98,9 +107,11 @@ export class ProgressiveCommissionService {
 
   // Get commission type description
   private static getCommissionType(commission: number): string {
-    if (commission === 0) return "Primer mes gratis";
-    if (commission === 0.05) return "Segundo mes - 5%";
-    if (commission === 0.10) return "Tercer mes - 10%";
+    if (commission === 0) return "1.er mes gratis - 0%";
+    if (commission === 0.03) return "2.º mes - 3%";
+    if (commission === 0.06) return "3.er mes - 6%";
+    if (commission === 0.09) return "4.º mes - 9%";
+    if (commission === 0.13) return "5.º mes - 13%";
     if (commission === 0.15) return "Comisión estándar - 15%";
     return `Comisión personalizada - ${(commission * 100).toFixed(0)}%`;
   }
