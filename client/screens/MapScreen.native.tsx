@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
@@ -48,22 +48,12 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <View style={styles.markerContainer} collapsable={false}>
-        {/* 1. Fondo Blanco (ESTRUCTURAL, SIN absoluteLayer) */}
-        <Ionicons name="ellipse" size={50} color="#FFFFFF" />
-        
-        {/* 2. Círculo de Color interior (ABSOLUTO) */}
-        <Ionicons 
-          name="ellipse" 
-          size={44} 
-          color={design.color} 
-          style={[styles.absoluteLayer, { opacity: bar.isOpen ? 1 : 0.7 }]} 
-        />
-        
-        {/* 3. Ícono Principal (ABSOLUTO) */}
-        <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={styles.absoluteLayer} />
-        
-        {/* Badge de negocio cerrado */}
+      <View style={styles.markerWrapper} collapsable={false}>
+        <View style={styles.markerWhiteCircle}>
+          <View style={[styles.markerColorCircle, { backgroundColor: design.color, opacity: bar.isOpen ? 1 : 0.7 }]}>
+            <Feather name={design.iconName as any} size={20} color="#FFFFFF" />
+          </View>
+        </View>
         {!bar.isOpen && (
           <View style={styles.closedBadge}>
             <View style={styles.closedBadgeInner} />
@@ -94,11 +84,12 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
       zIndex={999}
     >
-      <View style={styles.markerContainer} collapsable={false}>
-        {/* ESTRUCTURAL, SIN absoluteLayer */}
-        <Ionicons name="ellipse" size={26} color="#FFFFFF" />
-        <Ionicons name="ellipse" size={20} color={AstroBarColors.primary} style={styles.absoluteLayer} />
-        <Ionicons name="ellipse" size={8} color="#FFFFFF" style={styles.absoluteLayer} />
+      <View style={styles.markerWrapper} collapsable={false}>
+        <View style={[styles.markerWhiteCircle, { width: 26, height: 26, borderRadius: 13, elevation: 2, shadowRadius: 2 }]}>
+          <View style={[styles.markerColorCircle, { backgroundColor: AstroBarColors.primary, width: 20, height: 20, borderRadius: 10 }]}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF' }} />
+          </View>
+        </View>
       </View>
     </Marker>
   );
@@ -433,21 +424,37 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  markerContainer: {
+  markerWrapper: {
     width: 60,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    overflow: 'visible',
   },
-  absoluteLayer: {
-    position: 'absolute',
+  markerWhiteCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  markerColorCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   closedBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: 5,
+    right: 5,
     width: 14,
     height: 14,
     borderRadius: 7,
@@ -456,7 +463,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
-    elevation: 0, 
+    elevation: 6, 
   },
   closedBadgeInner: {
     width: 6,
