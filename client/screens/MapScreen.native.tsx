@@ -8,6 +8,7 @@ import {
   Alert,
   Platform,
   Image,
+  Linking,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -27,7 +28,7 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
 
-// Lógica usando la carpeta Images con I mayúscula tal como está en tu explorador
+// Lógica usando el alias absoluto @/ para evitar problemas de rutas
 const getPinStateImage = (bar: any) => {
   if (bar.hasFlashPromo && bar.isOpen) {
     return require('@/assets/Images/pin-hot.png');
@@ -126,26 +127,14 @@ export default function MapScreenNative() {
       setLocation(currentLocation);
 
       // ==========================================
-      // MODO PRUEBA: DATOS FALSOS (Sin depender de Railway)
+      // MODO PRUEBA: DATOS FALSOS
       // ==========================================
       const datosDePrueba = [
-        { id: 1, name: 'Bar de Prueba 1', latitude: '-34.6037', longitude: '-58.3816', type: 'bar', isOpen: true, hasFlashPromo: true },
-        { id: 2, name: 'Disco Prueba 2', latitude: '-34.6100', longitude: '-58.3900', type: 'nightclub', isOpen: false },
-        { id: 3, name: 'Resto Prueba 3', latitude: '-34.5950', longitude: '-58.3750', type: 'restaurant', isOpen: true }
+        { id: 1, name: 'Bar de Prueba 1', latitude: '-34.6037', longitude: '-58.3816', type: 'bar', address: 'Av. Corrientes 1234', isOpen: true, hasFlashPromo: true },
+        { id: 2, name: 'Disco Prueba 2', latitude: '-34.6100', longitude: '-58.3900', type: 'nightclub', address: 'Av. Rivadavia 456', isOpen: false },
+        { id: 3, name: 'Resto Prueba 3', latitude: '-34.5950', longitude: '-58.3750', type: 'restaurant', address: 'Santa Fe 789', isOpen: true }
       ];
       setBars(datosDePrueba);
-
-      /* ==========================================
-         CÓDIGO ORIGINAL (Descomentar cuando vuelva Railway o uses localhost)
-         ==========================================
-      const response = await apiRequest('GET', `/api/public/businesses`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const activeBars = (data.businesses || []).filter((b: any) => b.latitude && b.longitude);
-        setBars(activeBars);
-      }
-      */
 
     } catch (err: any) {
       console.error('Error loading map:', err);
@@ -206,87 +195,33 @@ export default function MapScreenNative() {
     }
   };
 
-  const getDirections = async (bar: any) => {
-    if (!location) {
-      Alert.alert('Error', 'No se pudo obtener tu ubicación');
-      return;
-    }
+  // Función para abrir Google Maps / Apple Maps nativo
+  const openNativeMaps = (bar: any) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const lat = parseFloat(bar.latitude);
+    const lng = parseFloat(bar.longitude);
+    const label = encodeURIComponent(bar.name);
 
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
-      const origin = `${location.coords.latitude},${location.coords.longitude}`;
-      const destination = `${bar.latitude},${bar.longitude}`;
+    const url = Platform.select({
+      ios: `maps:0,0?q=${label}@${lat},${lng}`,
+      android: `geo:0,0?q=${lat},${lng}(${label})`
+    });
 
-      // Si Railway está caído, esto va a fallar al buscar direcciones, pero no romperá la app.
-      const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
-      const data = await response.json();
+    const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
-      if (data.success && data.route) {
-        const points = decodePolyline(data.route.polyline);
-        
-        if (points.length === 0) {
-          Alert.alert('Error', 'No se pudo generar la ruta');
-          return;
+    if (url) {
+      Linking.canOpenURL(url).then(supported => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Linking.openURL(fallbackUrl);
         }
-        
-        setRouteCoords(points);
-        setRouteInfo({
-          distance: data.route.distance,
-          duration: data.route.duration,
-        });
-
-        setTimeout(() => {
-          const allCoords = [
-            { latitude: location.coords.latitude, longitude: location.coords.longitude },
-            ...points,
-            { latitude: parseFloat(bar.latitude), longitude: parseFloat(bar.longitude) }
-          ];
-          
-          mapRef.current?.fitToCoordinates(allCoords, {
-            edgePadding: { top: 100, right: 50, bottom: 350, left: 50 },
-            animated: true,
-          });
-        }, 100);
-        
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } else {
-        const errorMsg = data.hint || data.details || data.error || 'No se pudo encontrar una ruta';
-        Alert.alert('Error', errorMsg);
-      }
-    } catch (err: any) {
-      Alert.alert('Modo de prueba', 'No se pueden calcular direcciones sin conexión al servidor (Railway).');
+      }).catch(() => {
+        Linking.openURL(fallbackUrl);
+      });
+    } else {
+      Linking.openURL(fallbackUrl);
     }
-  };
-
-  const decodePolyline = (encoded: string) => {
-    const points = [];
-    let index = 0, len = encoded.length;
-    let lat = 0, lng = 0;
-
-    while (index < len) {
-      let b, shift = 0, result = 0;
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
-    }
-    return points;
   };
 
   const getMarkerDesign = (bar: any) => {
@@ -450,9 +385,12 @@ export default function MapScreenNative() {
           <View style={styles.sheetHeader}>
             <View style={{ flex: 1 }}>
               <ThemedText type="h3">{selectedBar.name}</ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>
-                {selectedBar.address || 'Buenos Aires'}
-              </ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="map-pin" size={12} color={theme.textSecondary} style={{ marginRight: 4 }} />
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  {selectedBar.address || 'Ubicación disponible'}
+                </ThemedText>
+              </View>
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, { backgroundColor: getStatusDotColor(selectedBar) }]} />
                 <ThemedText type="small" style={{ color: getStatusDotColor(selectedBar), fontWeight: '600' }}>
@@ -466,23 +404,10 @@ export default function MapScreenNative() {
             </Pressable>
           </View>
 
-          {routeInfo && (
-            <View style={styles.routeInfo}>
-              <View style={styles.routeItem}>
-                <Feather name="navigation" size={16} color={AstroBarColors.primary} />
-                <ThemedText type="small" style={{ marginLeft: 8 }}>{routeInfo.distance}</ThemedText>
-              </View>
-              <View style={styles.routeItem}>
-                <Feather name="clock" size={16} color={AstroBarColors.primary} />
-                <ThemedText type="small" style={{ marginLeft: 8 }}>{routeInfo.duration}</ThemedText>
-              </View>
-            </View>
-          )}
-
           <View style={styles.buttonRow}>
             <Pressable
               style={[styles.actionButton, { backgroundColor: AstroBarColors.primary }]}
-              onPress={() => getDirections(selectedBar)}
+              onPress={() => openNativeMaps(selectedBar)}
             >
               <Feather name="navigation" size={18} color="#FFF" />
               <ThemedText type="small" style={{ color: '#FFF', marginLeft: 8, fontWeight: '600' }}>
