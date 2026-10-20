@@ -14,7 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Circle, Path, Polygon, G } from "react-native-svg";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -27,7 +27,102 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width, height } = Dimensions.get('window');
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA LOS BARES (SVG)
+// RENDERIZADOR DE ÍCONOS SVG PUROS (SIN FUENTES)
+// ==========================================
+const renderSvgIcon = (iconName: string) => {
+  switch (iconName) {
+    case "coffee":
+      return (
+        <Path
+          d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    case "music":
+      return (
+        <Path
+          d="M9 18V5l12-2v13M9 9l12-2M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    case "pie-chart":
+      return (
+        <Path
+          d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    case "zap":
+      return (
+        <Polygon
+          points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    case "speaker":
+      return (
+        <Path
+          d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM12 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    case "moon":
+      return (
+        <Path
+          d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      );
+    default: // map-pin
+      return (
+        <>
+          <Path
+            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+          <Circle
+            cx="12"
+            cy="10"
+            r="3"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            fill="none"
+          />
+        </>
+      );
+  }
+};
+
+// ==========================================
+// COMPONENTE INTELIGENTE PARA LOS BARES (100% SVG)
 // ==========================================
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -49,26 +144,33 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <View style={styles.markerWrapper} collapsable={false}>
-        <Svg width="50" height="50" viewBox="0 0 50 50" style={{ position: 'absolute' }}>
+      <View style={{ width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }} collapsable={false}>
+        <Svg width="50" height="50" viewBox="0 0 50 50">
+          {/* Fondo blanco */}
           <Circle cx="25" cy="25" r="25" fill="#FFFFFF" />
+          {/* Círculo de color dinámico */}
           <Circle cx="25" cy="25" r="22" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
-        </Svg>
-        
-        <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={{ zIndex: 1 }} />
+          
+          {/* Ícono vectorial centrado en (13,13) */}
+          <G transform="translate(13, 13)">
+            {renderSvgIcon(design.iconName)}
+          </G>
 
-        {!bar.isOpen && (
-          <View style={styles.closedBadge}>
-            <View style={styles.closedBadgeInner} />
-          </View>
-        )}
+          {/* Badge de local cerrado */}
+          {!bar.isOpen && (
+            <G transform="translate(32, 2)">
+              <Circle cx="7" cy="7" r="7" fill="#EF4444" stroke="#FFFFFF" strokeWidth="2" />
+              <Path d="M4 7h6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+            </G>
+          )}
+        </Svg>
       </View>
     </Marker>
   );
 });
 
 // ==========================================
-// COMPONENTE INTELIGENTE PARA EL USUARIO (SVG)
+// COMPONENTE INTELIGENTE PARA EL USUARIO (100% SVG)
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -88,7 +190,7 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       zIndex={999}
     >
       <View style={{ width: 26, height: 26, justifyContent: 'center', alignItems: 'center' }} collapsable={false}>
-        <Svg width="26" height="26" viewBox="0 0 26 26" style={{ position: 'absolute' }}>
+        <Svg width="26" height="26" viewBox="0 0 26 26">
           <Circle cx="13" cy="13" r="13" fill="#FFFFFF" />
           <Circle cx="13" cy="13" r="10" fill={AstroBarColors.primary} />
           <Circle cx="13" cy="13" r="4" fill="#FFFFFF" />
@@ -497,37 +599,6 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: Spacing.md },
   errorTitle: { marginTop: Spacing.md, marginBottom: Spacing.xs },
   errorText: { textAlign: 'center', paddingHorizontal: Spacing.xl },
-  
-  // Ajustes del SVG Wrapper
-  markerWrapper: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  
-  closedBadge: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#EF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFF',
-    elevation: 6, 
-    zIndex: 2,
-  },
-  closedBadgeInner: {
-    width: 6,
-    height: 2,
-    backgroundColor: '#FFF',
-    borderRadius: 1,
-  },
   floatingButtonsContainer: {
     position: 'absolute',
     right: Spacing.md,
