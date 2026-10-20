@@ -7,6 +7,7 @@ import {
   Dimensions,
   Alert,
   Platform,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,7 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
-import Svg, { Circle, Path, Polygon, G } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -27,112 +28,10 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width, height } = Dimensions.get('window');
 
 // ==========================================
-// RENDERIZADOR DE ÍCONOS SVG PUROS (24x24)
-// ==========================================
-const renderSvgIcon = (iconName: string) => {
-  switch (iconName) {
-    case "coffee":
-      return (
-        <Path
-          d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    case "music":
-      return (
-        <Path
-          d="M9 18V5l12-2v13M9 9l12-2M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    case "pie-chart":
-      return (
-        <Path
-          d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    case "zap":
-      return (
-        <Polygon
-          points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    case "speaker":
-      return (
-        <Path
-          d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM12 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    case "moon":
-      return (
-        <Path
-          d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      );
-    default: // map-pin
-      return (
-        <>
-          <Path
-            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-          <Circle
-            cx="12"
-            cy="10"
-            r="3"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-            fill="none"
-          />
-        </>
-      );
-  }
-};
-
-// ==========================================
-// COMPONENTE MARCADOR DE BARES (SVG DIRECTO)
+// COMPONENTE MARCADOR DE BARES (PNG ESTÁTICO)
 // ==========================================
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTracksViewChanges(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <Marker
@@ -144,27 +43,29 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <Svg width="60" height="60" viewBox="0 0 60 60">
-        <Circle cx="30" cy="30" r="26" fill="#FFFFFF" />
-        <Circle cx="30" cy="30" r="22" fill={design.color} fillOpacity={bar.isOpen ? 1 : 0.7} />
-        
-        <G transform="translate(18, 18)">
-          {renderSvgIcon(design.iconName)}
-        </G>
-
-        {!bar.isOpen && (
-          <G transform="translate(42, 4)">
-            <Circle cx="7" cy="7" r="7" fill="#EF4444" stroke="#FFFFFF" strokeWidth="2" />
-            <Path d="M4 7h6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-          </G>
-        )}
-      </Svg>
+      {/* 
+        PRUEBA CON PNG:
+        Usamos el favicon que trae Expo por defecto. 
+        Este método es el más seguro en Android para evitar recortes.
+      */}
+      <Image
+        source={require('@/assets/images/favicon.png')} 
+        style={{ width: 45, height: 45, opacity: bar.isOpen ? 1 : 0.5 }}
+        resizeMode="contain"
+        onLoad={() => {
+          // El truco definitivo: frenamos el snapshot de Android
+          // EXACTAMENTE cuando la imagen termina de decodificarse
+          if (Platform.OS === 'android') {
+            setTimeout(() => setTracksViewChanges(false), 200);
+          }
+        }}
+      />
     </Marker>
   );
 });
 
 // ==========================================
-// COMPONENTE MARCADOR DE USUARIO (SVG DIRECTO)
+// COMPONENTE MARCADOR DE USUARIO (MANTENEMOS SVG PORQUE FUNCIONÓ BIEN)
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
