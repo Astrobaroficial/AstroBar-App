@@ -127,14 +127,16 @@ export default function MapScreenNative() {
       setLocation(currentLocation);
 
       // ==========================================
-      // MODO PRUEBA: DATOS FALSOS
+      // CÓDIGO CONECTADO A TU BASE DE DATOS REAL
       // ==========================================
-      const datosDePrueba = [
-        { id: 1, name: 'Bar de Prueba 1', latitude: '-34.6037', longitude: '-58.3816', type: 'bar', address: 'Av. Corrientes 1234', isOpen: true, hasFlashPromo: true },
-        { id: 2, name: 'Disco Prueba 2', latitude: '-34.6100', longitude: '-58.3900', type: 'nightclub', address: 'Av. Rivadavia 456', isOpen: false },
-        { id: 3, name: 'Resto Prueba 3', latitude: '-34.5950', longitude: '-58.3750', type: 'restaurant', address: 'Santa Fe 789', isOpen: true }
-      ];
-      setBars(datosDePrueba);
+      const response = await apiRequest('GET', `/api/public/businesses`);
+      const data = await response.json();
+      
+      if (data.success || data.businesses || Array.isArray(data)) {
+        const listadoBares = data.businesses || (Array.isArray(data) ? data : []);
+        const activeBars = listadoBares.filter((b: any) => b.latitude && b.longitude);
+        setBars(activeBars);
+      }
 
     } catch (err: any) {
       console.error('Error loading map:', err);
