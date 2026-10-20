@@ -27,6 +27,17 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
 
+// Lógica del cliente para los estados de los pines
+const getPinStateImage = (bar: any) => {
+  if (bar.hasFlashPromo && bar.isOpen) {
+    return require('../../assets/images/pin-hot.png');
+  }
+  if (bar.isOpen) {
+    return require('../../assets/images/pin-open.png');
+  }
+  return require('../../assets/images/pin-closed.png');
+};
+
 // ==========================================
 // COMPONENTE MARCADOR DE BARES (PNG ESTÁTICO)
 // ==========================================
@@ -43,16 +54,11 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      {/* 
-        PRUEBA CON PNG:
-        Ruta relativa para evitar el error de resolución del alias @ en Android.
-      */}
       <Image
-        source={require('../../assets/images/favicon.png')} 
-        style={{ width: 45, height: 45, opacity: bar.isOpen ? 1 : 0.5 }}
+        source={getPinStateImage(bar)} 
+        style={{ width: 45, height: 45 }} 
         resizeMode="contain"
         onLoad={() => {
-          // Frenamos el snapshot de Android EXACTAMENTE al decodificar la imagen
           if (Platform.OS === 'android') {
             setTimeout(() => setTracksViewChanges(false), 200);
           }
