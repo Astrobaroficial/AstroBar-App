@@ -45,16 +45,14 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
     >
       {/* 
         PRUEBA CON PNG:
-        Usamos el favicon que trae Expo por defecto. 
-        Este método es el más seguro en Android para evitar recortes.
+        Ruta relativa para evitar el error de resolución del alias @ en Android.
       */}
       <Image
-        source={require('@/assets/images/favicon.png')} 
+        source={require('../../assets/images/favicon.png')} 
         style={{ width: 45, height: 45, opacity: bar.isOpen ? 1 : 0.5 }}
         resizeMode="contain"
         onLoad={() => {
-          // El truco definitivo: frenamos el snapshot de Android
-          // EXACTAMENTE cuando la imagen termina de decodificarse
+          // Frenamos el snapshot de Android EXACTAMENTE al decodificar la imagen
           if (Platform.OS === 'android') {
             setTimeout(() => setTracksViewChanges(false), 200);
           }
@@ -65,7 +63,7 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
 });
 
 // ==========================================
-// COMPONENTE MARCADOR DE USUARIO (MANTENEMOS SVG PORQUE FUNCIONÓ BIEN)
+// COMPONENTE MARCADOR DE USUARIO (SVG)
 // ==========================================
 const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -121,6 +119,19 @@ export default function MapScreenNative() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
+      // ==========================================
+      // MODO PRUEBA: DATOS FALSOS (Sin depender de Railway)
+      // ==========================================
+      const datosDePrueba = [
+        { id: 1, name: 'Bar de Prueba 1', latitude: '-34.6037', longitude: '-58.3816', type: 'bar', isOpen: true, hasFlashPromo: true },
+        { id: 2, name: 'Disco Prueba 2', latitude: '-34.6100', longitude: '-58.3900', type: 'nightclub', isOpen: false },
+        { id: 3, name: 'Resto Prueba 3', latitude: '-34.5950', longitude: '-58.3750', type: 'restaurant', isOpen: true }
+      ];
+      setBars(datosDePrueba);
+
+      /* ==========================================
+         CÓDIGO ORIGINAL (Descomentar cuando vuelva Railway o uses localhost)
+         ==========================================
       const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
@@ -128,6 +139,8 @@ export default function MapScreenNative() {
         const activeBars = (data.businesses || []).filter((b: any) => b.latitude && b.longitude);
         setBars(activeBars);
       }
+      */
+
     } catch (err: any) {
       console.error('Error loading map:', err);
       setError(err.message || 'Error al cargar el mapa');
@@ -199,6 +212,7 @@ export default function MapScreenNative() {
       const origin = `${location.coords.latitude},${location.coords.longitude}`;
       const destination = `${bar.latitude},${bar.longitude}`;
 
+      // Si Railway está caído, esto va a fallar al buscar direcciones, pero no romperá la app.
       const response = await apiRequest('GET', `/api/directions?origin=${origin}&destination=${destination}`);
       const data = await response.json();
 
@@ -235,7 +249,7 @@ export default function MapScreenNative() {
         Alert.alert('Error', errorMsg);
       }
     } catch (err: any) {
-      Alert.alert('Error de Conexión', 'No se pudieron obtener las direcciones.');
+      Alert.alert('Modo de prueba', 'No se pueden calcular direcciones sin conexión al servidor (Railway).');
     }
   };
 
