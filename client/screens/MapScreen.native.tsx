@@ -27,15 +27,15 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
 
-// Lógica del cliente usando el alias absoluto @/ para evitar problemas de rutas
+// Lógica usando la carpeta Images con I mayúscula tal como está en tu explorador
 const getPinStateImage = (bar: any) => {
   if (bar.hasFlashPromo && bar.isOpen) {
-    return require('@/assets/images/pin-hot.png');
+    return require('@/assets/Images/pin-hot.png');
   }
   if (bar.isOpen) {
-    return require('@/assets/images/pin-open.png');
+    return require('@/assets/Images/pin-open.png');
   }
-  return require('@/assets/images/pin-closed.png');
+  return require('@/assets/Images/pin-closed.png');
 };
 
 // ==========================================
