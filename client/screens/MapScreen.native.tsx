@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import {
   View,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,6 +24,78 @@ import { apiRequest } from "@/lib/query-client";
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
+
+// ==========================================
+// COMPONENTE INTELIGENTE PARA LOS BARES
+// ==========================================
+const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTracksViewChanges(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Marker
+      coordinate={{
+        latitude: parseFloat(bar.latitude),
+        longitude: parseFloat(bar.longitude),
+      }}
+      onPress={onPress}
+      anchor={{ x: 0.5, y: 0.5 }}
+      tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
+    >
+      <View style={styles.markerContainer} collapsable={false}>
+        <Ionicons name="ellipse" size={50} color="#FFFFFF" style={styles.absoluteLayer} />
+        <Ionicons 
+          name="ellipse" 
+          size={44} 
+          color={design.color} 
+          style={[styles.absoluteLayer, { opacity: bar.isOpen ? 1 : 0.7 }]} 
+        />
+        <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={styles.absoluteLayer} />
+        {!bar.isOpen && (
+          <View style={styles.closedBadge}>
+            <View style={styles.closedBadgeInner} />
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+});
+
+// ==========================================
+// COMPONENTE INTELIGENTE PARA EL USUARIO
+// ==========================================
+const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  useEffect(() => {
+    // Este timer arranca exactamente cuando el GPS encuentra al usuario
+    const timer = setTimeout(() => {
+      setTracksViewChanges(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Marker
+      coordinate={coordinate}
+      anchor={{ x: 0.5, y: 0.5 }}
+      tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
+      zIndex={999} // Asegura que tu ubicación quede siempre por encima de los bares
+    >
+      <View style={styles.markerContainer} collapsable={false}>
+        <Ionicons name="ellipse" size={26} color="#FFFFFF" style={styles.absoluteLayer} />
+        <Ionicons name="ellipse" size={20} color={AstroBarColors.primary} style={styles.absoluteLayer} />
+        <Ionicons name="ellipse" size={8} color="#FFFFFF" style={styles.absoluteLayer} />
+      </View>
+    </Marker>
+  );
+});
 
 export default function MapScreenNative() {
   const { theme } = useTheme();
@@ -241,61 +314,22 @@ export default function MapScreenNative() {
           { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }
         ]}
       >
-        {bars.map((bar) => {
-          const design = getMarkerDesign(bar);
-          return (
-            <Marker
-              key={bar.id}
-              coordinate={{
-                latitude: parseFloat(bar.latitude),
-                longitude: parseFloat(bar.longitude),
-              }}
-              onPress={() => handleMarkerPress(bar)}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
-              {/* TRUCO MAESTRO: Apilamos fuentes (iconos) para hacer el circulo y evitamos 
-                  completamente el uso de borderRadius, evitando que Android corte la caja */}
-              <View style={styles.markerContainer} collapsable={false}>
-                {/* 1. Fondo Blanco (Borde) */}
-                <Ionicons name="ellipse" size={50} color="#FFFFFF" style={styles.absoluteLayer} />
-                
-                {/* 2. Círculo de Color interior */}
-                <Ionicons 
-                  name="ellipse" 
-                  size={44} 
-                  color={design.color} 
-                  style={[styles.absoluteLayer, { opacity: bar.isOpen ? 1 : 0.7 }]} 
-                />
-                
-                {/* 3. Ícono Principal */}
-                <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={styles.absoluteLayer} />
-
-                {/* Badge de negocio cerrado */}
-                {!bar.isOpen && (
-                  <View style={styles.closedBadge}>
-                    <View style={styles.closedBadgeInner} />
-                  </View>
-                )}
-              </View>
-            </Marker>
-          );
-        })}
+        {bars.map((bar) => (
+          <TrackedMarker 
+            key={bar.id} 
+            bar={bar} 
+            design={getMarkerDesign(bar)} 
+            onPress={() => handleMarkerPress(bar)} 
+          />
+        ))}
 
         {location && (
-          <Marker
+          <TrackedUserMarker 
             coordinate={{
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
-            }}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            {/* Aplicamos el mismo truco apilando fuentes para el marcador del usuario */}
-            <View style={styles.markerContainer} collapsable={false}>
-              <Ionicons name="ellipse" size={26} color="#FFFFFF" style={styles.absoluteLayer} />
-              <Ionicons name="ellipse" size={20} color={AstroBarColors.primary} style={styles.absoluteLayer} />
-              <Ionicons name="ellipse" size={8} color="#FFFFFF" style={styles.absoluteLayer} />
-            </View>
-          </Marker>
+            }} 
+          />
         )}
 
         {location && routeCoords.length > 0 && (
@@ -414,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFF',
-    elevation: 0, // Quitamos sombras aquí también por si acaso
+    elevation: 0, 
   },
   closedBadgeInner: {
     width: 6,
