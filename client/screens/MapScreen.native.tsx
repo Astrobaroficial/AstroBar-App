@@ -467,16 +467,15 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
+    bottom: 90, // Levantado por encima del menú de navegación
+    left: Spacing.md, // Margen lateral para que se vea flotante y moderno
+    right: Spacing.md,
+    borderRadius: BorderRadius.xl, // Redondeado en todos los bordes
     padding: Spacing.xl,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 10,
   },
   sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.md },
