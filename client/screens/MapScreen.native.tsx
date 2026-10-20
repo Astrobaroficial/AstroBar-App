@@ -74,7 +74,6 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
   useEffect(() => {
-    // Este timer arranca exactamente cuando el GPS encuentra al usuario
     const timer = setTimeout(() => {
       setTracksViewChanges(false);
     }, 1500);
@@ -86,7 +85,7 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       coordinate={coordinate}
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
-      zIndex={999} // Asegura que tu ubicación quede siempre por encima de los bares
+      zIndex={999}
     >
       <View style={styles.markerContainer} collapsable={false}>
         <Ionicons name="ellipse" size={26} color="#FFFFFF" style={styles.absoluteLayer} />
@@ -427,11 +426,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   markerContainer: {
-    width: 52,
-    height: 52,
+    width: 60, // <--- Aumentamos el tamaño
+    height: 60, // <--- Aumentamos el tamaño
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
+    overflow: 'visible', // <--- Agregamos esto para evitar el recorte
   },
   absoluteLayer: {
     position: 'absolute',
