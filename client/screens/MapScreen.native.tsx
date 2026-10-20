@@ -49,14 +49,21 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
       <View style={styles.markerContainer} collapsable={false}>
-        <Ionicons name="ellipse" size={50} color="#FFFFFF" style={styles.absoluteLayer} />
+        {/* 1. Fondo Blanco (ESTRUCTURAL, SIN absoluteLayer) */}
+        <Ionicons name="ellipse" size={50} color="#FFFFFF" />
+        
+        {/* 2. Círculo de Color interior (ABSOLUTO) */}
         <Ionicons 
           name="ellipse" 
           size={44} 
           color={design.color} 
           style={[styles.absoluteLayer, { opacity: bar.isOpen ? 1 : 0.7 }]} 
         />
+        
+        {/* 3. Ícono Principal (ABSOLUTO) */}
         <Feather name={design.iconName as any} size={20} color="#FFFFFF" style={styles.absoluteLayer} />
+        
+        {/* Badge de negocio cerrado */}
         {!bar.isOpen && (
           <View style={styles.closedBadge}>
             <View style={styles.closedBadgeInner} />
@@ -88,7 +95,8 @@ const TrackedUserMarker = memo(({ coordinate }: { coordinate: any }) => {
       zIndex={999}
     >
       <View style={styles.markerContainer} collapsable={false}>
-        <Ionicons name="ellipse" size={26} color="#FFFFFF" style={styles.absoluteLayer} />
+        {/* ESTRUCTURAL, SIN absoluteLayer */}
+        <Ionicons name="ellipse" size={26} color="#FFFFFF" />
         <Ionicons name="ellipse" size={20} color={AstroBarColors.primary} style={styles.absoluteLayer} />
         <Ionicons name="ellipse" size={8} color="#FFFFFF" style={styles.absoluteLayer} />
       </View>
@@ -426,12 +434,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   markerContainer: {
-    width: 60, // <--- Aumentamos el tamaño
-    height: 60, // <--- Aumentamos el tamaño
+    width: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    overflow: 'visible', // <--- Agregamos esto para evitar el recorte
+    overflow: 'visible',
   },
   absoluteLayer: {
     position: 'absolute',
