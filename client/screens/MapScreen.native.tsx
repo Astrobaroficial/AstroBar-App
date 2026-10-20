@@ -55,16 +55,19 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
     >
-      <Image
-        source={getPinStateImage(bar)} 
-        style={{ width: 45, height: 45 }} 
-        resizeMode="contain"
-        onLoad={() => {
-          if (Platform.OS === 'android') {
-            setTimeout(() => setTracksViewChanges(false), 200);
-          }
-        }}
-      />
+      {/* Contenedor extra para evitar que Android recorte la imagen */}
+      <View style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}>
+        <Image
+          source={getPinStateImage(bar)} 
+          style={{ width: 32, height: 32 }} // <-- Íconos más chicos
+          resizeMode="contain"
+          onLoad={() => {
+            if (Platform.OS === 'android') {
+              setTimeout(() => setTracksViewChanges(false), 200);
+            }
+          }}
+        />
+      </View>
     </Marker>
   );
 });
