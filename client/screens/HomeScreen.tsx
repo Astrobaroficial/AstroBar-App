@@ -57,9 +57,9 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>
 >;
 
+// Se eliminó 'flash' de aquí para evitar redundancia visual
 const filters = [
   { id: "cercano", name: "Cercano", icon: "map-pin" },
-  { id: "flash", name: "Flash", icon: "zap" },
   { id: "popular", name: "Popular", icon: "star" },
 ];
 
@@ -95,6 +95,11 @@ function HomeStarParticle({ x, y, size, delay }: { x: number; y: number; size: n
   );
 }
 
+// Interfaz extendida para manejar promociones flash
+interface ExtendedBusiness extends Business {
+  hasFlashPromo?: boolean;
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
@@ -106,8 +111,8 @@ export default function HomeScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [featuredBusinesses, setFeaturedBusinesses] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<ExtendedBusiness[]>([]);
+  const [featuredBusinesses, setFeaturedBusinesses] = useState<ExtendedBusiness[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -143,26 +148,43 @@ export default function HomeScreen() {
       const data = await response.json();
       const rawBusinesses = data.businesses || [];
       
-      const businessList: Business[] = rawBusinesses.map((b: any) => ({
-        id: b.id,
-        name: b.name,
-        description: b.description || '',
-        type: b.type || 'restaurant', // ⚠️ Este es el tipo real de DB
-        profileImage: b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-        bannerImage: b.cover_image || b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-        rating: (b.rating || 0) / 100,
-        reviewCount: b.total_ratings || 0,
-        deliveryTime: b.delivery_time || '30-45 min',
-        deliveryFee: (b.delivery_fee || 2500) / 100,
-        minimumOrder: (b.min_order || 5000) / 100,
-        isOpen: b.isOpen ?? b.is_open ?? false,
-        openingHours: [],
-        address: b.address || 'Buenos Aires, Argentina',
-        phone: b.phone || '',
-        categories: b.categories ? b.categories.split(',') : [],
-        acceptsCash: true,
-        featured: b.is_featured || false,
-      }));
+      // Consultamos las promociones en tiempo real para enriquecer los datos
+      const businessList: ExtendedBusiness[] = await Promise.all(
+        rawBusinesses.map(async (b: any) => {
+          let hasFlashPromo = false;
+          try {
+            const promoRes = await apiRequest('GET', `/api/promotions?businessId=${b.id}`);
+            const promoData = await promoRes.json();
+            if (promoData.success && promoData.promotions) {
+              hasFlashPromo = promoData.promotions.some((p: any) => p.type === 'flash' && p.isActive);
+            }
+          } catch (e) {
+            console.warn(`No se pudieron cargar promociones del negocio ${b.id}`);
+          }
+
+          return {
+            id: b.id,
+            name: b.name,
+            description: b.description || '',
+            type: b.type || 'restaurant', // ⚠️ Este es el tipo real de DB
+            profileImage: b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+            bannerImage: b.cover_image || b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+            rating: (b.rating || 0) / 100,
+            reviewCount: b.total_ratings || 0,
+            deliveryTime: b.delivery_time || '30-45 min',
+            deliveryFee: (b.delivery_fee || 2500) / 100,
+            minimumOrder: (b.min_order || 5000) / 100,
+            isOpen: b.isOpen ?? b.is_open ?? false,
+            openingHours: [],
+            address: b.address || 'Buenos Aires, Argentina',
+            phone: b.phone || '',
+            categories: b.categories ? b.categories.split(',') : [],
+            acceptsCash: true,
+            featured: b.is_featured || false,
+            hasFlashPromo, // 🚀 Propiedad clave agregada
+          };
+        })
+      );
       
       setBusinesses(businessList);
       setFeaturedBusinesses(businessList.filter((b) => b.featured));
@@ -184,7 +206,7 @@ export default function HomeScreen() {
   };
 
   const filterBusinesses = useCallback(
-    (businessList: Business[]) => {
+    (businessList: ExtendedBusiness[]) => {
       let filtered = [...businessList];
 
       if (searchQuery.trim()) {
@@ -199,36 +221,34 @@ export default function HomeScreen() {
       }
 
       if (activeCategory) {
-        // 🚀 CORRECCIÓN CLAVE: Agregamos las palabras en español, inglés y también las palabras parciales
-        const categoryMap: Record<string, string[]> = {
-          flash: ["flash", "promocion"],
-          bar: ["bar", "restaurant_bar", "pub"],
-          nightclub: ["discoteca", "nightclub", "boliche", "club"],
-          pub: ["pub", "bar"],
-          lounge: ["lounge", "resto"],
-          promo: ["promocion", "oferta", "descuento"],
-        };
-        const matchCategories = categoryMap[activeCategory] || [activeCategory];
-        
-        filtered = filtered.filter((b) => {
-          // Buscamos si la palabra clave coincide con el 'type' nativo de DB o alguna categoría extra
-          const hasMatchingType = b.type && matchCategories.some((match) => b.type.toLowerCase().includes(match));
-          const hasMatchingCategory = b.categories.some((cat) => matchCategories.some((match) => cat.toLowerCase().includes(match)));
+        if (activeCategory === "flash") {
+          // Filtramos exclusivamente por promociones flash activas
+          filtered = filtered.filter((b) => b.hasFlashPromo);
+        } else {
+          const categoryMap: Record<string, string[]> = {
+            bar: ["bar", "restaurant_bar", "pub"],
+            nightclub: ["discoteca", "nightclub", "boliche", "club"],
+            pub: ["pub", "bar"],
+            lounge: ["lounge", "resto"],
+            promo: ["promocion", "oferta", "descuento"],
+          };
+          const matchCategories = categoryMap[activeCategory] || [activeCategory];
           
-          return hasMatchingType || hasMatchingCategory;
-        });
+          filtered = filtered.filter((b) => {
+            const hasMatchingType = b.type && matchCategories.some((match) => b.type.toLowerCase().includes(match));
+            const hasMatchingCategory = b.categories.some((cat) => matchCategories.some((match) => cat.toLowerCase().includes(match)));
+            return hasMatchingType || hasMatchingCategory;
+          });
+        }
       }
 
       if (activeFilter) {
         switch (activeFilter) {
           case "cercano":
-            // Si estuviéramos guardando la distancia en el objeto, la usaríamos aquí.
-            break;
-          case "flash":
-            filtered = filtered.filter((b) => b.featured); // o revisar if (b.hasFlashPromo)
+            // Lógica de distancia reservada
             break;
           case "popular":
-            filtered = filtered.filter((b) => b.rating >= 4.0); // Reducido a 4.0 para que sea menos restrictivo
+            filtered = filtered.filter((b) => b.rating >= 4.0);
             break;
         }
       }
@@ -822,4 +842,3 @@ const styles = StyleSheet.create({
   emptyStateText: { textAlign: "center", lineHeight: 22, marginBottom: Spacing.xl },
   emptyStateClearButton: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderRadius: BorderRadius.full },
 });
-
