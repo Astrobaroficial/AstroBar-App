@@ -28,10 +28,10 @@ type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get('window');
 
-// Lógica usando el alias absoluto @/ para evitar problemas de rutas
+// Lógica para determinar el ícono del pin con soporte para promociones flash
 const getPinStateImage = (bar: any) => {
   if (bar.hasFlashPromo && bar.isOpen) {
-    return require('@/assets/Images/pin-hot.png');
+    return require('@/assets/Images/pin-hot.png'); // 📌 Pin rojo para promos flash activas
   }
   if (bar.isOpen) {
     return require('@/assets/Images/pin-open.png');
@@ -59,7 +59,7 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       <View style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}>
         <Image
           source={getPinStateImage(bar)} 
-          style={{ width: 32, height: 32 }} // <-- Íconos más chicos
+          style={{ width: 32, height: 32 }} // Íconos compactos y definidos
           resizeMode="contain"
           onLoad={() => {
             if (Platform.OS === 'android') {
@@ -129,16 +129,46 @@ export default function MapScreenNative() {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // ==========================================
-      // CÓDIGO CONECTADO A TU BASE DE DATOS REAL
-      // ==========================================
+      // Traer negocios de la base de datos
       const response = await apiRequest('GET', `/api/public/businesses`);
       const data = await response.json();
       
       if (data.success || data.businesses || Array.isArray(data)) {
         const listadoBares = data.businesses || (Array.isArray(data) ? data : []);
         const activeBars = listadoBares.filter((b: any) => b.latitude && b.longitude);
-        setBars(activeBars);
+
+        // Enriquecer en tiempo real si el bar tiene promociones flash activas
+        const barsEnriched = await Promise.all(
+          activeBars.map(async (bar: any) => {
+            try {
+              // Consultamos las promociones de este negocio
+              const promoRes = await apiRequest('GET', `/api/promotions?businessId=${bar.id}`);
+              const promoData = await promoRes.json();
+
+              if (promoData.success && promoData.promotions) {
+                // Filtramos las promociones flash activas
+                const flashPromos = promoData.promotions.filter(
+                  (p: any) => p.type === 'flash' && p.isActive
+                );
+
+                return {
+                  ...bar,
+                  hasFlashPromo: flashPromos.length > 0,
+                  flashPromoCount: flashPromos.length,
+                };
+              }
+            } catch (err) {
+              console.error(`Error al verificar promociones del bar ${bar.id}:`, err);
+            }
+            return {
+              ...bar,
+              hasFlashPromo: bar.hasFlashPromo || false,
+              flashPromoCount: bar.flashPromoCount || 0,
+            };
+          })
+        );
+
+        setBars(barsEnriched);
       }
 
     } catch (err: any) {
