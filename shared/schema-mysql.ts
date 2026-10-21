@@ -776,5 +776,16 @@ export const rewardLevels = mysqlTable("reward_levels", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Referrals - Historial de referidos (quién invitó a quién)
+export const referrals = mysqlTable("referrals", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`(UUID())`),
+  referrer_id: varchar("referrer_id", { length: 255 }).notNull(), // Quién invita
+  referred_id: varchar("referred_id", { length: 255 }).notNull(), // Quién fue invitado
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, completed
+  rewardAmount: int("reward_amount").notNull().default(0), // en centavos
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type Referral = typeof referrals.$inferSelect;
 export type ReferralCode = typeof referralCodes.$inferSelect;
 export type RewardLevel = typeof rewardLevels.$inferSelect;
