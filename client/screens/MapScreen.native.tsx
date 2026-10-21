@@ -186,57 +186,6 @@ export default function MapScreenNative() {
     }
   };
 
-  const calcularDistancia = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; 
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; 
-  };
-
-  const buscarMasCercano = (tipoBusqueda: 'bar' | 'nightclub' | 'restaurant') => {
-    if (!location || bars.length === 0) return;
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    const localesFiltrados = bars.filter((bar) => {
-      const type = (bar.type || '').toLowerCase();
-      if (tipoBusqueda === 'bar') return type.includes('bar') || type.includes('pub');
-      if (tipoBusqueda === 'nightclub') return type.includes('nightclub') || type.includes('discoteca');
-      if (tipoBusqueda === 'restaurant') return type.includes('restaurant');
-      return false;
-    });
-
-    if (localesFiltrados.length === 0) {
-      Alert.alert('Aviso', `No se encontraron lugares de tipo ${tipoBusqueda} cerca tuyo.`);
-      return;
-    }
-
-    let masCercano = null;
-    let distanciaMinima = Infinity;
-
-    localesFiltrados.forEach((bar) => {
-      const distancia = calcularDistancia(
-        location.coords.latitude,
-        location.coords.longitude,
-        parseFloat(bar.latitude),
-        parseFloat(bar.longitude)
-      );
-      if (distancia < distanciaMinima) {
-        distanciaMinima = distancia;
-        masCercano = bar;
-      }
-    });
-
-    if (masCercano) {
-      handleMarkerPress(masCercano);
-    }
-  };
-
   // Función para abrir Google Maps / Apple Maps nativo
   const openNativeMaps = (bar: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -386,40 +335,24 @@ export default function MapScreenNative() {
         )}
       </MapView>
 
+      {/* 🚀 BOTONES FLOTANTES REDUCIDOS */}
       <View style={styles.floatingButtonsContainer}>
-        <Pressable 
-          style={({ pressed }) => [styles.floatingButton, { opacity: pressed ? 0.7 : 1 }]} 
-          onPress={() => buscarMasCercano('bar')}
-        >
-          <Feather name="coffee" size={22} color="#FFFFFF" />
-        </Pressable>
-        <Pressable 
-          style={({ pressed }) => [styles.floatingButton, { backgroundColor: '#9C27B0', opacity: pressed ? 0.7 : 1 }]} 
-          onPress={() => buscarMasCercano('nightclub')}
-        >
-          <Feather name="music" size={22} color="#FFFFFF" />
-        </Pressable>
-        <Pressable 
-          style={({ pressed }) => [styles.floatingButton, { backgroundColor: '#FF9800', opacity: pressed ? 0.7 : 1 }]} 
-          onPress={() => buscarMasCercano('restaurant')}
-        >
-          <Feather name="pie-chart" size={22} color="#FFFFFF" />
-        </Pressable>
-        <View style={styles.floatingDivider} />
-        <Pressable 
-          style={({ pressed }) => [styles.floatingButton, { backgroundColor: theme.card, opacity: pressed ? 0.7 : 1 }]} 
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            mapRef.current?.animateToRegion({
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            });
-          }}
-        >
-          <Feather name="crosshair" size={22} color={theme.text} />
-        </Pressable>
+        {location && (
+          <Pressable 
+            style={({ pressed }) => [styles.floatingButton, { backgroundColor: theme.card, opacity: pressed ? 0.7 : 1 }]} 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              mapRef.current?.animateToRegion({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              });
+            }}
+          >
+            <Feather name="crosshair" size={22} color={theme.text} />
+          </Pressable>
+        )}
       </View>
 
       {selectedBar && (
@@ -499,18 +432,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 6,
   },
-  floatingDivider: {
-    width: 24,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginVertical: 4,
-  },
   bottomSheet: {
     position: 'absolute',
-    bottom: 90, // Levantado por encima del menú de navegación
-    left: Spacing.md, // Margen lateral para que se vea flotante y moderno
+    bottom: 90, 
+    left: Spacing.md, 
     right: Spacing.md,
-    borderRadius: BorderRadius.xl, // Redondeado en todos los bordes
+    borderRadius: BorderRadius.xl, 
     padding: Spacing.xl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
