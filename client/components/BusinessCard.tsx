@@ -127,18 +127,15 @@ export function BusinessCard({
           {business.categories.join(" · ")}
         </ThemedText>
         <View style={styles.footer}>
-          <View style={styles.deliveryInfo}>
-            <Feather name="clock" size={14} color={theme.textSecondary} />
+          <View style={styles.pickupInfo}>
+            <Feather name="shopping-bag" size={14} color="#00f2fe" />
             <ThemedText
               type="caption"
-              style={[styles.deliveryText, { color: theme.textSecondary }]}
+              style={[styles.pickupText, { color: theme.text }]}
             >
-              {business.deliveryTime}
+              Retiro en local
             </ThemedText>
           </View>
-          <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-            Envío ${business.deliveryFee}
-          </ThemedText>
         </View>
       </View>
     </AnimatedPressable>
@@ -200,13 +197,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: Spacing.sm,
   },
-  deliveryInfo: {
+  pickupInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    backgroundColor: "rgba(0, 242, 254, 0.1)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+    gap: 6,
   },
-  deliveryText: {
-    marginLeft: 2,
+  pickupText: {
+    fontWeight: "600",
   },
   compactCard: {
     width: 140,
