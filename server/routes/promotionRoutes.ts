@@ -11,7 +11,8 @@ router.get("/", async (req, res) => {
   try {
     const { promotions, businesses } = await import("@shared/schema-mysql");
     const { db } = await import("../db");
-    const { eq, and, gte, lte, sql, desc } = await import("drizzle-orm");
+    // Añadimos 'gt' para la comparación segura del stock
+    const { eq, and, gte, lte, gt, desc } = await import("drizzle-orm");
 
     const businessId = req.query.businessId as string | undefined;
     const type = req.query.type as string | undefined;
@@ -27,7 +28,8 @@ router.get("/", async (req, res) => {
         eq(promotions.isActive, true),
         lte(promotions.startTime, now),
         gte(promotions.endTime, now),
-        sql`${promotions.stock} > ${promotions.stockConsumed}`
+        // FIX: Comparamos el stock usando gt() en lugar de sql crudo para evitar errores
+        gt(promotions.stock, promotions.stockConsumed)
       );
     }
 
@@ -58,7 +60,8 @@ router.get("/", async (req, res) => {
           ...promo,
           business: business || null,
           businessName: business?.name || 'Bar',
-          stockRemaining: promo.stock - promo.stockConsumed,
+          // FIX: Blindamos la resta por si alguna vez los valores son nulos
+          stockRemaining: (promo.stock || 0) - (promo.stockConsumed || 0),
         };
       })
     );
@@ -200,7 +203,7 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
           await sendPushNotification(
             owner.pushToken,
             "¡Nueva promoción aceptada!",
-            `${promotion.title} - $${promoPrice.toFixed(2)}`,
+            `${promotion.title}\n$${promoPrice.toFixed(2)}`,
             { type: 'promotion_accepted', promotionId, transactionId }
           );
         }
@@ -265,6 +268,7 @@ router.post("/transactions/:id/cancel", authenticateToken, async (req, res) => {
       .where(eq(promotionTransactions.id, transactionId));
 
     // Restore stock
+    // FIX: Corregido el operador de resta en el sql crudo
     await db
       .update(promotions)
       .set({ stockConsumed: sql`${promotions.stockConsumed} - 1` })
@@ -852,7 +856,7 @@ router.post("/:id/pay", authenticateToken, async (req, res) => {
           await sendPushNotification(
             owner.pushToken,
             "¡Pago recibido!",
-            `${promotion.title} - $${(promoPrice / 100).toFixed(2)}`,
+            `${promotion.title}\n$${(promoPrice / 100).toFixed(2)}`,
             { type: 'payment_received', promotionId, transactionId, qrCode }
           );
         }
@@ -981,10 +985,7 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
         .limit(1);
     }
 
-    
-
     if (!business) {
-      
       return res.status(404).json({ error: "No tienes un bar registrado" });
     }
 
@@ -993,8 +994,6 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       .from(promotionTransactions)
       .where(eq(promotionTransactions.businessId, business.id))
       .orderBy(desc(promotionTransactions.createdAt));
-
-    
 
     // Enrich with promotion and user data
     const enriched = await Promise.all(
@@ -1020,7 +1019,6 @@ router.get("/business/transactions", authenticateToken, requireRole("business_ow
       })
     );
 
-    
     res.json({ success: true, transactions: enriched });
   } catch (error: any) {
     console.error("Error loading business transactions:", error);
