@@ -644,7 +644,7 @@ export const promotions = mysqlTable("promotions", {
   endTime: timestamp("end_time").notNull(),
   isActive: boolean("is_active").notNull().default(true),
   image: longtext("image"), // ✨ CORREGIDO A LONGTEXT
-  link: text("link"), // Agregado para coincidir con DB
+  link: varchar("link", { length: 255 }), // Agregado para coincidir con DB
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(
     sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
@@ -758,7 +758,7 @@ export const referralCodes = mysqlTable("referral_codes", {
   id: varchar("id", { length: 255 }).primaryKey().default(sql`(UUID())`),
   userId: varchar("user_id", { length: 255 }).notNull().unique(),
   code: varchar("code", { length: 50 }).notNull().unique(),
-  link: text("link"),
+  link: varchar("link", { length: 255 }), // <-- CAMBIADO DE text a varchar(255)
   totalReferrals: int("total_referrals").notNull().default(0),
   successfulReferrals: int("successful_referrals").notNull().default(0),
   totalEarned: int("total_earned").notNull().default(0),
@@ -769,9 +769,9 @@ export const referralCodes = mysqlTable("referral_codes", {
 // ✨ NUEVO: Reward Levels - Niveles de recompensas
 export const rewardLevels = mysqlTable("reward_levels", {
   id: varchar("id", { length: 255 }).primaryKey().default(sql`(UUID())`),
-  name: varchar("name", { length: 50 }).notNull(),
-  requiredReferrals: int("required_referrals").notNull().default(0), // <-- AGREGAR .default(0)
-  rewardAmount: int("reward_amount").notNull().default(0), // <-- AGREGAR .default(0)
+  name: varchar("name", { length: 100 }).notNull(), // <-- CAMBIADO DE 50 a 100
+  requiredReferrals: int("required_referrals").notNull().default(0),
+  rewardAmount: int("reward_amount").notNull().default(0), 
   description: text("description"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
