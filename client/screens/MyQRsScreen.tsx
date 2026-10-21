@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, FlatList, Pressable, RefreshControl } from "react-native";
+import { View, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -45,42 +45,58 @@ export default function MyQRsScreen() {
     loadTransactions();
   };
 
-  const renderTransaction = ({ item }: { item: any }) => (
-    <Pressable
-      style={[styles.card, { backgroundColor: theme.card }]}
-      onPress={() => navigation.navigate('PromotionQR' as any, {
-        transaction: item,
-        promotion: item.promotion,
-        business: item.business,
-      })}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.qrIcon}>
-          <Feather name="grid" size={24} color={AstroBarColors.primary} />
+  const renderTransaction = ({ item }: { item: any }) => {
+    // Si tu backend guarda en centavos, dividimos entre 100. Si ya son pesos, remueve la división.
+    const priceInPesos = (item.amountPaid || 0) / 100;
+
+    return (
+      <Pressable
+        style={[styles.card, { backgroundColor: theme.card }]}
+        onPress={() => navigation.navigate('PromotionQR' as any, {
+          transaction: item,
+          promotion: item.promotion,
+          business: item.business,
+        })}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.qrIcon}>
+            <Feather name="grid" size={24} color={AstroBarColors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <ThemedText type="body" style={{ fontWeight: '600' }}>
+              {item.promotion?.title || 'Promoción'}
+            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              {item.business?.name || 'Bar'}
+            </ThemedText>
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.textSecondary} />
         </View>
-        <View style={{ flex: 1 }}>
-          <ThemedText type="body" style={{ fontWeight: '600' }}>
-            {item.promotion?.title || 'Promoción'}
-          </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {item.business?.name || 'Bar'}
-          </ThemedText>
-        </View>
-        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-      </View>
-      
-      <View style={styles.cardFooter}>
-        <View style={styles.qrCodeBadge}>
-          <ThemedText type="small" style={{ color: AstroBarColors.primary, fontWeight: '600' }}>
-            {item.qrCode}
+        
+        <View style={styles.cardFooter}>
+          <View style={styles.qrCodeBadge}>
+            <ThemedText type="small" style={{ color: AstroBarColors.primary, fontWeight: '600' }}>
+              {item.qrCode}
+            </ThemedText>
+          </View>
+          <ThemedText type="h4" style={{ color: AstroBarColors.success }}>
+            ${priceInPesos.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
           </ThemedText>
         </View>
-        <ThemedText type="h4" style={{ color: AstroBarColors.success }}>
-          ${item.amountPaid.toLocaleString('es-AR')}
-        </ThemedText>
-      </View>
-    </Pressable>
-  );
+      </Pressable>
+    );
+  };
+
+  if (loading) {
+    return (
+      <LinearGradient
+        colors={[theme.gradientStart || '#FFFFFF', theme.gradientEnd || '#F5F5F5']}
+        style={[styles.container, styles.centered]}
+      >
+        <ActivityIndicator size="large" color={AstroBarColors.primary} />
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -128,6 +144,10 @@ export default function MyQRsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     paddingHorizontal: Spacing.lg,
