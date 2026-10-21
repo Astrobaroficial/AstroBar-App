@@ -166,14 +166,17 @@ export default function HomeScreen() {
             id: b.id,
             name: b.name,
             description: b.description || '',
-            type: b.type || 'restaurant', // ⚠️ Este es el tipo real de DB
+            type: b.type || 'restaurant',
             profileImage: b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
             bannerImage: b.cover_image || b.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
             rating: (b.rating || 0) / 100,
             reviewCount: b.total_ratings || 0,
-            deliveryTime: b.delivery_time || '30-45 min',
-            deliveryFee: (b.delivery_fee || 2500) / 100,
-            minimumOrder: (b.min_order || 5000) / 100,
+            
+            // 🚀 MODALIDAD DE RETIRO EN LOCAL (SIN ENVÍOS)
+            deliveryTime: 'Retiro en local',
+            deliveryFee: 0,
+            minimumOrder: 0,
+            
             isOpen: b.isOpen ?? b.is_open ?? false,
             openingHours: [],
             address: b.address || 'Buenos Aires, Argentina',
@@ -181,7 +184,7 @@ export default function HomeScreen() {
             categories: b.categories ? b.categories.split(',') : [],
             acceptsCash: true,
             featured: b.is_featured || false,
-            hasFlashPromo, // 🚀 Propiedad clave agregada
+            hasFlashPromo,
           };
         })
       );
@@ -222,7 +225,6 @@ export default function HomeScreen() {
 
       if (activeCategory) {
         if (activeCategory === "flash") {
-          // Filtramos exclusivamente por promociones flash activas
           filtered = filtered.filter((b) => b.hasFlashPromo);
         } else {
           const categoryMap: Record<string, string[]> = {
@@ -245,7 +247,6 @@ export default function HomeScreen() {
       if (activeFilter) {
         switch (activeFilter) {
           case "cercano":
-            // Lógica de distancia reservada
             break;
           case "popular":
             filtered = filtered.filter((b) => b.rating >= 4.0);
