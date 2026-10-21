@@ -45,6 +45,12 @@ const getPinStateImage = (bar: any) => {
 const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
+  // 🚀 LÓGICA DE JERARQUÍA (z-index)
+  // Flash: 100 (Siempre arriba) | Abierto: 10 | Cerrado: 1
+  let markerZIndex = 1;
+  if (bar.isOpen) markerZIndex = 10;
+  if (bar.hasFlashPromo && bar.isOpen) markerZIndex = 100;
+
   return (
     <Marker
       coordinate={{
@@ -54,6 +60,7 @@ const TrackedMarker = memo(({ bar, design, onPress }: { bar: any, design: any, o
       onPress={onPress}
       anchor={{ x: 0.5, y: 0.5 }}
       tracksViewChanges={Platform.OS === 'ios' ? false : tracksViewChanges}
+      zIndex={markerZIndex} // 👈 Prioridad visual asignada
     >
       {/* Contenedor extra para evitar que Android recorte la imagen */}
       <View style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}>
