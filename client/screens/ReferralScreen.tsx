@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiRequest } from '../lib/query-client';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function ReferralScreen() {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets(); // Agregado para evitar que el texto choque con la batería/hora
   const [loading, setLoading] = useState(true);
   const [referralCode, setReferralCode] = useState('');
   const [referralLink, setReferralLink] = useState('');
@@ -28,9 +30,13 @@ export default function ReferralScreen() {
           setReferralCode(data.stats.code);
           setReferralLink(data.stats.link);
         }
+      } else {
+        // Manejo de error si el backend responde con success: false
+        console.log("No se pudieron cargar los referidos");
       }
     } catch (error) {
       console.error('Error loading referrals:', error);
+      Alert.alert("Error", "Hubo un problema al cargar tus referidos. Revisa tu conexión.");
     } finally {
       setLoading(false);
     }
@@ -44,9 +50,12 @@ export default function ReferralScreen() {
       if (data.success) {
         setReferralCode(data.code);
         setReferralLink(data.link);
+      } else {
+        Alert.alert("Error", data.message || "No se pudo generar el código de referido.");
       }
     } catch (error) {
       console.error('Error generating code:', error);
+      Alert.alert("Error", "Hubo un problema de conexión al intentar generar el código.");
     } finally {
       setLoading(false);
     }
@@ -76,14 +85,17 @@ ${referralLink}`;
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background, justifyContent: 'center' }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + 20 }}
+    >
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.colors.text.primary }]}>🎁 Referí Amigos</Text>
         <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>Ganá recompensas por cada amigo que se registre</Text>

@@ -7,7 +7,7 @@ import {
   timestamp,
   int,
   decimal,
-  longtext, //
+  longtext,
 } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -35,8 +35,9 @@ export const users = mysqlTable("users", {
   bankAccount: text("bank_account"), // JSON con datos bancarios (SPEI/CLABE)
   isActive: boolean("is_active").notNull().default(true), // Para desactivar cuentas
   isOnline: boolean("is_online").notNull().default(false), // Para repartidores online/offline
+  isAvailable: boolean("isAvailable").default(true), // Agregado para coincidir con la DB
   lastActiveAt: timestamp("last_active_at"), // Última actividad
-  profileImage: text("profile_image"), // URL de imagen de perfil
+  profileImage: longtext("profile_image"), // Corregido a longtext para evitar error de tamaño
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -305,7 +306,7 @@ export const products = mysqlTable("products", {
   name: text("name").notNull(),
   description: text("description"),
   price: int("price").notNull(), // en centavos
-  image: text("image"),
+  image: longtext("image"), // Corregido a longtext
   category: text("category"),
   isAvailable: boolean("is_available").notNull().default(true),
   is86: boolean("is_86").notNull().default(false), // Menú 86 (agotado temporalmente)
@@ -642,7 +643,8 @@ export const promotions = mysqlTable("promotions", {
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   isActive: boolean("is_active").notNull().default(true),
-  image: text("image"),
+  image: longtext("image"), // ✨ CORREGIDO A LONGTEXT
+  link: text("link"), // Agregado para coincidir con DB
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(
     sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
@@ -750,3 +752,29 @@ export const paymentCards = mysqlTable("payment_cards", {
 });
 
 export type PaymentCard = typeof paymentCards.$inferSelect;
+
+// ✨ NUEVO: Referral Codes - Sistema de Referidos
+export const referralCodes = mysqlTable("referral_codes", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`(UUID())`),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  link: text("link"),
+  totalReferrals: int("total_referrals").notNull().default(0),
+  successfulReferrals: int("successful_referrals").notNull().default(0),
+  totalEarned: int("total_earned").notNull().default(0),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`),
+});
+
+// ✨ NUEVO: Reward Levels - Niveles de recompensas
+export const rewardLevels = mysqlTable("reward_levels", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`(UUID())`),
+  name: varchar("name", { length: 50 }).notNull(),
+  requiredReferrals: int("required_referrals").notNull().default(0), // <-- AGREGAR .default(0)
+  rewardAmount: int("reward_amount").notNull().default(0), // <-- AGREGAR .default(0)
+  description: text("description"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type RewardLevel = typeof rewardLevels.$inferSelect;
