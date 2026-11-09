@@ -71,9 +71,12 @@ export default function BusinessDetailScreen() {
             bannerImage: data.business.coverImage || data.business.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
             rating: (data.business.rating || 0) / 100,
             reviewCount: data.business.totalRatings || 0,
-            deliveryTime: data.business.deliveryTime || '30-45 min',
-            deliveryFee: (data.business.deliveryFee || 2500) / 100,
-            minimumOrder: (data.business.minOrder || 5000) / 100,
+            
+            // 🚀 MODALIDAD DE RETIRO EN LOCAL (SIN ENVÍOS)
+            deliveryTime: 'Retiro en local', 
+            deliveryFee: 0,
+            minimumOrder: 0,
+            
             isOpen: data.business.isOpen || false,
             openingHours: [],
             address: data.business.address || 'Buenos Aires, Argentina',
@@ -83,7 +86,6 @@ export default function BusinessDetailScreen() {
             featured: data.business.isFeatured || false,
           };
           
-          // 🪐 ADAPTACIÓN CORREGIDA: Dejamos el precio nativo en centavos para que calce con ProductCard sin romperse
           const adaptedProducts: Product[] = (data.business.products || []).map((p: any) => ({
             id: p.id,
             name: p.name,
@@ -228,18 +230,13 @@ export default function BusinessDetailScreen() {
                 {business.description}
               </ThemedText>
               <View style={styles.infoRow}>
-                <Feather name="clock" size={14} color="#64748b" />
-                <ThemedText type="small" style={styles.infoCardMetaText}>
-                  {business.deliveryTime}
-                </ThemedText>
-                <View style={styles.dividerDot} />
-                <ThemedText type="small" style={styles.infoCardMetaText}>
-                  Envío ${business.deliveryFee}
-                </ThemedText>
-                <View style={styles.dividerDot} />
-                <ThemedText type="small" style={styles.infoCardMetaText}>
-                  Mín. ${business.minimumOrder}
-                </ThemedText>
+                {/* 🚀 MODIFICADO: Eliminados tiempos y montos de envío, reemplazados por un indicador visual claro */}
+                <View style={styles.pickupPill}>
+                  <Feather name="shopping-bag" size={14} color="#00f2fe" />
+                  <ThemedText type="small" style={styles.pickupPillText}>
+                    Modalidad: Retiro en local (Take Away)
+                  </ThemedText>
+                </View>
               </View>
               
               <View style={styles.contactRow}>
@@ -355,8 +352,24 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   descriptionText: { color: '#cbd5e1', fontWeight: '500', lineHeight: 19 },
   infoRow: { flexDirection: "row", alignItems: "center", marginTop: Spacing.md, flexWrap: "wrap" },
-  infoCardMetaText: { color: '#94a3b8', marginLeft: Spacing.sm, fontWeight: '600' },
-  dividerDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(0, 242, 254, 0.4)', marginHorizontal: Spacing.sm },
+  
+  // 🚀 ESTILOS NUEVOS PARA LA PÍLDORA DE RETIRO EN LOCAL
+  pickupPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 242, 254, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 242, 254, 0.2)',
+  },
+  pickupPillText: {
+    color: '#00f2fe',
+    marginLeft: 6,
+    fontWeight: '700',
+  },
+  
   contactRow: { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.lg },
   contactButtonCall: {
     flex: 1,

@@ -230,25 +230,42 @@ router.get("/users", authenticateToken, requireRole("admin", "super_admin"), asy
   }
 });
 
-// Get all businesses with commissions
+// Get all businesses with progressive commissions
 router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
+    // Importamos el servicio que maneja la lógica de comisiones progresivas
+    const { CommissionService } = await import("../commissionService");
 
+    // 1. Obtener todos los negocios activos
     const result = await db.execute(sql`
       SELECT 
         b.id as businessId,
         b.name as businessName,
-        COALESCE(bc.platform_commission, 0.30) as commission,
-        bc.updated_at as lastUpdated
+        b.created_at as createdAt
       FROM businesses b
-      LEFT JOIN business_commissions bc ON b.id = bc.business_id
       WHERE b.is_active = 1
       ORDER BY b.name
     `);
 
-    const businesses = Array.isArray(result[0]) ? result[0] : result;
-    res.json({ success: true, businesses });
+    const activeBusinesses = Array.isArray(result[0]) ? result[0] : result;
+
+    // 2. Calcular la comisión progresiva para cada uno usando el CommissionService
+    const businessesWithCommissions = await Promise.all(
+      activeBusinesses.map(async (business: any) => {
+        // Obtenemos la comisión (0%, 3%, 6%, 9%, 13%, 15% o personalizada si existe)
+        const commissionDecimal = await CommissionService.getBusinessCommission(business.businessId);
+        
+        return {
+          businessId: business.businessId,
+          businessName: business.businessName,
+          commission: commissionDecimal,
+          lastUpdated: new Date()
+        };
+      })
+    );
+
+    res.json({ success: true, businesses: businessesWithCommissions });
   } catch (error: any) {
     console.error('Commissions error:', error);
     res.status(500).json({ error: error.message });
