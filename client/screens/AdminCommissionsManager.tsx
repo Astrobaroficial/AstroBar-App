@@ -40,9 +40,9 @@ export default function AdminCommissionsManager() {
   const openEditModal = (business: BusinessCommission) => {
     setSelectedBusiness(business);
     
-    // Si la DB mandó "30" en vez de "0.30", evitamos que se multiplique a 3000
+    // Convertimos a porcentaje entero limpio (ej: 15) para que no arrastre decimales fantasma
     const percent = business.commission > 1 ? business.commission : business.commission * 100;
-    setNewCommission(percent.toString());
+    setNewCommission(Math.round(percent).toString());
     
     setModalVisible(true);
   };
@@ -50,9 +50,11 @@ export default function AdminCommissionsManager() {
   const saveCommission = async () => {
     if (!selectedBusiness) return;
 
-    const commissionValue = parseFloat(newCommission);
+    // Si está vacío, asumimos 0
+    const rawValue = newCommission.trim() === '' ? '0' : newCommission;
+    const commissionValue = parseFloat(rawValue);
     
-    // Permitir desde 0% (mes gratis) hasta 100%
+    // Validación de rango
     if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
       showAlert('Error', 'La comisión debe estar entre 0% y 100%');
       return;
@@ -61,7 +63,7 @@ export default function AdminCommissionsManager() {
     try {
       await apiRequest('POST', '/api/admin/commissions', {
         businessId: selectedBusiness.businessId,
-        // Siempre enviamos el decimal al backend para mantener consistencia (ej: 0.15)
+        // Mandamos el decimal correcto al backend (ej: 0.15)
         commission: commissionValue / 100,
         notes: `Actualizado a ${commissionValue}%`,
       });
@@ -75,9 +77,8 @@ export default function AdminCommissionsManager() {
   };
 
   const renderBusiness = ({ item }: { item: BusinessCommission }) => {
-    // Evitamos multiplicar si ya es un entero viejo en la DB
     const commissionPercent = item.commission > 1 ? item.commission : Math.round(item.commission * 100);
-    const isDefault = commissionPercent === 30 || commissionPercent === 15;
+    const isDefault = commissionPercent === 30 || commissionPercent === 15 || commissionPercent === 0;
 
     return (
       <TouchableOpacity style={styles.card} onPress={() => openEditModal(item)}>
@@ -88,7 +89,7 @@ export default function AdminCommissionsManager() {
           </View>
           {isDefault && (
             <View style={styles.defaultBadge}>
-              <Text style={styles.defaultText}>Por defecto</Text>
+              <Text style={styles.defaultText}>Por escala</Text>
             </View>
           )}
         </View>
@@ -160,13 +161,14 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                // Expresión regular para evitar caracteres raros y saltos de teclado
-                onChangeText={(text) => setNewCommission(text.replace(/[^0-9.]/g, ''))}
-                keyboardType="numeric"
+                // Limpio, sin regex que rompan el teclado
+                onChangeText={setNewCommission} 
+                keyboardType="number-pad"
                 placeholder="Ej: 15"
                 placeholderTextColor="#666"
+                maxLength={3} // Bloquea físicamente que puedan escribir más de 3 números (ej: 100)
               />
-              <Text style={styles.inputHint}>Ingresa valores entre 0 y 100 (0 para mes gratis)</Text>
+              <Text style={styles.inputHint}>Ingresa valores entre 0 y 100</Text>
             </View>
 
             <View style={styles.modalButtons}>
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
-    justify,
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
