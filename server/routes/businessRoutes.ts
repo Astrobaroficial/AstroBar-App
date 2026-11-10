@@ -120,9 +120,9 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
       : await db.select().from(businesses).where(eq(businesses.ownerId, req.user!.id)).limit(1);
     
     if (!business) {
-      const businessId = uuidv4();
+      const newBusinessId = uuidv4();
       const insertData: any = {
-        id: businessId,
+        id: newBusinessId,
         name: "Mi Bar",
         address: "Buenos Aires, Argentina",
         latitude: -34.6037,
@@ -139,7 +139,7 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
       insertData.owner_id = req.user!.id;
 
       await db.insert(businesses).values(insertData);
-      const [fetchedBusiness] = await db.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
+      const [fetchedBusiness] = await db.select().from(businesses).where(eq(businesses.id, newBusinessId)).limit(1);
       business = fetchedBusiness || insertData;
     }
     const transactions = await db.select().from(promotionTransactions).where(eq(promotionTransactions.businessId, business.id)).orderBy(desc(promotionTransactions.createdAt));
@@ -165,13 +165,15 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
     const activeFlash = activePromotions.filter(p => p.type === 'flash');
     const activeCommon = activePromotions.filter(p => p.type === 'common');
     
-    const commissionResult: any = await db.execute(sql`
-      SELECT platform_commission FROM business_commissions WHERE business_id = ${business.id} LIMIT 1
-    `);
-    let platformCommission = 30;
-    if (commissionResult && commissionResult[0] && commissionResult[0][0] && commissionResult[0][0].platform_commission) {
-      platformCommission = parseFloat(commissionResult[0][0].platform_commission);
-    }
+    // ---------------------------------------------------------
+    // 🔥 CÁLCULO DE COMISIÓN PROGRESIVA CORREGIDO 🔥
+    // ---------------------------------------------------------
+    const { CommissionService } = await import("../commissionService");
+    const commissionDecimal = await CommissionService.getBusinessCommission(business.id);
+    
+    // Si viene en decimal (ej 0.15) lo pasamos a entero (15) para el dashboard
+    const platformCommission = commissionDecimal <= 1 ? commissionDecimal * 100 : commissionDecimal;
+    // ---------------------------------------------------------
 
     const recentTransactions = transactions
       .filter(t => t.status === "redeemed" || t.status === "pending")
@@ -201,7 +203,7 @@ router.get("/dashboard", authenticateToken, requireRole("business_owner"), async
           flashList: activeFlash.map(p => ({ id: p.id, title: p.title, stock: Number(p.stock - p.stockConsumed) || 0 })),
           commonList: activeCommon.map(p => ({ id: p.id, title: p.title, stock: Number(p.stock - p.stockConsumed) || 0 }))
         },
-        platformCommission: Number(platformCommission) || 30
+        platformCommission: Number(platformCommission) || 0
       } 
     });
   } catch (error: any) {
@@ -384,7 +386,11 @@ router.get("/wallet-stats", authenticateToken, requireRole("business_owner"), as
     
     const pendingBalance = allTransactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
     const availableBalance = allTransactions.filter(t => t.status === 'redeemed').reduce((sum, t) => sum + (Number(t.businessRevenue) || 0), 0);
-    let platformCommission = 30;
+    
+    // 🔥 CÁLCULO DE COMISIÓN PROGRESIVA PARA WALLET 🔥
+    const { CommissionService } = await import("../commissionService");
+    const commissionDecimal = await CommissionService.getBusinessCommission(userBusinesses[0].id);
+    const platformCommission = commissionDecimal <= 1 ? commissionDecimal * 100 : commissionDecimal;
 
     res.json({
       success: true,
