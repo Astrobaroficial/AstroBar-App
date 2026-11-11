@@ -39,10 +39,8 @@ export default function AdminCommissionsManager() {
 
   const openEditModal = (business: BusinessCommission) => {
     setSelectedBusiness(business);
-    
     const percent = business.commission > 1 ? business.commission : business.commission * 100;
     setNewCommission(Math.round(percent).toString());
-    
     setModalVisible(true);
   };
 
@@ -157,14 +155,12 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                // BLINDAJE ANTIBUG ANDROID: Usamos text variant con números para evitar el bucle de ceros del teclado numérico nativo
-                onChangeText={(text) => {
-                  const cleaned = text.replace(/[^0-9]/g, '');
-                  setNewCommission(cleaned);
-                }}
-                keyboardType="numeric"
-                maxLength={3}
+                onChangeText={setNewCommission}
+                // SOLUCIÓN DEFINITIVA: Cambiamos a teclado de texto normal y desactivamos ayudas de Android
+                keyboardType="default" 
+                autoCapitalize="none"
                 autoCorrect={false}
+                maxLength={3}
                 placeholder="Ej: 15"
                 placeholderTextColor="#666"
               />
