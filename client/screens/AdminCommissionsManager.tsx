@@ -41,7 +41,6 @@ export default function AdminCommissionsManager() {
     setSelectedBusiness(business);
     
     const percent = business.commission > 1 ? business.commission : business.commission * 100;
-    // Solo enviamos el string limpio al abrir el modal
     setNewCommission(Math.round(percent).toString());
     
     setModalVisible(true);
@@ -50,7 +49,6 @@ export default function AdminCommissionsManager() {
   const saveCommission = async () => {
     if (!selectedBusiness) return;
 
-    // Validación pura al momento de guardar
     const rawValue = newCommission.trim() === '' ? '0' : newCommission;
     const commissionValue = parseFloat(rawValue);
     
@@ -159,9 +157,14 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                onChangeText={setNewCommission} // ASIGNACIÓN DIRECTA: Cero manipulación en vivo
+                // BLINDAJE ANTIBUG ANDROID: Usamos text variant con números para evitar el bucle de ceros del teclado numérico nativo
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/[^0-9]/g, '');
+                  setNewCommission(cleaned);
+                }}
                 keyboardType="numeric"
-                maxLength={3} // Límite estricto nativo
+                maxLength={3}
+                autoCorrect={false}
                 placeholder="Ej: 15"
                 placeholderTextColor="#666"
               />
