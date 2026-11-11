@@ -17,6 +17,8 @@ export default function AdminCommissionsManager() {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessCommission | null>(null);
+  
+  // Volvemos al estado normal, ya que el problema real era el maxLength nativo
   const [newCommission, setNewCommission] = useState('');
   const { showAlert, AlertComponent } = useCustomAlert();
 
@@ -97,7 +99,7 @@ export default function AdminCommissionsManager() {
 
         {item.lastUpdated && (
           <Text style={styles.lastUpdated}>
-            Actualizado: {new Date(item.lastUpdated).toLocaleDateString()}
+            Actualizado: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}
           </Text>
         )}
 
@@ -155,12 +157,17 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                onChangeText={setNewCommission}
-                // SOLUCIÓN DEFINITIVA: Cambiamos a teclado de texto normal y desactivamos ayudas de Android
-                keyboardType="default" 
-                autoCapitalize="none"
+                onChangeText={(text) => {
+                  // 1. Limpiamos cualquier cosa que no sea número
+                  // 2. Limitamos a 3 caracteres MANUALMENTE con .slice(0,3)
+                  // Esto evita que el teclado nativo colapse por culpa del maxLength prop
+                  const cleanText = text.replace(/[^0-9]/g, '').slice(0, 3);
+                  setNewCommission(cleanText);
+                }}
+                // phone-pad elude el bug de duplicación matemática de Android
+                keyboardType="phone-pad" 
                 autoCorrect={false}
-                maxLength={3}
+                autoComplete="off"
                 placeholder="Ej: 15"
                 placeholderTextColor="#666"
               />
