@@ -40,8 +40,8 @@ export default function AdminCommissionsManager() {
   const openEditModal = (business: BusinessCommission) => {
     setSelectedBusiness(business);
     
-    // Convertimos a porcentaje entero limpio (ej: 15) para que no arrastre decimales fantasma
     const percent = business.commission > 1 ? business.commission : business.commission * 100;
+    // Solo enviamos el string limpio al abrir el modal
     setNewCommission(Math.round(percent).toString());
     
     setModalVisible(true);
@@ -50,22 +50,20 @@ export default function AdminCommissionsManager() {
   const saveCommission = async () => {
     if (!selectedBusiness) return;
 
-    // Si está vacío, asumimos 0
+    // Validación pura al momento de guardar
     const rawValue = newCommission.trim() === '' ? '0' : newCommission;
     const commissionValue = parseFloat(rawValue);
     
-    // Validación de rango
     if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
-      showAlert('Error', 'La comisión debe estar entre 0% y 100%');
+      showAlert('Error', 'La comisión debe ser un número entre 0 y 100');
       return;
     }
 
     try {
       await apiRequest('POST', '/api/admin/commissions', {
         businessId: selectedBusiness.businessId,
-        // Mandamos el decimal correcto al backend (ej: 0.15)
         commission: commissionValue / 100,
-        notes: `Actualizado a ${commissionValue}%`,
+        notes: `Actualizada manualmente a ${commissionValue}%`,
       });
       
       showAlert('Éxito', 'Comisión actualizada correctamente');
@@ -161,12 +159,11 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                // Limpio, sin regex que rompan el teclado
-                onChangeText={setNewCommission} 
-                keyboardType="number-pad"
+                onChangeText={setNewCommission} // ASIGNACIÓN DIRECTA: Cero manipulación en vivo
+                keyboardType="numeric"
+                maxLength={3} // Límite estricto nativo
                 placeholder="Ej: 15"
                 placeholderTextColor="#666"
-                maxLength={3} // Bloquea físicamente que puedan escribir más de 3 números (ej: 100)
               />
               <Text style={styles.inputHint}>Ingresa valores entre 0 y 100</Text>
             </View>
@@ -200,14 +197,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', color: '#FFF' },
   subtitle: { fontSize: 12, color: '#999', marginTop: 4 },
   list: { padding: 16 },
-  card: {
-    backgroundColor: '#1A1F3A',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#2A2F4A',
-  },
+  card: { backgroundColor: '#1A1F3A', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#2A2F4A' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   businessInfo: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   businessName: { fontSize: 16, fontWeight: 'bold', color: '#FFF', flex: 1 },
@@ -221,33 +211,13 @@ const styles = StyleSheet.create({
   editText: { fontSize: 12, color: '#FFD700', fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { color: '#666', fontSize: 16, marginTop: 16 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: '#1A1F3A',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#1A1F3A', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 },
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#FFF', marginBottom: 4 },
   modalSubtitle: { fontSize: 14, color: '#999', marginBottom: 20 },
   inputContainer: { marginBottom: 20 },
   inputLabel: { fontSize: 14, color: '#FFF', marginBottom: 8 },
-  input: {
-    backgroundColor: '#2A2F4A',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#FFF',
-    borderWidth: 1,
-    borderColor: '#3A3F5A',
-  },
+  input: { backgroundColor: '#2A2F4A', borderRadius: 8, padding: 12, fontSize: 16, color: '#FFF', borderWidth: 1, borderColor: '#3A3F5A' },
   inputHint: { fontSize: 11, color: '#666', marginTop: 4 },
   modalButtons: { flexDirection: 'row', gap: 12 },
   modalButton: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },

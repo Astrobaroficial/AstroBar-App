@@ -230,37 +230,37 @@ router.get("/users", authenticateToken, requireRole("admin", "super_admin"), asy
   }
 });
 
-// Get all businesses with progressive commissions
+// Get all businesses with progressive commissions (CORREGIDO)
 router.get("/commissions", authenticateToken, requireRole("admin", "super_admin"), async (req, res) => {
   try {
     const { db } = await import("../db");
-    // Importamos el servicio que maneja la lógica de comisiones progresivas
     const { CommissionService } = await import("../commissionService");
 
-    // 1. Obtener todos los negocios activos
+    // 1. Hacemos un JOIN para traer la fecha real (updated_at) desde business_commissions
     const result = await db.execute(sql`
       SELECT 
         b.id as businessId,
         b.name as businessName,
-        b.created_at as createdAt
+        bc.updated_at as lastUpdated
       FROM businesses b
+      LEFT JOIN business_commissions bc ON b.id = bc.business_id
       WHERE b.is_active = 1
       ORDER BY b.name
     `);
 
     const activeBusinesses = Array.isArray(result[0]) ? result[0] : result;
 
-    // 2. Calcular la comisión progresiva para cada uno usando el CommissionService
+    // 2. Calculamos la comisión progresiva para cada uno
     const businessesWithCommissions = await Promise.all(
       activeBusinesses.map(async (business: any) => {
-        // Obtenemos la comisión (0%, 3%, 6%, 9%, 13%, 15% o personalizada si existe)
         const commissionDecimal = await CommissionService.getBusinessCommission(business.businessId);
         
         return {
           businessId: business.businessId,
           businessName: business.businessName,
           commission: commissionDecimal,
-          lastUpdated: new Date()
+          // Le pasamos la fecha real de la base de datos (o null si nunca se modificó)
+          lastUpdated: business.lastUpdated 
         };
       })
     );
