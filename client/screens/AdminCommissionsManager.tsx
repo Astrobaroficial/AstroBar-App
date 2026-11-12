@@ -18,7 +18,6 @@ export default function AdminCommissionsManager() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessCommission | null>(null);
   
-  // Volvemos al estado normal, ya que el problema real era el maxLength nativo
   const [newCommission, setNewCommission] = useState('');
   const { showAlert, AlertComponent } = useCustomAlert();
 
@@ -49,9 +48,12 @@ export default function AdminCommissionsManager() {
   const saveCommission = async () => {
     if (!selectedBusiness) return;
 
-    const rawValue = newCommission.trim() === '' ? '0' : newCommission;
+    // Aquí limpiamos la basura que el usuario haya podido escribir
+    const cleanText = newCommission.replace(/[^0-9]/g, '');
+    const rawValue = cleanText.trim() === '' ? '0' : cleanText;
     const commissionValue = parseFloat(rawValue);
     
+    // Aquí validamos que no se pase de 100
     if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
       showAlert('Error', 'La comisión debe ser un número entre 0 y 100');
       return;
@@ -157,15 +159,10 @@ export default function AdminCommissionsManager() {
               <TextInput
                 style={styles.input}
                 value={newCommission}
-                onChangeText={(text) => {
-                  // 1. Limpiamos cualquier cosa que no sea número
-                  // 2. Limitamos a 3 caracteres MANUALMENTE con .slice(0,3)
-                  // Esto evita que el teclado nativo colapse por culpa del maxLength prop
-                  const cleanText = text.replace(/[^0-9]/g, '').slice(0, 3);
-                  setNewCommission(cleanText);
-                }}
-                // phone-pad elude el bug de duplicación matemática de Android
-                keyboardType="phone-pad" 
+                // Asignación DIRECTA: Ni un solo filtro aquí adentro.
+                onChangeText={setNewCommission}
+                keyboardType="numeric"
+                // Desactivamos cualquier ayuda del sistema que pueda meterse en el medio
                 autoCorrect={false}
                 autoComplete="off"
                 placeholder="Ej: 15"
