@@ -40,7 +40,7 @@ export default function AdminCommissionsManager() {
     const isDefault = commissionPercent === 30 || commissionPercent === 15 || commissionPercent === 0;
 
     return (
-      // Cambiamos TouchableOpacity por View: Ya no hace nada al tocarlo
+      // Renderizamos solo una tarjeta visual sin acciones ni botones de edición
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.businessInfo}>
@@ -63,7 +63,7 @@ export default function AdminCommissionsManager() {
 
         {item.lastUpdated && (
           <Text style={styles.lastUpdated}>
-            Actualizado: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}
+            Actualizado: {new Date(item.lastUpdated).toLocaleDateString()}
           </Text>
         )}
       </View>
