@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-// CAMBIO CRÍTICO: Nueva importación de apiRequest
 import { apiRequest } from '@/lib/query-client';
 import { AstroBarColors } from '@/constants/theme';
 
@@ -52,6 +51,7 @@ export default function AdminManagement() {
   };
 
   const openEdit = (item: any) => {
+    if (activeTab === 'commissions') return;
     setSelectedItem(item);
     setEditForm(item);
     setEditModal(true);
@@ -75,13 +75,7 @@ export default function AdminManagement() {
           email: editForm.email
         });
       } else {
-        const commissionValue = parseFloat(editForm.commission);
-        const commissionDecimal = commissionValue > 1 ? commissionValue / 100 : commissionValue;
-        res = await apiRequest('POST', '/api/admin/commissions', {
-          businessId: selectedItem.businessId || selectedItem.id,
-          commission: commissionDecimal,
-          notes: editForm.notes || ''
-        });
+        return;
       }
 
       if (!res.ok) {
@@ -171,6 +165,7 @@ export default function AdminManagement() {
     </TouchableOpacity>
   );
 
+  // SOLO LECTURA: Sin TouchableOpacity, sin onPress y sin icono de lápiz
   const renderCommission = ({ item }: any) => {
     const rawCommission = item?.commission ?? item?.rate ?? 0;
     const numericCommission = parseFloat(rawCommission);
@@ -179,7 +174,7 @@ export default function AdminManagement() {
       : '0.0';
 
     return (
-      <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
+      <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
             <Text style={styles.cardTitle}>{item?.businessName || item?.name || `Bar #${item?.businessId || item?.id || 'N/A'}`}</Text>
@@ -190,9 +185,8 @@ export default function AdminManagement() {
               Última actualización: {formatDate(item?.lastUpdatedAt || item?.lastUpdated || item?.updatedAt)}
             </Text>
           </View>
-          <Feather name="edit-2" size={20} color={AstroBarColors.primary} />
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -262,11 +256,11 @@ export default function AdminManagement() {
         onRefresh={loadData}
       />
 
-      {/* Modal de Edición */}
-      {editModal && (
+      {/* Modal de Edición (Solo para Usuarios y Bares) */}
+      {editModal && activeTab !== 'commissions' && (
         <View style={styles.modal}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Editar {activeTab === 'users' ? 'Usuario' : activeTab === 'businesses' ? 'Bar' : 'Comisión'}</Text>
+            <Text style={styles.modalTitle}>Editar {activeTab === 'users' ? 'Usuario' : 'Bar'}</Text>
             
             {activeTab === 'users' && (
               <>
@@ -298,25 +292,6 @@ export default function AdminManagement() {
                 <TextInput style={styles.input} placeholder="Dirección" value={editForm.address || ''} onChangeText={(text) => setEditForm({...editForm, address: text})} />
                 <TextInput style={styles.input} placeholder="Teléfono" value={editForm.phone || ''} onChangeText={(text) => setEditForm({...editForm, phone: text})} />
                 <TextInput style={styles.input} placeholder="Email" value={editForm.email || ''} onChangeText={(text) => setEditForm({...editForm, email: text})} />
-              </>
-            )}
-            
-            {activeTab === 'commissions' && (
-              <>
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="Comisión % (5-30)" 
-                  keyboardType="numeric" 
-                  value={editForm.commission ? String((parseFloat(editForm.commission) * 100).toFixed(0)) : ''} 
-                  onChangeText={(text) => setEditForm({...editForm, commission: text})} 
-                />
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="Notas" 
-                  value={editForm.notes || ''} 
-                  onChangeText={(text) => setEditForm({...editForm, notes: text})} 
-                  multiline 
-                />
               </>
             )}
             
@@ -358,8 +333,4 @@ const styles = StyleSheet.create({
   modalButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
   modalButton: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center' },
   modalButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  roleButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#f5f5f5' },
-  roleButtonActive: { backgroundColor: AstroBarColors.primary, borderColor: AstroBarColors.primary },
-  roleButtonText: { fontSize: 12, color: '#666' },
-  roleButtonTextActive: { color: '#fff', fontWeight: '600' },
-});
+  roleButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#f5f5f5'
