@@ -333,4 +333,8 @@ const styles = StyleSheet.create({
   modalButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
   modalButton: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center' },
   modalButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  roleButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#f5f5f5'
+  roleButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#f5f5f5' },
+  roleButtonActive: { backgroundColor: AstroBarColors.primary, borderColor: AstroBarColors.primary },
+  roleButtonText: { fontSize: 12, color: '#666' },
+  roleButtonTextActive: { color: '#fff', fontWeight: '600' },
+});
