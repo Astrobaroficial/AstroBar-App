@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiRequest } from '../lib/query-client';
 import { useCustomAlert } from '../components/CustomAlert';
@@ -15,10 +15,7 @@ export default function AdminCommissionsManager() {
   const [businesses, setBusinesses] = useState<BusinessCommission[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState<BusinessCommission | null>(null);
   
-  const [newCommission, setNewCommission] = useState('');
   const { showAlert, AlertComponent } = useCustomAlert();
 
   const loadBusinesses = async () => {
@@ -38,48 +35,13 @@ export default function AdminCommissionsManager() {
     loadBusinesses();
   }, []);
 
-  const openEditModal = (business: BusinessCommission) => {
-    setSelectedBusiness(business);
-    const percent = business.commission > 1 ? business.commission : business.commission * 100;
-    setNewCommission(Math.round(percent).toString());
-    setModalVisible(true);
-  };
-
-  const saveCommission = async () => {
-    if (!selectedBusiness) return;
-
-    // Aquí limpiamos la basura que el usuario haya podido escribir
-    const cleanText = newCommission.replace(/[^0-9]/g, '');
-    const rawValue = cleanText.trim() === '' ? '0' : cleanText;
-    const commissionValue = parseFloat(rawValue);
-    
-    // Aquí validamos que no se pase de 100
-    if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
-      showAlert('Error', 'La comisión debe ser un número entre 0 y 100');
-      return;
-    }
-
-    try {
-      await apiRequest('POST', '/api/admin/commissions', {
-        businessId: selectedBusiness.businessId,
-        commission: commissionValue / 100,
-        notes: `Actualizada manualmente a ${commissionValue}%`,
-      });
-      
-      showAlert('Éxito', 'Comisión actualizada correctamente');
-      setModalVisible(false);
-      loadBusinesses();
-    } catch (error: any) {
-      showAlert('Error', 'Error al actualizar comisión');
-    }
-  };
-
   const renderBusiness = ({ item }: { item: BusinessCommission }) => {
     const commissionPercent = item.commission > 1 ? item.commission : Math.round(item.commission * 100);
     const isDefault = commissionPercent === 30 || commissionPercent === 15 || commissionPercent === 0;
 
     return (
-      <TouchableOpacity style={styles.card} onPress={() => openEditModal(item)}>
+      // Cambiamos TouchableOpacity por View: Ya no hace nada al tocarlo
+      <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.businessInfo}>
             <Ionicons name="business" size={20} color="#FFD700" />
@@ -104,12 +66,7 @@ export default function AdminCommissionsManager() {
             Actualizado: {item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}
           </Text>
         )}
-
-        <View style={styles.editButton}>
-          <Ionicons name="create" size={16} color="#FFD700" />
-          <Text style={styles.editText}>Editar</Text>
-        </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -126,7 +83,7 @@ export default function AdminCommissionsManager() {
       {AlertComponent}
       <View style={styles.header}>
         <Text style={styles.title}>Gestión de Comisiones</Text>
-        <Text style={styles.subtitle}>Rango permitido: 0% - 100%</Text>
+        <Text style={styles.subtitle}>Vista de comisiones actuales (Solo lectura)</Text>
       </View>
 
       <FlatList
@@ -147,47 +104,6 @@ export default function AdminCommissionsManager() {
           </View>
         }
       />
-
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Editar Comisión</Text>
-            <Text style={styles.modalSubtitle}>{selectedBusiness?.businessName}</Text>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Nueva comisión (%)</Text>
-              <TextInput
-                style={styles.input}
-                value={newCommission}
-                // Asignación DIRECTA: Ni un solo filtro aquí adentro.
-                onChangeText={setNewCommission}
-                keyboardType="numeric"
-                // Desactivamos cualquier ayuda del sistema que pueda meterse en el medio
-                autoCorrect={false}
-                autoComplete="off"
-                placeholder="Ej: 15"
-                placeholderTextColor="#666"
-              />
-              <Text style={styles.inputHint}>Ingresa valores entre 0 y 100</Text>
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={saveCommission}
-              >
-                <Text style={styles.saveButtonText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -210,22 +126,6 @@ const styles = StyleSheet.create({
   commissionLabel: { fontSize: 14, color: '#999' },
   commissionValue: { fontSize: 24, fontWeight: 'bold' },
   lastUpdated: { fontSize: 11, color: '#666', marginBottom: 8 },
-  editButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
-  editText: { fontSize: 12, color: '#FFD700', fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { color: '#666', fontSize: 16, marginTop: 16 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#1A1F3A', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#FFF', marginBottom: 4 },
-  modalSubtitle: { fontSize: 14, color: '#999', marginBottom: 20 },
-  inputContainer: { marginBottom: 20 },
-  inputLabel: { fontSize: 14, color: '#FFF', marginBottom: 8 },
-  input: { backgroundColor: '#2A2F4A', borderRadius: 8, padding: 12, fontSize: 16, color: '#FFF', borderWidth: 1, borderColor: '#3A3F5A' },
-  inputHint: { fontSize: 11, color: '#666', marginTop: 4 },
-  modalButtons: { flexDirection: 'row', gap: 12 },
-  modalButton: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  cancelButton: { backgroundColor: '#2A2F4A' },
-  saveButton: { backgroundColor: '#4CAF50' },
-  cancelButtonText: { color: '#FFF', fontWeight: '600' },
-  saveButtonText: { color: '#FFF', fontWeight: '600' },
 });
